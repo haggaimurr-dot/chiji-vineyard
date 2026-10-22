@@ -1,0 +1,38 @@
+<view class="page page-pad" wx:if="{{loading || error}}">
+  <view class="state-panel" wx:if="{{loading}}"><view class="state-title">正在加载课堂内容</view><view class="state-copy">请稍候…</view></view>
+  <view class="state-panel" wx:else><view class="state-title">暂时无法查看内容</view><view class="state-copy">{{error}}</view><button class="primary-btn" bindtap="loadArticle">重新加载</button><button class="ghost-btn" bindtap="goClassroom">返回种植课堂</button></view>
+</view>
+<view class="page" wx:elif="{{article}}">
+  <image wx:if="{{!coverFailed}}" class="hero" src="{{article.cover}}" mode="aspectFill" binderror="coverError" />
+  <view wx:else class="hero image-placeholder"><text>迟记种植课堂</text><text>封面暂未加载，正文仍可阅读</text></view>
+  <view class="content">
+    <view class="meta">{{article.stage}} · {{article.variety}} · {{article.publishedAt}}</view>
+    <view class="title">{{article.title}}</view>
+    <view class="article-stats"><text wx:if="{{article.readCount >= 0}}">阅读 {{article.readCount}}</text><text wx:if="{{article.version}}">版本 {{article.version}}</text></view>
+    <view class="summary">{{article.summary}}</view>
+    <button class="ghost-btn article-favorite" disabled="{{favoriteBusy}}" bindtap="toggleFavorite">{{article.favorite ? '♥ 已收藏 · 点击取消' : '♡ 收藏这篇内容'}}</button>
+    <view class="video-section" wx:if="{{article.type === 'video'}}">
+      <video wx:if="{{videoUrl && !videoError}}" initial-time="{{videoPosition}}" bindtimeupdate="onVideoTime" bindpause="onVideoPause" bindended="onVideoEnded" src="{{videoUrl}}" poster="{{coverFailed ? '' : article.cover}}" data-attempt="{{videoAttempt}}" binderror="videoError" controls />
+      <view class="question-note" wx:if="{{videoProgressError}}">{{videoProgressError}}</view>
+      <view class="video-state" wx:if="{{videoLoading}}">正在获取视频…</view>
+      <view class="video-state" wx:elif="{{videoError}}"><view>{{videoError}}</view><button wx:if="{{article.videoUrl}}" class="ghost-btn" bindtap="retryVideo">重试视频</button></view>
+    </view>
+    <rich-text wx:if="{{contentHtml}}" class="rich-content" nodes="{{contentHtml}}" selectable />
+    <block wx:else><view class="paragraph" wx:for="{{paragraphs}}" wx:key="*this">{{item}}</view></block>
+    <view class="completion-panel"><view>学完这一节了吗？</view><button class="primary-btn" disabled="{{completeBusy}}" bindtap="toggleCompleted">{{completeBusy ? '正在保存…' : article.completed ? '✓ 已学完 · 点击撤销' : '标记学完'}}</button><view class="question-note">标记后将更新系列课程进度</view></view>
+    <view class="classroom-qa">
+      <view class="qa-title">课堂问答</view>
+      <view class="question-note">向老师提问，仅你和后台工作人员可见。回复后可在课堂问答中查看。</view>
+      <textarea class="question-input" value="{{questionDraft}}" maxlength="500" disabled="{{questionBusy}}" placeholder="描述你遇到的种植问题（最多500字）" bindinput="onQuestionInput" />
+      <view class="qa-error" wx:if="{{questionError}}">{{questionError}}</view>
+      <button class="primary-btn" disabled="{{questionBusy}}" bindtap="submitQuestion">{{questionBusy ? '正在提交…' : '提交问题'}}</button>
+      <view class="qa-item" wx:for="{{questions}}" wx:key="id"><view class="question-note">{{item.createdText}}</view><view class="qa-text">问：{{item.question}}</view><view class="qa-answer" wx:if="{{item.answer}}">老师回复：{{item.answer}}<view class="question-note">{{item.answeredText}}</view></view><view class="question-note" wx:else>待老师回复</view></view>
+      <view class="question-note" wx:if="{{questionsLoading}}">正在加载问答…</view>
+      <view wx:elif="{{questionsError}}" class="qa-error">{{questionsError}}<button class="ghost-btn" bindtap="retryQuestions">重试</button></view>
+      <view class="question-note" wx:elif="{{!questions.length}}">暂无提问</view>
+      <button wx:if="{{questionsMore}}" class="ghost-btn" disabled="{{questionsLoading}}" bindtap="moreQuestions">加载更多问答</button>
+    </view>
+    <view class="disclaimer">种植建议需结合当地气候、土壤与植保要求。涉及农资使用时，请遵循产品标签、登记范围及安全间隔期。</view>
+  </view>
+</view>
+

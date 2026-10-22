@@ -1,0 +1,20 @@
+<view class="page safe-bottom">
+  <view class="page-pad"><button class="ghost-btn" bindtap="wallet">我的券包 · 结算自动匹配最优券 ›</button></view>
+  <view class="page-pad" wx:if="{{items.length || invalidItems.length}}">
+    <view class="cart-toolbar"><text>共 {{items.length}} 项 · 已选 {{selectedCount}} 项</text><button class="ghost-btn" disabled="{{busy}}" bindtap="toggleManage">{{managing ? '完成' : '管理'}}</button></view>
+    <view class="top-up card" wx:if="{{hint && !managing}}"><view><text>{{hint}}</text><view class="hint-note">运费以结算页所选地址及配送日期为准</view></view><button wx:if="{{canTopUp}}" class="ghost-btn" disabled="{{busy}}" bindtap="goShop">去凑单</button></view>
+    <view class="cart-item card" wx:for="{{items}}" wx:key="skuId">
+      <view class="check {{item.selected ? 'checked' : ''}}" data-index="{{index}}" bindtap="toggle">{{item.selected ? '✓' : ''}}</view>
+      <image class="cover" src="{{item.product.cover}}" mode="aspectFill" />
+      <view class="info"><view class="name">{{item.product.name}}</view><view class="spec">{{item.sku.name}} · {{item.sku.weightLabel}}</view><view class="quantity-warning" wx:if="{{item.quantityWarning}}">{{item.quantityWarning}}</view><view class="line"><text class="price-small">¥{{item.priceText}}</text><view class="stepper"><button disabled="{{busy}}" data-index="{{index}}" bindtap="minus">−</button><text>{{item.quantity}}</text><button disabled="{{busy}}" data-index="{{index}}" bindtap="plus">＋</button></view></view></view>
+    </view>
+    <view class="invalid-section card" wx:if="{{invalidItems.length}}">
+      <view class="cart-toolbar"><text>失效商品（{{invalidItems.length}}）</text><button class="ghost-btn" disabled="{{busy}}" bindtap="clearInvalid">一键清理</button></view>
+      <view class="invalid-item" wx:for="{{invalidItems}}" wx:key="skuId"><image wx:if="{{item.product.cover || item.cover}}" class="cover" src="{{item.product.cover || item.cover}}" mode="aspectFill" /><view wx:else class="invalid-placeholder">萄</view><view class="info"><view class="name">{{item.nameText}}</view><view class="spec">{{item.specText}} · {{item.quantity}} 件</view><view class="invalid-reason">{{item.reason}}</view></view></view>
+    </view>
+    <view class="fresh-note">生鲜商品建议按需购买，收到后尽快开箱冷藏</view>
+  </view>
+  <view class="empty" wx:else><view class="empty-icon">萄</view><view>购物袋还是空的</view><button class="ghost-btn" bindtap="goShop">去挑选当季葡萄</button></view>
+  <view class="settle" wx:if="{{items.length}}"><view class="select-all" bindtap="toggleAll"><text class="check {{allSelected ? 'checked' : ''}}">{{allSelected ? '✓' : ''}}</text>全选</view><block wx:if="{{managing}}"><button class="ghost-btn favorite-btn" disabled="{{busy || !selectedCount}}" bindtap="moveToFavorites">移入收藏</button><button class="ghost-btn delete-btn" disabled="{{busy || !selectedCount}}" bindtap="deleteSelected">批量删除</button></block><block wx:else><view class="total">合计 <text>¥{{totalText}}</text></view><button class="primary-btn" disabled="{{busy || !selectedCount}}" bindtap="checkout">去结算</button></block></view>
+</view>
+

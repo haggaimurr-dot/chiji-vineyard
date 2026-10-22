@@ -1,0 +1,48 @@
+<view class="page page-pad">
+  <view class="title">{{kind === 'history' ? '每一次好消息，都留在这里' : kind === 'restock' ? '等一份枝头好味道' : kind === 'pricedrop' ? '好味道，也等一个好价格' : '喜欢的鲜果，留在这里'}}</view>
+  <view class="intro" wx:if="{{kind === 'restock'}}">进入本页会更新补货状态；显示「已到货」即可查看购买。商品下架后暂不展示。</view>
+  <view class="intro" wx:if="{{kind === 'pricedrop'}}">比较关注时同一规格的实售价，进入本页更新价格。可设置目标价，到价且可购买时发送一次微信提醒；留空则降价即提醒。微信提醒需主动订阅；商品下架后暂不展示。</view>
+  <view class="intro" wx:if="{{kind === 'history'}}">记录到货、降价微信提醒的发送时间与结果，时间为北京时间。取消提醒或商品下架后仍保留历史。演示模式仅记录小程序内提醒。</view>
+  <button wx:if="{{kind !== 'history'}}" class="ghost-btn history-link" bindtap="openHistory">查看提醒历史 →</button>
+  <view class="muted" wx:if="{{subscriptionError}}">{{subscriptionError}}</view>
+  <view class="state" wx:if="{{loading}}">正在加载…</view>
+  <view class="state" wx:elif="{{error}}"><view>{{error}}</view><button class="primary-btn" bindtap="loadProducts">重新加载</button></view>
+  <block wx:elif="{{kind === 'history'}}">
+    <view wx:if="{{!history.length}}" class="state">暂无提醒历史，满足条件并发送提醒后会显示在这里。</view>
+    <view class="entry card" wx:for="{{history}}" wx:key="id">
+      <view class="name">{{item.productName}}</view>
+      <view class="muted">{{item.kind === 'restock' ? '到货提醒' : '降价提醒'}} · {{item.timeText}}</view>
+      <view wx:if="{{item.skuName}}" class="muted">{{item.skuName}}</view>
+      <view wx:if="{{item.kind === 'pricedrop'}}" class="price">触发时价格 ¥{{item.priceText}}<text wx:if="{{item.targetText}}"> · 目标价 ¥{{item.targetText}}</text></view>
+      <view class="status {{item.status === 'SENT' || item.status === 'IN_APP' ? 'ready' : ''}}">{{item.statusText}}</view>
+      <view wx:if="{{item.detail}}" class="muted">{{item.detail}}</view>
+      <button class="ghost-btn" data-id="{{item.productId}}" bindtap="openProduct">查看商品</button>
+    </view>
+    <view wx:if="{{historyError}}" class="state">{{historyError}}</view>
+    <button wx:if="{{historyMore}}" class="ghost-btn" bindtap="moreHistory" disabled="{{historyLoading}}" loading="{{historyLoading}}">{{historyError ? '重试加载' : '加载更多'}}</button>
+    <view wx:elif="{{history.length}}" class="intro">已显示全部提醒历史</view>
+  </block>
+  <view class="state" wx:elif="{{!products.length}}"><view>{{kind === 'restock' ? '暂无到货提醒' : kind === 'pricedrop' ? '暂无降价提醒' : '暂无收藏商品'}}</view><button class="ghost-btn" bindtap="goShop">去商城看看</button></view>
+  <block wx:else>
+    <view class="entry card" wx:for="{{products}}" wx:key="id">
+      <view class="entry-content" data-id="{{item.id}}" bindtap="openProduct">
+        <view class="name">{{item.name}}</view><view class="muted">{{item.subtitle}}</view>
+        <view class="status {{(kind === 'pricedrop' ? item.priceDrop.dropped : item.ready) ? 'ready' : ''}}">{{kind === 'restock' ? (item.ready ? '已到货 · 可以购买了' : '等待补货') : kind === 'pricedrop' ? (!item.priceDrop.skuName ? '关注规格已下架' : item.priceDrop.dropped ? (item.priceDrop.available ? (item.targetText ? '已到目标价 · 可以购买了' : '已降价 · 可以购买了') : (item.targetText ? '已到目标价 · 暂时不可购买' : '已降价 · 暂时不可购买')) : (item.targetText ? '等待目标价格' : '等待降价')) : (item.ready ? '有货' : '暂时售罄')}}</view>
+        <view class="price" wx:if="{{kind !== 'pricedrop' && item.priceText}}">¥{{item.priceText}} 起</view>
+        <block wx:if="{{kind === 'pricedrop'}}">
+          <view class="muted">{{item.priceDrop.skuName || '已下架规格'}} · 关注价 ¥{{item.baselineText}}</view>
+          <view class="muted" wx:if="{{item.targetText}}">目标价 ¥{{item.targetText}} · 现价不高于目标价时提醒</view>
+          <view class="price" wx:if="{{item.currentText}}">现价 ¥{{item.currentText}}<text wx:if="{{item.dropText}}"> · 已降 ¥{{item.dropText}}</text></view>
+          <view class="muted">{{item.priceDrop.pushStatus === 'READY' ? '已订阅微信降价提醒' : item.priceDrop.pushStatus === 'SENT' ? '微信提醒已发送' : (item.priceDrop.pushStatus === 'SENDING' || item.priceDrop.pushStatus === 'UNCERTAIN') ? '微信提醒结果待核实' : '仅小程序内提醒'}}</view>
+        </block>
+        <view class="muted" wx:if="{{kind === 'restock'}}">{{item.restockPushStatus === 'READY' ? '已订阅微信到货提醒' : item.restockPushStatus === 'SENT' ? '微信提醒已发送' : (item.restockPushStatus === 'SENDING' || item.restockPushStatus === 'UNCERTAIN') ? '微信提醒结果待核实' : '仅小程序内提醒'}}</view>
+      </view>
+      <button class="ghost-btn" wx:if="{{kind === 'restock' && restockConfig.enabled && item.restockPushStatus !== 'READY' && item.restockPushStatus !== 'SENT' && item.restockPushStatus !== 'SENDING' && item.restockPushStatus !== 'UNCERTAIN'}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="subscribeRestock">订阅微信到货提醒</button>
+      <button class="ghost-btn" wx:if="{{kind === 'pricedrop' && priceDropConfig.enabled && item.priceDrop.pushStatus !== 'READY' && item.priceDrop.pushStatus !== 'SENT' && item.priceDrop.pushStatus !== 'SENDING' && item.priceDrop.pushStatus !== 'UNCERTAIN'}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="subscribePriceDrop">订阅微信降价提醒</button>
+      <button wx:if="{{kind === 'pricedrop'}}" class="ghost-btn" disabled="{{busy}}" data-id="{{item.id}}" bindtap="editTargetPrice">设置 / 修改目标价格</button>
+      <button wx:if="{{kind === 'pricedrop' && item.targetText}}" class="ghost-btn" disabled="{{busy}}" data-id="{{item.id}}" data-clear="{{true}}" bindtap="editTargetPrice">恢复降价即提醒</button>
+      <button class="ghost-btn" wx:if="{{kind === 'favorite'}}" data-id="{{item.id}}" bindtap="openProduct">{{item.priceDropReminder ? '查看降价提醒' : '选择规格并设置降价提醒'}}</button>
+      <button class="ghost-btn" disabled="{{busy}}" data-id="{{item.id}}" bindtap="remove">{{kind !== 'favorite' ? '取消提醒' : '取消收藏'}}</button>
+    </view>
+  </block>
+</view>

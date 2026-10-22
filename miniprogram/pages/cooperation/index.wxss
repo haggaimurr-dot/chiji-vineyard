@@ -1,0 +1,18 @@
+.coop-hero { padding: 70rpx 38rpx 120rpx; color: white; background: linear-gradient(145deg, #49205a, #2e513a); }
+.eyebrow { color: #e1c77c; font-size: 19rpx; letter-spacing: 4rpx; }
+.title { margin-top: 24rpx; font-family: serif; font-size: 52rpx; font-weight: 700; }
+.copy { margin-top: 16rpx; color: rgba(255,255,255,.72); font-size: 24rpx; }
+.facts { display: flex; justify-content: space-between; margin-top: 48rpx; }
+.facts view { display: flex; flex-direction: column; align-items: center; width: 30%; border-right: 1rpx solid rgba(255,255,255,.2); }
+.facts view:last-child { border: 0; }.facts text:first-child { font-size: 31rpx; font-weight: 700; }.facts text:last-child { margin-top: 8rpx; opacity: .62; font-size: 21rpx; }
+.form, .success { position: relative; margin-top: -82rpx; padding: 36rpx; }
+.form-title { font-size: 36rpx; font-weight: 700; }.form-tip { margin: 8rpx 0 28rpx; color: var(--muted); font-size: 22rpx; }
+label { display: block; margin-top: 24rpx; }label > text { color: #4b4640; font-size: 23rpx; }
+input, .picker, textarea { margin-top: 10rpx; width: 100%; padding: 22rpx; border-radius: 15rpx; background: #f4f0e8; font-size: 25rpx; }
+textarea { height: 170rpx; }.picker { display: flex; justify-content: space-between; color: #4b4640; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; }
+.agree { display: flex; align-items: flex-start; gap: 12rpx; margin-top: 30rpx; color: var(--muted); font-size: 21rpx; line-height: 1.5; }
+.check { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 30rpx; height: 30rpx; border: 2rpx solid #b9b0a2; border-radius: 6rpx; }.check.checked { border-color: var(--purple); color: white; background: var(--purple); }
+.submit { margin-top: 32rpx; }
+.success { text-align: center; }.success-icon { display: inline-flex; align-items: center; justify-content: center; width: 100rpx; height: 100rpx; border-radius: 50%; color: white; background: var(--green); font-size: 55rpx; }.success-title { margin-top: 24rpx; font-size: 38rpx; font-weight: 700; }.success-copy { margin: 16rpx auto 32rpx; width: 80%; color: var(--muted); line-height: 1.7; }
+

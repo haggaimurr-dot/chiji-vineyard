@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "我的",
+  "usingComponents": {
+    "service-info": "/components/service-info/index"
+  }
+}

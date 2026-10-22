@@ -1,0 +1,130 @@
+<view class="page page-pad" wx:if="{{loading || error}}">
+  <view class="state-panel" wx:if="{{loading}}"><view class="state-title">正在加载鲜果详情</view><view class="state-copy">请稍候…</view></view>
+  <view class="state-panel" wx:else><view class="state-title">暂时无法查看商品</view><view class="state-copy">{{error}}</view><button class="primary-btn" bindtap="loadProduct">重新加载</button><button class="ghost-btn" bindtap="goShop">返回商城</button></view>
+</view>
+<view class="page safe-bottom product-page" wx:elif="{{product}}">
+  <view class="gallery-wrap">
+    <swiper class="gallery" indicator-dots="{{images.length > 1}}" indicator-color="rgba(255,255,255,.5)" indicator-active-color="#fff">
+      <swiper-item wx:for="{{images}}" wx:key="src">
+        <image wx:if="{{!item.failed}}" src="{{item.src}}" mode="aspectFill" data-index="{{index}}" binderror="imageError" bindtap="previewImage" />
+        <view wx:else class="image-placeholder"><text>枝头鲜果</text><text>图片暂未加载，商品信息仍可查看</text></view>
+      </swiper-item>
+    </swiper>
+    <text class="image-label" wx:if="{{product.imageNote}}">{{product.imageNote}} · 实物以收到为准</text>
+  </view>
+  <view class="page-pad product-info">
+    <view class="badges"><text class="pill {{product.saleMode === 'presale' ? 'pill-purple' : ''}}">{{product.saleMode === 'presale' ? '预约鲜采' : '当季现货'}}</text><text class="pill" wx:for="{{product.badges}}" wx:key="*this">{{item}}</text></view>
+    <view class="name">{{product.name}}</view><view class="subtitle">{{product.subtitle}}</view>
+    <view class="price-row" wx:if="{{product.skus.length}}"><view class="price"><text class="money-unit">¥</text>{{product.skus[skuIndex].priceText}}</view><text class="compare" wx:if="{{product.skus[skuIndex].compareText}}">¥{{product.skus[skuIndex].compareText}}</text></view>
+    <view class="sold-notice" wx:if="{{soldOut}}">{{product.skus.length ? '本款暂时售罄，补货时间可咨询客服' : '商品规格暂未上架，请看看其他鲜果'}}</view>
+    <view class="presale" wx:if="{{product.saleMode === 'presale'}}">预计 {{product.expectedShipDate}} 起按成熟度依次发货</view>
+    <view class="attention-actions">
+      <button class="ghost-btn" bindtap="toggleCompare">{{comparing ? '移出对比' : '加入对比'}}</button>
+      <button class="ghost-btn" bindtap="openCompare">查看对比</button>
+      <button class="ghost-btn" disabled="{{attentionBusy}}" data-kind="favorite" bindtap="toggleAttention">{{product.favorite ? '♥ 已收藏' : '♡ 收藏商品'}}</button>
+      <button class="ghost-btn" wx:if="{{soldOut || product.restockReminder}}" disabled="{{attentionBusy}}" data-kind="restock" bindtap="toggleAttention">{{product.restockReminder ? '取消到货提醒' : '到货提醒'}}</button>
+      <button class="ghost-btn" wx:if="{{product.skus.length || product.priceDropReminder}}" disabled="{{attentionBusy}}" data-kind="pricedrop" bindtap="toggleAttention">{{product.priceDropReminder ? '取消降价提醒' : '降价提醒'}}</button>
+    </view>
+    <view class="muted reminder-note" wx:if="{{product.restockReminder}}">已关注补货，可在「我的 → 到货提醒」查看到货状态。</view>
+    <view wx:if="{{product.restockReminder}}">
+      <view class="muted" wx:if="{{product.restockPushStatus === 'READY'}}">已订阅，到货后发送一次微信提醒。</view>
+      <view class="muted" wx:elif="{{product.restockPushStatus === 'SENT'}}">微信到货提醒已发送。</view>
+      <view class="muted" wx:elif="{{product.restockPushStatus === 'SENDING' || product.restockPushStatus === 'UNCERTAIN'}}">微信提醒发送结果待核实。</view>
+      <button class="ghost-btn" wx:elif="{{restockConfig.enabled}}" bindtap="subscribeRestock" disabled="{{attentionBusy}}" loading="{{attentionBusy}}">订阅微信到货提醒</button>
+      <view class="muted" wx:else>当前仅支持小程序内到货提醒。</view>
+      <view class="muted" wx:if="{{restockError}}">{{restockError}}</view>
+    </view>
+    <view class="muted reminder-note" wx:if="{{!product.priceDropReminder && product.skus.length}}">降价提醒关注当前所选规格，可填写目标价（元）；留空则价格低于关注价时提醒。目标价按当前所选规格比较。</view>
+    <input wx:if="{{!product.priceDropReminder && product.skus.length}}" class="target-price-input" type="digit" value="{{targetPriceInput}}" bindinput="inputTargetPrice" placeholder="目标价格（可选，元）" disabled="{{attentionBusy}}" />
+    <view wx:if="{{product.priceDropReminder}}">
+      <view class="muted reminder-note">{{priceDropNote}}</view>
+      <button class="ghost-btn" bindtap="editTargetPrice" disabled="{{attentionBusy}}">设置 / 修改目标价格</button>
+      <button wx:if="{{product.priceDrop.targetPrice}}" class="ghost-btn" data-clear="{{true}}" bindtap="editTargetPrice" disabled="{{attentionBusy}}">恢复降价即提醒</button>
+      <button class="ghost-btn" bindtap="openReminderHistory">查看提醒历史</button>
+      <view class="muted" wx:if="{{product.priceDrop.pushStatus === 'READY'}}">已订阅，所关注规格满足价格条件且可购买时发送一次微信提醒。</view>
+      <view class="muted" wx:elif="{{product.priceDrop.pushStatus === 'SENT'}}">微信降价提醒已发送。</view>
+      <view class="muted" wx:elif="{{product.priceDrop.pushStatus === 'SENDING' || product.priceDrop.pushStatus === 'UNCERTAIN'}}">微信提醒发送结果待核实。</view>
+      <button class="ghost-btn" wx:elif="{{priceDropConfig.enabled}}" bindtap="subscribePriceDrop" disabled="{{attentionBusy}}">订阅微信降价提醒</button>
+      <view class="muted" wx:else>当前仅支持小程序内降价提醒。</view>
+      <view class="muted" wx:if="{{priceDropError}}">{{priceDropError}}</view>
+    </view>
+    <view class="origin">产地：{{product.origin}}</view>
+    <view class="notice" wx:if="{{product.traceability.demo}}"><view>示例商品与批次资料</view><text>当前使用 mock 数据展示品种、规格与溯源流程，不代表实际在售商品或已采收批次。</text></view>
+  </view>
+  <view class="divider"></view>
+  <view class="page-pad options">
+    <view class="option-title">选择规格</view>
+    <view class="sku {{skuIndex === index ? 'active' : ''}} {{item.soldOut ? 'sku-empty' : ''}}" wx:for="{{product.skus}}" wx:key="id" data-index="{{index}}" bindtap="chooseSku">
+      <view><text class="sku-name">{{item.name}}</text><text class="weight">{{item.weightLabel}}</text></view><view><text>¥{{item.priceText}}</text><text class="stock">{{item.soldOut ? '暂时售罄' : '余 ' + item.stock + ' 件'}}</text></view>
+    </view>
+    <view class="quantity" wx:if="{{!soldOut}}"><text>购买数量</text><view><button disabled="{{quantity <= 1 || submitting}}" bindtap="minus" aria-label="减少数量">−</button><text>{{quantity}}</text><button disabled="{{quantity >= maxQuantity || submitting}}" bindtap="plus" aria-label="增加数量">＋</button></view></view>
+    <view class="quantity-hint" wx:if="{{!soldOut}}">每单限购 {{product.skus[skuIndex].limitPerOrder}} 件{{quantity >= maxQuantity ? ' · 已达库存或限购上限' : ''}}</view>
+  </view>
+  <view class="divider"></view>
+  <view class="page-pad detail">
+    <view class="option-title">为什么好吃</view>
+    <view class="trace-facts"><view wx:if="{{product.variety}}">品种 <text>{{product.variety}}</text></view><view>产地 <text>{{product.origin}}</text></view><view wx:if="{{product.skus.length}}">所选规格 <text>{{product.skus[skuIndex].name}} · {{product.skus[skuIndex].weightLabel}}</text></view><view wx:if="{{product.netWeightNote}}">净重口径 <text>{{product.netWeightNote}}</text></view></view>
+    <view class="highlights"><view wx:for="{{product.highlights}}" wx:key="*this"><text>✓</text>{{item}}</view></view>
+    <view class="description">{{product.description}}</view>
+    <view class="notice"><view>签收与保存</view><text>收到后请尽快开箱检查，冷藏保存，食用前再清洗。葡萄果粉、大小及色泽会因批次略有差异；运输破损、腐坏请及时联系处理。</text></view>
+    <view class="notice" wx:if="{{product.storage}}"><view>本款保存说明</view><text>{{product.storage}}</text></view>
+    <view class="after-sales">
+      <view class="option-title">售后说明</view>
+      <view class="service-item"><view>坏果、漏发或运输损伤</view><text>建议在签收后 24 小时内联系客服，提供订单号、快递面单、外包装和问题果实照片，保留包装以便核实。</text></view>
+      <view class="service-item"><view>未发货订单退款</view><text>已付款且未发货的订单，可在「我的订单 → 订单详情」申请全部或部分金额退款，由商家审核，审核通过后原路退回。</text></view>
+      <view class="service-item"><view>发货后售后</view><text>发货后或签收后遇到质量、配送问题，可在订单详情申请售后，填写金额并上传举证图片，由商家审核。退货安排请联系客服核实。预售发货时间以页面说明为准，有调整可咨询客服。</text></view>
+      <view class="service-actions"><button class="ghost-btn" open-type="contact">联系售后客服</button><button class="ghost-btn" bindtap="openOrders">查看我的订单</button></view>
+    </view>
+  </view>
+  <view class="divider"></view>
+  <view class="page-pad content-section">
+    <view class="section-heading"><view class="option-title">商品评价</view><text wx:if="{{reviewTotal}}">{{reviewAverage}} 分 · {{reviewTotal}} 条</text></view>
+    <view class="section-copy">确认收货后可在订单详情中分享体验，公开展示为匿名评价。</view>
+    <block>
+      <view class="review-item" wx:for="{{reviews}}" wx:key="id"><view class="section-heading"><text>{{item.demo ? '示例评价' : '匿名买家'}}</text><text class="review-stars">{{item.stars}}</text></view><view class="review-copy">{{item.content}}</view><view class="review-photos"><image wx:for="{{item.images}}" wx:for-item="photo" wx:key="*this" src="{{photo}}" mode="aspectFill" data-url="{{photo}}" data-urls="{{item.images}}" bindtap="previewReviewImage" /></view><view wx:if="{{item.appendAt}}" class="review-followup"><text>追评 · {{item.appendAt}}</text><view>{{item.appendContent}}</view><view class="review-photos"><image wx:for="{{item.appendImages}}" wx:for-item="photo" wx:key="*this" src="{{photo}}" mode="aspectFill" data-url="{{photo}}" data-urls="{{item.appendImages}}" bindtap="previewReviewImage" /></view></view><view wx:if="{{item.reply}}" class="review-followup">商家回复：{{item.reply}}<view>{{item.replyAt}}</view></view><text class="section-copy">{{item.date}}</text></view>
+      <view class="section-copy" wx:if="{{!reviews.length && !reviewsLoading && !reviewsError}}">还没有评价，期待你的第一份品尝感受。</view>
+    </block>
+    <view class="section-copy" wx:if="{{reviewsLoading}}">正在加载评价…</view>
+    <view wx:if="{{reviewsError}}"><view class="section-copy">{{reviewsError}}</view><button class="ghost-btn" bindtap="retryReviews">重试加载评价</button></view>
+    <button wx:elif="{{reviewsHasMore}}" class="ghost-btn" bindtap="loadMoreReviews" loading="{{reviewsLoading}}" disabled="{{reviewsLoading}}">加载更多评价</button>
+    <view class="section-copy" wx:if="{{reviews.length && !reviewsHasMore && !reviewsLoading && !reviewsError}}">已加载全部评价</view>
+    <button class="ghost-btn" bindtap="openOrders">去订单评价</button>
+  </view>
+  <view class="divider"></view>
+  <view class="page-pad content-section">
+    <view class="section-heading"><view class="option-title">产地溯源</view><text wx:if="{{product.traceability.demo}}">示例资料</text></view>
+    <block wx:if="{{product.traceability}}">
+      <view class="trace-facts"><view>产地 <text>{{product.origin}}</text></view><view>果园 <text>{{product.traceability.orchard || '待补充'}}</text></view><view>批次 <text>{{product.traceability.batch || '待补充'}}</text></view><view>采收 <text>{{product.traceability.harvestedAt || '以实际发货批次为准'}}</text></view></view>
+      <view class="section-copy" wx:if="{{product.traceability.packedAt}}">包装日期：{{product.traceability.packedAt}}</view>
+      <view class="trace-code-card">
+        <view class="option-title">批次溯源码</view>
+        <block wx:if="{{product.traceability.code}}"><text class="trace-code" selectable="{{true}}">{{product.traceability.code}}</text><view class="section-copy">{{product.traceability.demo ? '示例溯源码，仅用于演示。' : '可复制溯源码，联系客服核实本批次资料。'}}</view><button class="ghost-btn" bindtap="copyTraceCode">复制溯源码</button></block>
+        <view class="section-copy" wx:else>当前批次尚未提供溯源码，可联系客服了解。</view>
+      </view>
+      <view class="trace-step" wx:for="{{product.traceability.steps}}" wx:key="index"><text class="step-number">{{index + 1}}</text><view><view>{{item.title}}</view><text>{{item.detail}}</text></view></view>
+      <view class="section-copy" wx:if="{{product.traceability.packing}}">包装说明：{{product.traceability.packing}}</view>
+      <view class="section-copy">本页为商品批次资料，收到的批次请以包装标识及客服核实为准。</view>
+    </block>
+    <view class="section-copy" wx:else>产地：{{product.origin}}。果园及批次资料待商家补充，可联系客服了解。</view>
+  </view>
+  <view class="divider"></view>
+  <view class="page-pad content-section" wx:if="{{product.giftCustomization.enabled}}">
+    <view class="option-title">礼盒定制</view>
+    <view class="section-copy">{{product.giftCustomization.description}}</view>
+    <view class="gift-options"><text class="pill" wx:for="{{product.giftCustomization.options}}" wx:key="index">{{item}}</text></view>
+    <view class="trace-facts"><view>起订量 <text>{{product.giftCustomization.minimumQuantity}} 盒</text></view><view>定制周期 <text>{{product.giftCustomization.leadTime}}</text></view></view>
+    <view class="section-copy">提交需求后沟通方案、报价及交期，确认后再安排购买。</view>
+    <view class="service-actions"><button class="primary-btn" bindtap="customizeGift">提交定制需求</button><button class="ghost-btn" open-type="contact">咨询定制客服</button></view>
+  </view>
+  <view class="divider" wx:if="{{product.giftCustomization.enabled}}"></view>
+  <view class="page-pad content-section">
+    <view class="option-title">推荐搭配</view>
+    <view class="pairing-card" wx:for="{{product.pairings}}" wx:key="index"><view>{{item.title}}</view><text>{{item.description}}</text><button wx:if="{{item.productId}}" class="ghost-btn" data-id="{{item.productId}}" bindtap="openPairing">查看搭配商品 →</button></view>
+    <view class="section-copy" wx:if="{{!product.pairings || !product.pairings.length}}">搭配建议正在准备中。</view>
+  </view>
+  <view class="bottom-bar">
+    <view class="cart" bindtap="openCart"><text>袋</text><text>购物袋</text></view>
+    <button class="ghost-btn" disabled="{{soldOut || submitting}}" loading="{{submitting}}" bindtap="addCart">加入购物袋</button><button class="primary-btn" disabled="{{soldOut || submitting}}" bindtap="buyNow">{{soldOut ? '暂时售罄' : product.saleMode === 'presale' ? '立即预订' : '立即购买'}}</button>
+  </view>
+</view>
+

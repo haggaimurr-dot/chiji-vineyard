@@ -1,0 +1,11 @@
+<view class="page page-pad">
+  <view class="intro">{{unread ? unread + ' 条未读通知' : '发货后，物流信息会出现在这里'}}<text wx:if="{{demo}}">演示环境</text></view>
+  <view class="notice card" wx:for="{{items}}" wx:key="orderId" data-id="{{item.orderId}}" bindtap="open">
+    <view class="notice-title"><text>{{item.read ? '订单已发货' : '● 订单已发货'}}</text><text class="read-state">{{item.read ? '已读' : '未读'}}</text></view>
+    <view>订单 {{item.orderNo}}</view><view>{{item.carrier}} · {{item.trackingNo}}</view><view wx:for="{{item.parcels}}" wx:for-item="parcel" wx:key="trackingNo">{{parcel.carrier}} · {{parcel.trackingNo}}</view><view class="notice-time">{{item.shippedAt}}</view><view class="link">查看订单与物流 →</view>
+  </view>
+  <view class="empty" wx:if="{{loading}}">正在加载通知…</view>
+  <view class="empty" wx:elif="{{error}}"><view>{{error}}</view><button class="ghost-btn" bindtap="load">重试</button></view>
+  <view class="empty" wx:elif="{{!items.length}}">暂无发货通知</view>
+  <view class="intro" wx:elif="{{items.length >= 200}}">优先展示未读通知，最多显示200条。全部发货记录可在订单中查看。</view>
+</view>

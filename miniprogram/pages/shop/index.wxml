@@ -1,0 +1,96 @@
+<view class="page page-pad">
+  <view class="shop-head">
+    <view><view class="shop-title">枝头鲜果</view><view class="shop-copy">跟着产期，吃正当时的葡萄</view></view>
+    <view class="cart-entry" bindtap="openCart">购物袋</view>
+  </view>
+  <view class="memory-tools"><button class="ghost-btn" bindtap="openHistory">浏览记录</button><button class="ghost-btn" bindtap="openCompare">商品对比（{{compareCount}}/4）</button></view>
+  <view class="search-bar">
+    <text class="search-icon">⌕</text><input value="{{query}}" placeholder="搜索品种、产地或规格" maxlength="60" confirm-type="search" bindfocus="showSuggestions" bindinput="search" bindconfirm="submitSearch" />
+    <button wx:if="{{query}}" class="clear-search" bindtap="clearSearch" aria-label="清空搜索">清空</button>
+  </view>
+  <view wx:if="{{suggestionsOpen}}" class="search-suggestions card">
+    <view class="suggestion-heading"><text>搜索历史</text><button bindtap="clearSearchHistory" wx:if="{{searchHistory.length}}">清空历史</button><button bindtap="closeSuggestions">收起</button></view>
+    <view class="search-chips"><view wx:for="{{searchHistory}}" wx:key="*this" class="search-chip" data-word="{{item}}" bindtap="chooseSearch"><text>{{item}}</text><button data-word="{{item}}" catchtap="removeSearchHistory" aria-label="删除这条搜索历史">×</button></view></view>
+    <view wx:if="{{!searchHistory.length}}" class="muted search-note">暂无搜索历史，确认搜索后会保存在当前设备</view>
+    <view class="suggestion-heading"><text>推荐搜索词</text><text class="muted search-note">按在售商品销量推荐</text></view>
+    <view wx:if="{{hotLoading}}" class="muted search-note">正在加载推荐搜索词…</view>
+    <button wx:elif="{{hotError}}" class="ghost-btn" bindtap="loadHotSearches">{{hotError}}</button>
+    <view wx:elif="{{!hotSearches.length}}" class="muted search-note">暂无推荐搜索词</view>
+    <view class="search-chips"><button wx:for="{{hotSearches}}" wx:key="*this" class="search-chip" data-word="{{item}}" bindtap="chooseSearch">{{item}}</button></view>
+  </view>
+  <view class="favorite-searches card">
+    <view class="suggestion-heading"><text>组合筛选收藏{{searchFavorites.length ? '（' + searchFavorites.length + '/10）' : ''}}</text><button bindtap="saveFilterFavorite">收藏当前组合</button></view>
+    <view class="muted search-note">保存当前关键词、分类、排序和已应用筛选，仅保存在当前设备</view>
+    <view wx:if="{{!searchFavorites.length}}" class="muted search-note">暂无收藏，选好条件后可保存，方便下次一键筛选</view>
+    <view class="search-chips" wx:if="{{searchFavorites.length}}"><view wx:for="{{searchFavorites}}" wx:key="id" class="search-chip" data-id="{{item.id}}" bindtap="applyFilterFavorite"><text>{{item.label}}</text><button data-id="{{item.id}}" catchtap="deleteFilterFavorite" aria-label="删除这组筛选收藏">×</button></view></view>
+  </view>
+  <view class="sort-bar">
+    <view class="{{sort === 'default' ? 'selected' : ''}}" data-value="default" bindtap="chooseSort">综合</view>
+    <view class="{{sort === 'priceAsc' || sort === 'priceDesc' ? 'selected' : ''}}" data-value="price" bindtap="chooseSort">价格 {{sort === 'priceAsc' ? '↑' : sort === 'priceDesc' ? '↓' : '↕'}}</view>
+    <view class="{{sort === 'sales' ? 'selected' : ''}}" data-value="sales" bindtap="chooseSort">销量 ↓</view>
+    <view class="{{filterCount ? 'selected' : ''}}" bindtap="openFilters">筛选{{filterCount ? '（' + filterCount + '）' : ''}}</view>
+  </view>
+  <view wx:if="{{filtersOpen}}" class="filter-panel card">
+    <view class="suggestion-heading"><text>多条件筛选</text><button bindtap="closeFilters">取消</button></view>
+    <view class="filter-label">发货方式</view>
+    <view class="search-chips">
+      <button class="filter {{draftSaleMode === 'all' ? 'active' : ''}}" data-field="draftSaleMode" data-value="all" bindtap="chooseDraftFilter">全部</button>
+      <button class="filter {{draftSaleMode === 'spot' ? 'active' : ''}}" data-field="draftSaleMode" data-value="spot" bindtap="chooseDraftFilter">现货</button>
+      <button class="filter {{draftSaleMode === 'presale' ? 'active' : ''}}" data-field="draftSaleMode" data-value="presale" bindtap="chooseDraftFilter">预售</button>
+    </view>
+    <view class="filter-label">库存状态</view>
+    <view class="search-chips">
+      <button class="filter {{draftStock === 'all' ? 'active' : ''}}" data-field="draftStock" data-value="all" bindtap="chooseDraftFilter">全部</button>
+      <button class="filter {{draftStock === 'available' ? 'active' : ''}}" data-field="draftStock" data-value="available" bindtap="chooseDraftFilter">有货</button>
+      <button class="filter {{draftStock === 'soldOut' ? 'active' : ''}}" data-field="draftStock" data-value="soldOut" bindtap="chooseDraftFilter">售罄</button>
+    </view>
+    <view class="filter-label">价格区间（元，按最低规格价）</view>
+    <view class="price-inputs"><input type="digit" maxlength="12" value="{{draftMinPrice}}" placeholder="最低价" data-field="draftMinPrice" bindinput="inputPrice" /><text>至</text><input type="digit" maxlength="12" value="{{draftMaxPrice}}" placeholder="最高价" data-field="draftMaxPrice" bindinput="inputPrice" /></view>
+    <view class="filter-actions"><button class="ghost-btn" bindtap="resetDraftFilters">重置筛选</button><button class="primary-btn" bindtap="applyFilters">确定筛选</button></view>
+  </view>
+  <view wx:if="{{filterCount}}" class="active-filters">已筛选：{{saleMode === 'spot' ? '现货 · ' : saleMode === 'presale' ? '预售 · ' : ''}}{{stock === 'available' ? '有货 · ' : stock === 'soldOut' ? '售罄 · ' : ''}}{{minPrice || maxPrice ? '¥' + (minPrice || '0') + ' 至 ' + (maxPrice ? '¥' + maxPrice : '不限') : ''}}<button bindtap="resetFilters">清除全部条件</button></view>
+  <view class="filters">
+    <view class="filter {{category === 'all' ? 'active' : ''}}" data-value="all" bindtap="chooseCategory">全部</view>
+    <view class="filter {{category === 'family' ? 'active' : ''}}" data-value="family" bindtap="chooseCategory">家庭装</view>
+    <view class="filter {{category === 'gift' ? 'active' : ''}}" data-value="gift" bindtap="chooseCategory">节礼装</view>
+  </view>
+  <view wx:if="{{loading}}" class="state-panel"><view class="state-title">正在寻找枝头好味道</view><view class="state-copy">商品加载中，请稍候…</view></view>
+  <view wx:elif="{{error}}" class="state-panel"><view class="state-title">商品暂时未能加载</view><view class="state-copy">{{error}}</view><button class="primary-btn" bindtap="loadProducts">重新加载</button></view>
+  <block wx:else>
+    <view class="result-count" wx:if="{{products.length}}">{{query ? '搜索结果' : '当季精选'}} · 共 {{total}} 款，已加载 {{products.length}} 款</view>
+    <view class="product-grid">
+      <view class="product card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="openProduct">
+        <view class="cover-wrap">
+          <image wx:if="{{item.cover && !item.imageFailed}}" class="cover" src="{{item.cover}}" mode="aspectFill" lazy-load="{{true}}" data-id="{{item.id}}" binderror="imageError" />
+          <view wx:else class="cover image-placeholder"><text>枝头鲜果</text><text>图片暂未加载</text></view>
+          <view class="sold-overlay" wx:if="{{item.soldOut}}"><text>暂时售罄</text></view>
+          <text class="image-label" wx:if="{{item.imageNote}}">{{item.imageNote}}</text>
+        </view>
+        <view class="body">
+          <view class="tags"><text class="pill {{item.saleMode === 'presale' ? 'pill-purple' : ''}}">{{item.saleMode === 'presale' ? '预售' : '现货'}}</text><text class="stock {{item.soldOut ? 'stock-empty' : ''}}">{{item.soldOut ? '待补货' : '有货'}}</text></view>
+          <view class="name">{{item.name}}</view><view class="subtitle">{{item.subtitle}}</view>
+          <view class="muted sales">已售 {{item.sales}} 件{{item.imageNote ? '（演示）' : ''}}</view>
+          <view class="attention-actions">
+            <button data-id="{{item.id}}" catchtap="toggleCompare">{{item.comparing ? '移出对比' : '加入对比'}}</button>
+            <button disabled="{{attentionBusy}}" data-id="{{item.id}}" data-kind="favorite" catchtap="toggleAttention">{{item.favorite ? '♥ 已收藏' : '♡ 收藏'}}</button>
+            <button wx:if="{{item.soldOut || item.restockReminder}}" disabled="{{attentionBusy}}" data-id="{{item.id}}" data-kind="restock" catchtap="toggleAttention">{{item.restockReminder ? '取消提醒' : '到货提醒'}}</button>
+          </view>
+          <view class="origin">产地 · {{item.origin}}</view>
+          <view class="price" wx:if="{{item.priceText}}"><text class="money-unit">¥</text>{{item.priceText}}<text class="price-from" wx:if="{{item.skus.length > 1}}">起</text></view>
+          <view class="muted" wx:else>规格暂未上架</view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{products.length}}" class="load-more">
+      <view wx:if="{{loadingMore}}">正在加载更多商品…</view>
+      <block wx:elif="{{moreError}}"><view>{{moreError}}</view><button class="ghost-btn" bindtap="retryMore">重试加载</button></block>
+      <button wx:elif="{{hasMore}}" class="ghost-btn" bindtap="loadMore">加载更多商品</button>
+      <view wx:else>已加载全部商品</view>
+    </view>
+    <view wx:if="{{!products.length}}" class="state-panel">
+      <view class="state-title">{{query ? '没有找到匹配的葡萄' : '这个分类暂时没有商品'}}</view>
+      <view class="state-copy">{{query ? '试试品种名、产地，或减少搜索关键词' : '可以看看其他分类的当季鲜果'}}</view>
+      <button class="ghost-btn" bindtap="resetFilters">查看全部商品</button>
+    </view>
+  </block>
+</view>

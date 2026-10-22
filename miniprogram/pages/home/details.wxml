@@ -1,0 +1,135 @@
+<view class="home-details">
+  <view wx:if="{{error}}" class="home-feedback card page-pad"><text>{{error}}</text><button bindtap="loadHome" size="mini">重新加载</button></view>
+  <view wx:if="{{loading}}" class="home-loading page-pad">首页内容加载中…</view>
+  <block wx:if="{{!loading && !error}}">
+  <swiper wx:if="{{home.banners.length}}" class="hero-swiper" indicator-dots="{{home.banners.length > 1}}" autoplay="{{home.banners.length > 1}}" circular>
+    <swiper-item wx:for="{{home.banners}}" wx:key="index"><view class="hero">
+      <image wx:if="{{item.image && !bannerImageFailed[index]}}" class="hero-background" src="{{item.image}}" mode="aspectFill" data-kind="banner" data-index="{{index}}" data-src="{{item.image}}" data-version="{{requestVersion}}" binderror="imageError"/>
+      <text wx:if="{{bannerImageFailed[index]}}" class="hero-image-note">图片暂不可用</text><text wx:elif="{{demoMode}}" class="hero-image-note">演示素材 · 示意图</text>
+      <view class="hero-content"><view class="hero-kicker">FROM THE VINEYARD</view><view class="hero-title">{{item.title}}</view><view class="hero-copy">{{item.copy}}</view><button class="hero-btn" data-index="{{index}}" bindtap="openBanner" disabled="{{!bannerAvailable[index]}}">{{bannerAvailable[index] ? item.button : '内容暂不可用'}}</button></view>
+    </view></swiper-item>
+  </swiper>
+
+  <view class="page-pad">
+    <view wx:if="{{!reservationLoading && !reservationError && activityReminders.length}}" class="activity-reminders card">
+      <view class="notice-heading">活动预约提醒</view>
+      <view wx:for="{{activityReminders}}" wx:key="id" class="reminder-row" data-id="{{item.id}}" bindtap="openReservedActivity">
+        <view class="reminder-info"><view class="reminder-label">{{item.reminder}}</view><view class="notice-title">{{item.title}}</view><view class="notice-date">{{item.startDate}} — {{item.endDate}} · 北京时间</view></view><text class="notice-arrow">›</text>
+      </view>
+      <view class="feature-hint">小程序内提醒 · 进入首页时更新</view>
+    </view>
+    <view class="notice-board card">
+      <view class="notice-heading">公告 <text class="notice-caption">果园最新消息</text></view>
+      <view class="notice-row" wx:for="{{announcements}}" wx:key="index" data-index="{{index}}" bindtap="openAnnouncement">
+        <view class="notice-info"><view class="notice-title">{{item.title}}</view><text class="notice-date">{{item.publishedAt}}</text></view><text class="notice-arrow">›</text>
+      </view>
+      <view wx:if="{{!loading && !announcements.length}}" class="home-empty">暂无公告</view>
+    </view>
+
+    <view class="section">
+      <view class="section-head"><view><view class="section-title">活动专区</view><view class="section-subtitle">鲜果相伴，好事发生</view></view></view>
+      <view class="activity-card" wx:for="{{activities}}" wx:key="index" data-index="{{index}}" bindtap="openActivity">
+        <view class="activity-top"><text class="activity-kicker">果园活动</text><text class="activity-status">{{item.status}}</text></view>
+        <view class="activity-title">{{item.title}}</view><view class="activity-summary">{{item.summary}}</view>
+        <view class="activity-footer"><text>{{item.startDate}} — {{item.endDate}}</text><text>查看详情 →</text></view>
+      </view>
+      <view wx:if="{{!loading && !activities.length}}" class="home-empty card">暂无活动，敬请期待</view>
+    </view>
+
+    <view class="section reservation-section">
+      <view class="notice-row" bindtap="activityNotices"><text class="notice-title">查看预约与候补通知</text><text class="notice-arrow">›</text></view>
+      <view class="section-head"><view><view class="section-title">活动预约</view><view class="section-subtitle">提前登记，让相聚有所期待</view></view></view>
+      <view wx:if="{{demoMode}}" class="feature-hint">演示预约 · 仅保存在本机</view>
+      <view wx:if="{{reservationLoading}}" class="home-empty">预约状态加载中…</view>
+      <view wx:elif="{{reservationError}}" class="home-feedback card"><text>{{reservationError}}</text><button size="mini" bindtap="loadReservations">重新加载预约</button></view>
+      <block wx:else>
+        <view class="reservation-card card" wx:for="{{reservationActivities}}" wx:key="id">
+          <view class="reservation-heading"><text class="reservation-title">{{item.title}}</text><text class="pill {{item.reserved ? '' : 'pill-purple'}}">{{item.waitlisted ? '候补第' + item.position + '位' : item.reserved ? '已预约' : item.ended ? '已结束' : item.reservationEnabled ? '开放预约' : '预约已关闭'}}</text></view>
+          <view class="reservation-copy">{{item.summary}}</view><view class="hint">{{item.capacityText}}</view><text class="calendar-link" data-id="{{item.id}}" bindtap="openReservedActivity">查看活动详情 →</text><view class="reservation-date">{{item.startDate}} — {{item.endDate}}</view>
+          <button class="reservation-button {{item.reserved ? 'reservation-cancel' : ''}}" size="mini" data-id="{{item.id}}" bindtap="changeReservation" loading="{{reservationBusy === item.id}}" disabled="{{reservationBusy || (!item.reserved && !item.waitlisted && (item.ended || !item.reservationEnabled || (item.full && !item.waitlistEnabled)))}}">{{item.waitlisted ? '取消候补' : item.reserved ? '取消预约' : item.ended ? '预约已截止' : item.full ? item.waitlistEnabled ? '加入候补' : '名额已满' : item.reservationEnabled ? '立即预约' : '预约已关闭'}}</button>
+        </view>
+        <view class="reservation-card card" wx:for="{{unavailableReservations}}" wx:key="*this"><view class="reservation-copy">已下线的活动预约</view><button size="mini" class="reservation-button reservation-cancel" data-id="{{item}}" bindtap="changeReservation" disabled="{{reservationBusy}}">取消预约</button></view>
+        <view wx:if="{{!reservationActivities.length && !unavailableReservations.length}}" class="home-empty card">暂无可预约活动，敬请期待</view>
+      </block>
+      <view class="feature-hint">预约登记参与意向，具体安排以活动公告为准。</view>
+    </view>
+
+    <view class="section recommendation-section">
+      <view class="section-head"><view><view class="section-title">{{personalized ? '为你推荐' : '当季推荐'}}</view><view class="section-subtitle">{{personalized ? '按购买偏好与收藏，挑选合心意的鲜果' : '看看当季在售的好味道'}}</view></view><text wx:if="{{recommendations.length > 1}}" class="link" bindtap="nextRecommendations">换一换 ↻</text></view>
+      <view class="personalization-control"><text>个性化推荐</text><switch checked="{{personalized}}" color="#496552" bindchange="togglePersonalization"/></view>
+      <view wx:if="{{personalized}}" class="preference-row"><view wx:for="{{preferenceOptions}}" wx:key="id" class="month-chip {{preference === item.id ? 'month-active' : ''}}" data-id="{{item.id}}" bindtap="choosePreference">{{item.label}}</view></view>
+      <view class="recommendation-card card" wx:for="{{recommendations}}" wx:key="id" data-id="{{item.id}}" bindtap="openProduct">
+        <image wx:if="{{item.cover && !item.imageFailed}}" class="recommendation-image" src="{{item.cover}}" mode="aspectFill" lazy-load data-kind="recommendation" data-index="{{index}}" data-src="{{item.cover}}" data-version="{{requestVersion}}" binderror="imageError"/>
+        <view wx:else class="recommendation-image image-placeholder">图片暂不可用</view>
+        <view class="recommendation-info"><text class="recommendation-reason">{{item.reason}}</text><view class="recommendation-name">{{item.name}}</view><view class="reservation-copy">{{item.subtitle}}</view><view wx:if="{{item.imageNote || demoMode}}" class="image-note">{{item.imageNote || '商品示意图'}}</view><view class="price"><text class="money-unit">¥</text>{{item.priceText}}<text class="from"> 起</text></view></view>
+      </view>
+      <view wx:if="{{!recommendations.length}}" class="home-empty card">暂无可购买的推荐商品</view>
+    </view>
+
+    <view class="section calendar-section">
+      <view class="section-head"><view><view class="section-title">上市日历</view><view class="section-subtitle">每一份甜，都有自己的时节</view></view></view>
+      <scroll-view scroll-x class="month-scroll" show-scrollbar="false"><view class="month-row"><view wx:for="{{months}}" wx:key="index" class="month-chip {{monthIndex === index ? 'month-active' : ''}}" data-index="{{index}}" bindtap="chooseMonth">{{item}}</view></view></scroll-view>
+      <view class="calendar-card card">
+        <view class="calendar-row" wx:for="{{calendarItems}}" wx:key="index">
+          <view class="calendar-dot"></view><view class="calendar-info"><view class="calendar-heading"><text class="calendar-variety">{{item.variety}}</text><text class="pill {{item.status === '上市中' ? '' : 'pill-purple'}}">{{item.status}}</text></view>
+          <view class="calendar-date">{{item.startDate}} — {{item.endDate}}</view><view class="calendar-note">{{item.note}}</view>
+          <text wx:if="{{item.available}}" class="calendar-link" data-id="{{item.productId}}" bindtap="openProduct">查看商品 →</text></view>
+        </view>
+        <view wx:if="{{!loading && !calendarItems.length}}" class="home-empty">暂无{{monthIndex ? months[monthIndex] : ''}}上市安排</view>
+      </view>
+      <view class="calendar-hint">上市时间随天气与成熟情况调整，以实际供应为准。</view>
+    </view>
+    <view class="section">
+      <view class="section-head">
+        <view><view class="section-title">当季鲜果</view><view class="section-subtitle">跟着成熟期吃葡萄</view></view>
+        <text class="link" bindtap="goShop">全部商品 →</text>
+      </view>
+      <scroll-view scroll-x class="product-scroll" show-scrollbar="false">
+        <view class="product-row">
+          <view class="product-card card" wx:for="{{products}}" wx:key="id" data-id="{{item.id}}" bindtap="openProduct">
+            <image wx:if="{{item.cover && !item.imageFailed}}" class="product-image" src="{{item.cover}}" mode="aspectFill" data-kind="product" data-index="{{index}}" data-src="{{item.cover}}" data-version="{{requestVersion}}" binderror="imageError"/>
+            <view wx:else class="product-image image-placeholder">图片暂不可用</view>
+            <view class="product-body">
+              <view wx:if="{{item.imageNote || demoMode}}" class="image-note">{{item.imageNote || '商品示意图'}}</view>
+              <view class="product-badges"><text class="pill {{item.saleMode === 'presale' ? 'pill-purple' : ''}}">{{item.saleMode === 'presale' ? '预约鲜采' : '当季现货'}}</text></view>
+              <view class="product-name">{{item.name}}</view>
+              <view class="product-subtitle">{{item.subtitle}}</view>
+              <view class="price"><text class="money-unit">¥</text>{{item.priceText}}<text class="from"> 起</text></view>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view wx:if="{{!products.length}}" class="home-empty card">暂无在售商品</view>
+    </view>
+
+    <view class="story-card card">
+      <view class="story-label">ORCHARD NOTE</view>
+      <view class="story-title">{{home.storyTitle}}</view>
+      <view class="story-copy">{{home.storyCopy}}</view>
+      <button class="story-btn" bindtap="goClassroom">去种植课堂</button>
+    </view>
+
+    <view class="section">
+      <view class="section-head">
+        <view><view class="section-title">果园里的知识</view><view class="section-subtitle">把经验讲成人人能懂的方法</view></view>
+        <text class="link" bindtap="goClassroom">更多内容 →</text>
+      </view>
+      <view class="article card" wx:for="{{articles}}" wx:key="id" data-id="{{item.id}}" bindtap="openArticle">
+        <image wx:if="{{item.cover && !item.imageFailed}}" class="article-cover" src="{{item.cover}}" mode="aspectFill" data-kind="article" data-index="{{index}}" data-src="{{item.cover}}" data-version="{{requestVersion}}" binderror="imageError"/>
+        <view wx:else class="article-cover image-placeholder">图片暂不可用</view>
+        <view class="article-info">
+          <view class="article-meta">{{item.stage}} · {{item.variety}}</view>
+          <view class="article-title">{{item.title}}</view>
+          <view class="article-summary">{{item.summary}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!articles.length}}" class="home-empty card">暂无已发布内容</view>
+    <view class="cooperation-card" bindtap="goCooperation">
+      <view><view class="cooperation-title">{{home.cooperationTitle}}</view><view class="cooperation-copy">{{home.cooperationCopy}}</view></view>
+      <view class="cooperation-arrow">→</view>
+    </view>
+  </view>
+  </block>
+</view>

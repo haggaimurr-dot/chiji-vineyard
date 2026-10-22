@@ -1,0 +1,9 @@
+<view class="page page-pad">
+  <view class="card section" wx:if="{{closed}}"><view class="title">账号已注销</view><view class="description">个人资料和使用记录已删除，旧登录会话已失效。重新注册不会恢复原账号的数据。</view><button bindtap="restart" loading="{{busy}}" disabled="{{busy}}">重新注册</button></view>
+  <block wx:else>
+    <view class="card section"><view class="title">删除个人数据</view><view class="description">按需清理数据，删除后无法恢复。</view><button data-scope="addresses" bindtap="remove" disabled="{{busy || loading}}">删除全部收货地址</button><button data-scope="usage" bindtap="remove" disabled="{{busy || loading}}">删除使用记录</button><view class="description">使用记录包括购物车、收藏、提醒、浏览搜索、学习记录和课堂问答。订单、券包及活动预约保留。</view></view>
+    <view class="card section"><view class="title">自助注销账号</view><view class="description">注销会删除账号资料、地址和使用记录，取消活动预约，撤销所有登录会话。券包及历史订单无法恢复。</view><view wx:if="{{loading}}" class="description">正在检查注销条件…</view><view wx:elif="{{blockingCount}}" class="description">有未完成订单、退款或售后，请处理完成后再注销。</view><button wx:if="{{blockingCount}}" bindtap="orders">查看订单与售后</button><input placeholder="请输入“注销账号”确认" value="{{confirmation}}" bindinput="confirmInput" disabled="{{busy}}" maxlength="20"/><button class="danger" bindtap="closeAccount" loading="{{busy}}" disabled="{{busy || loading || !canClose || confirmation !== '注销账号'}}">注销账号</button></view>
+  </block>
+  <view class="card section"><view class="title">保留记录说明</view><view class="description">上述操作不删除历史订单中的收货信息、支付退款、发票、售后凭证和评价。注销后这些记录与原账号解除关联，但不代表凭证内容已匿名化。如需进一步删除交易记录、合作申请或处理备份数据，请通过隐私政策中的联系方式提出申请。</view><text class="link" bindtap="policy">查看隐私政策与联系方式 ›</text></view>
+  <view wx:if="{{error}}" class="error">{{error}}</view><button wx:if="{{error && !closed}}" bindtap="load" disabled="{{busy}}">重新检查</button>
+</view>

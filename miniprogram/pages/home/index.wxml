@@ -1,0 +1,42 @@
+<view class="page orchard-home">
+  <view class="orchard-masthead">
+    <text class="orchard-name">迟记葡萄牙</text>
+    <text class="orchard-note">果园里的日常</text>
+  </view>
+  <view class="orchard-photo-frame">
+    <image wx:if="{{orchardImage && !orchardImageFailed}}" class="orchard-photo" src="{{orchardImage}}" mode="aspectFill" data-kind="orchard" data-src="{{orchardImage}}" data-version="{{requestVersion}}" binderror="imageError" />
+    <view wx:else class="orchard-photo orchard-photo-empty"><text>等一束光，照进葡萄园。</text><text class="orchard-photo-empty-note">{{orchardImageFailed ? '照片暂时没有加载出来' : '果园照片正在准备'}}</text></view>
+  </view>
+  <view class="orchard-photo-caption"><text>一串葡萄，一双用心的手。</text><text wx:if="{{orchardImageIllustration}}">采摘场景示意</text></view>
+  <view class="orchard-intro">
+    <view class="orchard-title">{{home.storyTitle || '把一串葡萄，慢慢种好。'}}</view>
+    <view class="orchard-copy">{{home.storyCopy || '种植、照料、采摘，是果园里平常的日子。\n在这里，看看葡萄从枝头到你手里的过程。'}}</view>
+    <view class="orchard-signature"><view class="orchard-rule"></view><text>迟记 · 与你分享果园的日常</text></view>
+  </view>
+  <view wx:if="{{loading}}" class="orchard-feedback">正在看看果园的近况…</view>
+  <view wx:elif="{{error}}" class="orchard-feedback"><text>{{error}}</text><button class="orchard-retry" bindtap="loadHome" size="mini">重新加载</button></view>
+  <view class="orchard-entrances">
+    <view class="orchard-entrance" bindtap="goShop" hover-class="orchard-entrance-hover" role="button" aria-label="当季葡萄，进入商城">
+      <text class="orchard-entrance-number">01</text><view class="orchard-entrance-copy"><view class="orchard-entrance-title">当季葡萄</view><view class="orchard-entrance-description">看看这一季的收成</view></view><text class="orchard-entrance-arrow">↗</text>
+    </view>
+    <view class="orchard-entrance" bindtap="goClassroom" hover-class="orchard-entrance-hover" role="button" aria-label="种植手记，进入种植课堂">
+      <text class="orchard-entrance-number">02</text><view class="orchard-entrance-copy"><view class="orchard-entrance-title">种植手记</view><view class="orchard-entrance-description">读一读果园里的经验</view></view><text class="orchard-entrance-arrow">↗</text>
+    </view>
+    <view class="orchard-entrance" bindtap="goCooperation" hover-class="orchard-entrance-hover" role="button" aria-label="联系果园，进入销售合作">
+      <text class="orchard-entrance-number">03</text><view class="orchard-entrance-copy"><view class="orchard-entrance-title">联系果园</view><view class="orchard-entrance-description">团购、合作，慢慢聊</view></view><text class="orchard-entrance-arrow">↗</text>
+    </view>
+    <view class="orchard-entrance" bindtap="goVineyardGame" hover-class="orchard-entrance-hover" role="button" aria-label="模拟种植，打开独立微信小游戏" aria-disabled="{{vineyardOpening}}">
+      <text class="orchard-entrance-number">04</text><view class="orchard-entrance-copy"><view class="orchard-entrance-title">{{vineyardOpening ? '正在进入葡萄园…' : '模拟种植'}}</view><view class="orchard-entrance-description">种好一串葡萄，经营自己的小葡萄园</view></view><text class="orchard-entrance-arrow">↗</text>
+    </view>
+  </view>
+  <view class="orchard-more">
+    <button class="orchard-more-button" bindtap="goLive">查看果园现状<text class="orchard-more-symbol">↗</text></button>
+    <text class="orchard-more-note">果园内部 · 园外摊位 · 现场直播</text>
+  </view>
+  <view class="orchard-more">
+    <button class="orchard-more-button" bindtap="toggleDetails" aria-expanded="{{detailsExpanded}}">{{detailsExpanded ? '收起果园近况' : '看看果园近况'}}<text class="orchard-more-symbol">{{detailsExpanded ? '−' : '＋'}}</text></button>
+    <text class="orchard-more-note">公告 · 活动与预约 · 上市日历</text>
+  </view>
+  <block wx:if="{{detailsExpanded}}"><include src="details.wxml" /></block>
+  <view class="orchard-footer">顺着时节生长，踏踏实实做事。</view>
+</view>

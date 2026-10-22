@@ -1,0 +1,81 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { api, dateTime } from '../api'
+import type { LogisticsTask, Order, Parcel } from '../types'
+const props = defineProps<{ orders: Order[] }>()
+const emit = defineEmits<{ changed: [] }>()
+const tasks = ref<LogisticsTask[]>([]), busy = ref(false), error = ref(''), message = ref('')
+const status = ref(''), orderId = ref(''), parcelKey = ref('')
+const order = computed(() => props.orders.find(o => o.id === orderId.value))
+const parcels = computed(() => order.value?.shipment ? [order.value.shipment, ...(order.value.shipment.parcels || [])] : [])
+const parcel = computed(() => parcels.value.find(p => `${p.carrierCode}:${p.trackingNo}` === parcelKey.value) || parcels.value[0])
+const form = ref({ carrier: '顺丰速运', carrierCode: 'SF', trackingNo: '' })
+const kind = ref('EXCEPTION'), owner = ref(''), note = ref(''), editing = ref<LogisticsTask|null>(null), taskStatus = ref('OPEN')
+const kinds: Record<string,string> = { DELAY:'长时间未更新', EXCEPTION:'运输异常', RETURN:'退签 / 退回', SYNC:'微信同步失败', NOTICE:'发货通知异常' }
+const statuses: Record<string,string> = { OPEN:'待处理', PROCESSING:'处理中', RESOLVED:'已关闭' }
+async function load() {
+  busy.value = true; error.value = ''
+  try { tasks.value = await api<LogisticsTask[]>('admin.logistics.tasks', { status: status.value }) }
+  catch(e) { error.value = (e as Error).message }
+  finally { busy.value = false }
+}
+onMounted(load)
+function editTask(task: LogisticsTask) { editing.value = structuredClone(task); owner.value = task.owner; note.value = ''; taskStatus.value = task.status; kind.value = task.kind }
+function reset() { editing.value = null; note.value = ''; owner.value = ''; taskStatus.value = 'OPEN' }
+async function saveTask() {
+  if (busy.value) return
+  busy.value = true; error.value = ''; message.value = ''
+  try {
+    if (!editing.value && !parcel.value) throw new Error('请选择已发货订单及运单')
+    await api('admin.logistics.task.save', { ...(editing.value || { orderId:orderId.value, carrierCode:parcel.value?.carrierCode, trackingNo:parcel.value?.trackingNo, kind:kind.value }), status:taskStatus.value, owner:owner.value, note:note.value })
+    reset(); message.value = '异常任务已保存'; await load()
+  } catch(e) { error.value = (e as Error).message }
+  finally { busy.value = false }
+}
+async function addParcel() {
+  if (!order.value || busy.value) return
+  if (!confirm('确认此包裹已交寄？保存后将把全部运单同步到微信。')) return
+  busy.value = true; error.value = ''; message.value = ''
+  try {
+    const result = await api<{shipment: NonNullable<Order['shipment']>}>('admin.order.addParcel', { orderId:orderId.value, ...form.value })
+    message.value = result.shipment.syncStatus === 'FAILED' ? '包裹已保存，微信同步失败，请在订单列表重试同步' : '包裹已保存'
+    form.value.trackingNo = ''; emit('changed')
+  } catch(e) { error.value = (e as Error).message }
+  finally { busy.value = false }
+}
+function key(p: Parcel) { return `${p.carrierCode}:${p.trackingNo}` }
+</script>
+
+<template>
+  <section class="panel">
+    <h2>多运单与物流异常任务</h2>
+    <p class="subtle">选取当前订单页中的已发货订单；每单最多10个包裹。任务保存跟进历史，关闭时需填写处理结果。</p>
+    <p v-if="error" class="form-error" role="alert">{{ error }}</p><p v-if="message" class="success-text" role="status">{{ message }}</p>
+    <label>订单<select v-model="orderId" :disabled="busy || !!editing" @change="parcelKey = ''"><option value="">请选择已发货订单</option><option v-for="o in orders.filter(o => o.shipment)" :key="o.id" :value="o.id">{{ o.orderNo }}</option></select></label>
+    <div v-if="order?.shipment">
+      <p v-for="p in parcels" :key="key(p)">{{ p.carrier }} · {{ p.trackingNo }}</p>
+      <form v-permission="'order.ship'" @submit.prevent="addParcel">
+        <h3>追加运单</h3><label>承运商<input v-model="form.carrier" required maxlength="40" :disabled="busy" /></label><label>公司编码<input v-model="form.carrierCode" required maxlength="20" :disabled="busy" /></label><label>运单号<input v-model="form.trackingNo" required maxlength="50" :disabled="busy" /></label>
+        <button class="button secondary" :disabled="busy || order.fulfillmentStatus !== 'SHIPPED'">确认交寄并追加运单</button>
+      </form>
+    </div>
+    <form v-permission="'order.ship'" @submit.prevent="saveTask">
+      <h3>{{ editing ? `跟进任务 · ${editing.orderNo} · ${editing.trackingNo}` : '创建异常任务' }}</h3>
+      <label v-if="!editing">运单<select v-model="parcelKey" :disabled="busy"><option v-for="p in parcels" :key="key(p)" :value="key(p)">{{ p.carrier }} · {{ p.trackingNo }}</option></select></label>
+      <label>异常类型<select v-model="kind" :disabled="busy || !!editing"><option v-for="(label,value) in kinds" :key="value" :value="value">{{ label }}</option></select></label>
+      <label>负责人<input v-model="owner" maxlength="60" :disabled="busy" placeholder="姓名或账号" /></label>
+      <label>状态<select v-model="taskStatus" :disabled="busy"><option v-for="(label,value) in statuses" :key="value" :value="value">{{ label }}</option></select></label>
+      <label>跟进说明 / 处理结果<textarea v-model="note" maxlength="1000" required :disabled="busy" /></label>
+      <button class="button primary" :disabled="busy || (!editing && !parcel)">保存任务</button> <button v-if="editing" class="button secondary" type="button" :disabled="busy" @click="reset">取消编辑</button>
+    </form>
+    <h3>任务列表</h3><label>任务状态<select v-model="status" :disabled="busy" @change="load"><option value="">全部</option><option v-for="(label,value) in statuses" :key="value" :value="value">{{ label }}</option></select></label>
+    <button class="button secondary" :disabled="busy" @click="load">刷新任务</button>
+    <p v-if="!tasks.length && !busy" class="subtle">暂无任务</p>
+    <article v-for="task in tasks" :key="task.id" class="panel">
+      <strong>{{ task.orderNo }} · {{ statuses[task.status] }}</strong><p>{{ task.carrierCode }} · {{ task.trackingNo }} · {{ kinds[task.kind] }}</p><p>负责人：{{ task.owner || '未分配' }} · {{ dateTime(task.updatedAt) }}</p><p>{{ task.note }}</p>
+      <button v-permission="'order.ship'" class="button secondary" :disabled="busy" @click="editTask(task)">分派 / 跟进 / 关闭</button>
+      <details><summary>跟进历史（{{ task.history.length }}）</summary><p v-for="(entry,index) in task.history" :key="index">{{ dateTime(entry.at) }} · {{ entry.actor }} · {{ statuses[entry.status] }} · {{ entry.owner || '未分配' }}：{{ entry.note }}</p></details>
+    </article>
+    <p class="subtle">最多展示最近200项任务。物流异常由运营人员核实后创建。</p>
+  </section>
+</template>

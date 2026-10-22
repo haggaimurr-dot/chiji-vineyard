@@ -1,0 +1,29 @@
+<view class="page page-pad">
+  <view class="notice card"><view>退款 / 售后说明</view><text>支持全部或部分金额退款，提交后由商家审核，审核通过后原路退回。已发货、已收货订单可申请质量或配送问题售后，请提供举证图片；退货安排请与客服联系。</text></view>
+  <view class="notice" wx:if="{{demo}}"><text>演示模式：进度仅供预览，不会发生真实退款。</text></view>
+  <button class="ghost-btn refresh" bindtap="refresh" loading="{{loading}}" disabled="{{loading || submitting || imageBusy}}">刷新退款进度</button>
+  <view class="card progress" wx:for="{{refunds}}" wx:key="id">
+    <view class="heading"><text>{{item.statusText}}</text><text>¥{{item.amountText}}</text></view>
+    <view class="steps"><view wx:for="{{item.steps}}" wx:for-item="step" wx:key="title" class="step {{step.done ? 'done' : ''}}">{{step.done ? '●' : '○'}} {{step.title}}</view></view>
+    <text class="hint" wx:if="{{item.status === 'APPLIED'}}">申请已提交，等待商家审核。</text>
+    <text class="hint" wx:if="{{item.status === 'APPROVED'}}">商家已同意，微信退款结果待确认，可稍后刷新进度。</text>
+    <text class="reject" wx:if="{{item.status === 'REJECTED'}}">拒绝原因：{{item.rejectReason || '请联系客服了解详情'}}</text>
+    <text class="reject" wx:if="{{item.status === 'FAILED'}}">微信退款异常或关闭，需由商家核实处理，请联系客服。尚未确认退款到账。</text>
+    <text class="hint" wx:if="{{item.status === 'SUCCEEDED'}}">微信已确认本笔退款成功，请查看支付账户。</text>
+    <text class="detail">退款单号：{{item.id}}</text><text class="detail">订单号：{{item.orderNo}}</text><text class="detail" wx:if="{{item.providerRefundId}}">微信退款单号：{{item.providerRefundId}}</text>
+    <view wx:if="{{item.images.length}}"><button wx:for="{{item.images}}" wx:for-item="imageId" wx:key="*this" class="ghost-btn" data-id="{{imageId}}" bindtap="previewEvidence" disabled="{{imageBusy}}">查看举证 {{index+1}}</button></view>
+    <text class="detail">申请时间：{{item.createdText}}</text><text class="detail">状态更新时间：{{item.updatedText}}</text>
+    <text class="detail">申请原因：{{item.reason}}</text><text class="detail" wx:if="{{item.note}}">补充说明：{{item.note}}</text>
+  </view>
+  <view wx:if="{{loading}}" class="notice card">正在加载订单…</view>
+  <view wx:elif="{{eligible}}" class="form card">
+    <label><text>退款金额（元）</text><input type="digit" value="{{amount}}" bindinput="amount" disabled="{{submitting}}"/><text class="hint">剩余可退 ¥{{remainingText}}，可填写部分金额</text></label>
+    <label><text>售后原因</text><picker range="{{reasons}}" value="{{reasonIndex}}" bindchange="reason" disabled="{{submitting}}"><view>{{reasons[reasonIndex]}} ›</view></picker></label>
+    <label><text>补充说明</text><textarea maxlength="200" value="{{note}}" placeholder="描述坏果、破损或配送问题，最多200字" bindinput="note" disabled="{{submitting}}"/></label>
+    <label><text>举证图片{{shipped ? '（必填）' : '（选填）'}}</text><text class="hint">最多6张。建议拍摄问题商品、外包装及快递面单，遮盖无关个人信息。</text><view class="evidence-grid"><view wx:for="{{images}}" wx:key="id" class="evidence-item"><image src="{{item.path}}" mode="aspectFill" data-path="{{item.path}}" bindtap="previewImage"/><button data-id="{{item.id}}" bindtap="removeImage" disabled="{{submitting || imageBusy}}">删除</button></view></view><button class="ghost-btn" wx:if="{{images.length < 6}}" bindtap="chooseImages" loading="{{imageBusy}}" disabled="{{submitting || imageBusy}}">添加图片（{{images.length}}/6）</button></label>
+  </view>
+  <view wx:elif="{{!error}}" class="notice card">当前订单不可再次申请售后，已有记录的处理进度见上方。</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view><button wx:if="{{error && !remaining}}" class="ghost-btn" bindtap="refresh">重新加载</button>
+  <button wx:if="{{eligible}}" class="primary-btn submit" loading="{{submitting}}" disabled="{{submitting || imageBusy}}" bindtap="submit">提交售后申请</button>
+  <button class="ghost-btn submit" open-type="contact">联系售后客服</button>
+</view>

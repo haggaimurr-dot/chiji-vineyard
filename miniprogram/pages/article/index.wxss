@@ -1,0 +1,30 @@
+.hero { width: 100%; height: 470rpx; }
+.image-placeholder { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18rpx; padding-bottom: 34rpx; color: var(--green); background: var(--green-soft); }
+.image-placeholder text:first-child { font-family: serif; font-size: 38rpx; }
+.image-placeholder text:last-child { font-size: 23rpx; }
+.content { position: relative; margin-top: -34rpx; padding: 38rpx 34rpx 70rpx; border-radius: 34rpx 34rpx 0 0; background: var(--paper); }
+.meta { color: var(--green); font-size: 22rpx; }
+.title { margin-top: 18rpx; font-family: serif; font-size: 46rpx; font-weight: 700; line-height: 1.35; }
+.article-stats { display: flex; gap: 22rpx; margin-top: 16rpx; color: var(--muted); font-size: 22rpx; }
+.summary { margin-top: 22rpx; padding-left: 20rpx; border-left: 5rpx solid var(--gold); color: var(--muted); line-height: 1.75; }
+.video-section { margin-top: 30rpx; }
+.content video { width: 100%; border-radius: 18rpx; }
+.video-state { padding: 30rpx 24rpx; border-radius: 18rpx; color: var(--muted); background: var(--cream); font-size: 25rpx; line-height: 1.65; text-align: center; }
+.video-state button { margin-top: 20rpx; font-size: 24rpx; }
+.paragraph, .rich-content { display: block; margin-top: 30rpx; color: #464039; font-size: 28rpx; line-height: 2; overflow-wrap: break-word; }
+.disclaimer { margin-top: 42rpx; padding: 24rpx; border-radius: 15rpx; color: #756c5d; background: #f5efe3; font-size: 21rpx; line-height: 1.65; }
+.state-panel { margin-top: 90rpx; padding: 42rpx 28rpx; border-radius: 28rpx; background: var(--paper); text-align: center; }
+.state-title { font-size: 34rpx; font-weight: 700; }
+.state-copy { margin: 22rpx 0 32rpx; color: var(--muted); line-height: 1.7; }
+.state-panel button + button { margin-top: 18rpx; }
+.article-favorite { margin-top: 24rpx; font-size: 25rpx; }
+
+.completion-panel, .classroom-qa { margin-top: 36rpx; padding: 28rpx; background: #f5f3ee; border-radius: 18rpx; }
+.completion-panel button { margin-top: 20rpx; }
+.qa-title { font-size: 32rpx; font-weight: 700; }
+.question-note { margin: 16rpx 0; font-size: 22rpx; line-height: 1.7; color: var(--muted); }
+.question-input { box-sizing: border-box; width: 100%; height: 220rpx; padding: 20rpx; margin: 20rpx 0; border-radius: 12rpx; background: white; font-size: 26rpx; }
+.qa-item { border-top: 1rpx solid #dedbd3; margin-top: 28rpx; padding-top: 12rpx; }
+.qa-text, .qa-answer { font-size: 26rpx; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+.qa-answer { margin-top: 20rpx; padding: 20rpx; background: #e7eee4; border-radius: 12rpx; }
+.qa-error { color: #a44438; font-size: 24rpx; margin: 16rpx 0; }

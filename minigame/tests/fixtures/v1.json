@@ -1,0 +1,2758 @@
+[
+  {
+    "name": "initial",
+    "now": 1791763200000,
+    "seed": 20261012,
+    "steps": [],
+    "expected": {
+      "schemaVersion": 1,
+      "rulesVersion": "v1",
+      "season": 1,
+      "day": 0,
+      "version": 0,
+      "seed": 20261012,
+      "coins": 18000,
+      "totalCosts": 0,
+      "totalRevenue": 0,
+      "lastSettledAt": 1791763200000,
+      "plots": [
+        {
+          "id": 1,
+          "name": "朝阳园",
+          "moisture": 60,
+          "canopy": 78,
+          "load": 84,
+          "vigor": 72,
+          "berryWeight": 0.8,
+          "brix": 5,
+          "damage": 0,
+          "fertility": 58,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 2,
+          "name": "溪边园",
+          "moisture": 60,
+          "canopy": 78,
+          "load": 84,
+          "vigor": 74,
+          "berryWeight": 0.8,
+          "brix": 5,
+          "damage": 0,
+          "fertility": 58,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 3,
+          "name": "南坡园",
+          "moisture": 60,
+          "canopy": 78,
+          "load": 84,
+          "vigor": 70,
+          "berryWeight": 0.8,
+          "brix": 5,
+          "damage": 0,
+          "fertility": 58,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 4,
+          "name": "老藤园",
+          "moisture": 60,
+          "canopy": 78,
+          "load": 84,
+          "vigor": 76,
+          "berryWeight": 0.8,
+          "brix": 5,
+          "damage": 0,
+          "fertility": 58,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        }
+      ],
+      "inventory": [],
+      "history": [],
+      "report": null,
+      "facilities": {
+        "drip": false,
+        "shelter": false,
+        "coldStorage": false
+      },
+      "stats": {
+        "harvestWeight": 0,
+        "soldWeight": 0,
+        "spoiledWeight": 0
+      }
+    }
+  },
+  {
+    "name": "offline-fraction-and-cap",
+    "now": 1791763200000,
+    "seed": 4321,
+    "steps": [
+      {
+        "command": null,
+        "now": 1791790200000
+      },
+      {
+        "command": null,
+        "now": 1791814500000
+      },
+      {
+        "command": null,
+        "now": 1827813600000
+      }
+    ],
+    "expected": {
+      "schemaVersion": 1,
+      "rulesVersion": "v1",
+      "season": 1,
+      "day": 84,
+      "version": 3,
+      "seed": 4321,
+      "coins": 18000,
+      "totalCosts": 0,
+      "totalRevenue": 0,
+      "lastSettledAt": 1792065600000,
+      "plots": [
+        {
+          "id": 1,
+          "name": "朝阳园",
+          "moisture": 43,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 39.07,
+          "berryWeight": 1.61,
+          "brix": 7.76,
+          "damage": 88.01,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 2,
+          "name": "溪边园",
+          "moisture": 43,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 41.4,
+          "berryWeight": 1.65,
+          "brix": 7.79,
+          "damage": 88.01,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 3,
+          "name": "南坡园",
+          "moisture": 43,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 36.63,
+          "berryWeight": 1.58,
+          "brix": 7.75,
+          "damage": 88.01,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 4,
+          "name": "老藤园",
+          "moisture": 43,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 43.91,
+          "berryWeight": 1.69,
+          "brix": 7.91,
+          "damage": 88.01,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        }
+      ],
+      "inventory": [],
+      "history": [
+        {
+          "day": 7,
+          "season": 1,
+          "type": "stage",
+          "text": "进入萌芽展叶阶段"
+        },
+        {
+          "day": 21,
+          "season": 1,
+          "type": "stage",
+          "text": "进入开花坐果阶段"
+        },
+        {
+          "day": 35,
+          "season": 1,
+          "type": "stage",
+          "text": "进入果粒膨大阶段"
+        },
+        {
+          "day": 56,
+          "season": 1,
+          "type": "stage",
+          "text": "进入转色成熟阶段"
+        },
+        {
+          "day": 70,
+          "season": 1,
+          "type": "stage",
+          "text": "进入采收销售阶段"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "stage",
+          "text": "进入本季结束阶段"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "seasonEnd",
+          "text": "本季生长结束，剩余库存可继续销售"
+        }
+      ],
+      "report": {
+        "season": 1,
+        "harvestWeight": 0,
+        "soldWeight": 0,
+        "spoiledWeight": 0,
+        "totalRevenue": 0,
+        "totalCosts": 0,
+        "profit": 0,
+        "avgBrix": 0,
+        "bestGrade": "—",
+        "notes": [
+          "本季没有商品果入库；成熟期留意糖度并及时采收。",
+          "病害或水分波动降低了商品率；通风、防护与稳定供水需要配合。",
+          "留果偏多会拖慢糖度积累，适度疏果可改善粒重与成熟。"
+        ]
+      },
+      "facilities": {
+        "drip": false,
+        "shelter": false,
+        "coldStorage": false
+      },
+      "stats": {
+        "harvestWeight": 0,
+        "soldWeight": 0,
+        "spoiledWeight": 0
+      }
+    }
+  },
+  {
+    "name": "all-actions-inventory-and-two-seasons",
+    "now": 1791763200000,
+    "seed": 20261012,
+    "steps": [
+      {
+        "command": {
+          "type": "upgrade",
+          "facility": "drip"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "water",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "water",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "water",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "water",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "fertilize",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "fertilize",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "fertilize",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "fertilize",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "protect",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "sell",
+          "channel": "retail"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "upgrade",
+          "facility": "coldStorage"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "advance"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "sell",
+          "channel": "retail"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "newSeason"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "upgrade",
+          "facility": "shelter"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": null,
+        "now": 1792065600000
+      }
+    ],
+    "expected": {
+      "schemaVersion": 1,
+      "rulesVersion": "v1",
+      "season": 2,
+      "day": 84,
+      "version": 71,
+      "seed": 20261012,
+      "coins": 2180,
+      "totalCosts": 10532,
+      "totalRevenue": 0,
+      "lastSettledAt": 1792065600000,
+      "plots": [
+        {
+          "id": 1,
+          "name": "朝阳园",
+          "moisture": 62,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 81.42,
+          "berryWeight": 5.15,
+          "brix": 16.16,
+          "damage": 22.38,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 2,
+          "name": "溪边园",
+          "moisture": 62,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 83.99,
+          "berryWeight": 5.25,
+          "brix": 16.46,
+          "damage": 22.38,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 3,
+          "name": "南坡园",
+          "moisture": 62,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 78.61,
+          "berryWeight": 5.01,
+          "brix": 15.81,
+          "damage": 22.38,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        },
+        {
+          "id": 4,
+          "name": "老藤园",
+          "moisture": 62,
+          "canopy": 93.68,
+          "load": 84,
+          "vigor": 87.03,
+          "berryWeight": 5.39,
+          "brix": 16.8,
+          "damage": 22.38,
+          "fertility": 24.54,
+          "harvested": false,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": -99,
+            "thin": -99,
+            "protect": -99
+          }
+        }
+      ],
+      "inventory": [],
+      "history": [
+        {
+          "day": 76,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "advance",
+          "text": "推进 7 天，水分、果实与库存已结算"
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "harvest",
+          "text": "朝阳园完成采收，A 级 41390 克，糖度 19.36",
+          "cost": 220
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "sell",
+          "text": "零售售出 41390 克葡萄",
+          "revenue": 3766,
+          "cost": 290
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "harvest",
+          "text": "溪边园完成采收，A 级 41445 克，糖度 19.36",
+          "cost": 220
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "harvest",
+          "text": "南坡园完成采收，A 级 41390 克，糖度 19.36",
+          "cost": 220
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "harvest",
+          "text": "老藤园完成采收，A 级 41445 克，糖度 19.36",
+          "cost": 220
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "upgrade",
+          "text": "建设小型冷库，运行需要日常维护费用",
+          "cost": 4800
+        },
+        {
+          "day": 78,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 78,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 996 克，库存已同步减少"
+        },
+        {
+          "day": 79,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 79,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 987 克，库存已同步减少"
+        },
+        {
+          "day": 80,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 80,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 980 克，库存已同步减少"
+        },
+        {
+          "day": 81,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 81,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 972 克，库存已同步减少"
+        },
+        {
+          "day": 82,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 82,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 965 克，库存已同步减少"
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 957 克，库存已同步减少"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 54
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "spoilage",
+          "text": "采后损耗 948 克，库存已同步减少"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "stage",
+          "text": "进入本季结束阶段"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "seasonEnd",
+          "text": "本季生长结束，剩余库存可继续销售"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "advance",
+          "text": "推进 7 天，水分、果实与库存已结算"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "sell",
+          "text": "零售售出 117475 克葡萄",
+          "revenue": 10690,
+          "cost": 824
+        },
+        {
+          "day": 0,
+          "season": 2,
+          "type": "newSeason",
+          "text": "开启下一季，保留经营币、设施与多年生树势"
+        },
+        {
+          "day": 0,
+          "season": 2,
+          "type": "upgrade",
+          "text": "建设避雨设施，运行需要日常维护费用",
+          "cost": 6500
+        },
+        {
+          "day": 1,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 2,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 3,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 4,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 5,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 6,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 7,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 7,
+          "season": 2,
+          "type": "stage",
+          "text": "进入萌芽展叶阶段"
+        },
+        {
+          "day": 8,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 9,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 10,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 11,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 12,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 13,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 14,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 15,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 16,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 17,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 18,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 19,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 20,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 21,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 21,
+          "season": 2,
+          "type": "stage",
+          "text": "进入开花坐果阶段"
+        },
+        {
+          "day": 22,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 23,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 24,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 25,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 26,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 27,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 28,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 29,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 30,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 31,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 32,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 33,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 34,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 35,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 35,
+          "season": 2,
+          "type": "stage",
+          "text": "进入果粒膨大阶段"
+        },
+        {
+          "day": 36,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 37,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 38,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 39,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 40,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 41,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 42,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 43,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 44,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 45,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 46,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 47,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 48,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 49,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 50,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 51,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 52,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 53,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 54,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 55,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 56,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 56,
+          "season": 2,
+          "type": "stage",
+          "text": "进入转色成熟阶段"
+        },
+        {
+          "day": 57,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 58,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 59,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 60,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 61,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 62,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 63,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 64,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 65,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 66,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 67,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 68,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 69,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 70,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 70,
+          "season": 2,
+          "type": "stage",
+          "text": "进入采收销售阶段"
+        },
+        {
+          "day": 71,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 72,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 73,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 74,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 75,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 76,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 77,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 78,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 79,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 80,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 81,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 82,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 83,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 84,
+          "season": 2,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 48
+        },
+        {
+          "day": 84,
+          "season": 2,
+          "type": "stage",
+          "text": "进入本季结束阶段"
+        },
+        {
+          "day": 84,
+          "season": 2,
+          "type": "seasonEnd",
+          "text": "本季生长结束，剩余库存可继续销售"
+        }
+      ],
+      "report": {
+        "season": 2,
+        "harvestWeight": 0,
+        "soldWeight": 0,
+        "spoiledWeight": 0,
+        "totalRevenue": 0,
+        "totalCosts": 10532,
+        "profit": -10532,
+        "avgBrix": 0,
+        "bestGrade": "—",
+        "notes": [
+          "本季没有商品果入库；成熟期留意糖度并及时采收。",
+          "病害或水分波动降低了商品率；通风、防护与稳定供水需要配合。",
+          "留果偏多会拖慢糖度积累，适度疏果可改善粒重与成熟。",
+          "本季支出超过销售收入；设施建设费用计入当季，可在后续季节继续使用。"
+        ]
+      },
+      "facilities": {
+        "drip": true,
+        "shelter": true,
+        "coldStorage": true
+      },
+      "stats": {
+        "harvestWeight": 0,
+        "soldWeight": 0,
+        "spoiledWeight": 0
+      }
+    }
+  },
+  {
+    "name": "wholesale-season-close",
+    "now": 1791763200000,
+    "seed": 20261012,
+    "steps": [
+      {
+        "command": {
+          "type": "upgrade",
+          "facility": "drip"
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 1
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 2
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 3
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 4
+        },
+        "now": 1791763200000
+      },
+      {
+        "command": null,
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 1
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 1
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 2
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 2
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 3
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 3
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "thin",
+          "plotId": 4
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": {
+          "type": "prune",
+          "plotId": 4
+        },
+        "now": 1791864000000
+      },
+      {
+        "command": null,
+        "now": 1792062000000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 1
+        },
+        "now": 1792062000000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 2
+        },
+        "now": 1792062000000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 3
+        },
+        "now": 1792062000000
+      },
+      {
+        "command": {
+          "type": "harvest",
+          "plotId": 4
+        },
+        "now": 1792062000000
+      },
+      {
+        "command": {
+          "type": "sell",
+          "channel": "wholesale"
+        },
+        "now": 1792062000000
+      },
+      {
+        "command": null,
+        "now": 1792065600000
+      }
+    ],
+    "expected": {
+      "schemaVersion": 1,
+      "rulesVersion": "v1",
+      "season": 1,
+      "day": 84,
+      "version": 21,
+      "seed": 20261012,
+      "coins": 13352,
+      "totalCosts": 9742,
+      "totalRevenue": 5094,
+      "lastSettledAt": 1792065600000,
+      "plots": [
+        {
+          "id": 1,
+          "name": "朝阳园",
+          "moisture": 66,
+          "canopy": 57.68,
+          "load": 64,
+          "vigor": 72.98,
+          "berryWeight": 6.42,
+          "brix": 21.68,
+          "damage": 24.48,
+          "fertility": 24.54,
+          "harvested": true,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": 28,
+            "thin": 28,
+            "protect": -99
+          }
+        },
+        {
+          "id": 2,
+          "name": "溪边园",
+          "moisture": 66,
+          "canopy": 57.68,
+          "load": 64,
+          "vigor": 74.98,
+          "berryWeight": 6.47,
+          "brix": 21.68,
+          "damage": 24.48,
+          "fertility": 24.54,
+          "harvested": true,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": 28,
+            "thin": 28,
+            "protect": -99
+          }
+        },
+        {
+          "id": 3,
+          "name": "南坡园",
+          "moisture": 66,
+          "canopy": 57.68,
+          "load": 64,
+          "vigor": 70.69,
+          "berryWeight": 6.42,
+          "brix": 21.68,
+          "damage": 24.48,
+          "fertility": 24.54,
+          "harvested": true,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": 28,
+            "thin": 28,
+            "protect": -99
+          }
+        },
+        {
+          "id": 4,
+          "name": "老藤园",
+          "moisture": 66,
+          "canopy": 57.68,
+          "load": 64,
+          "vigor": 77.26,
+          "berryWeight": 6.5,
+          "brix": 21.68,
+          "damage": 24.48,
+          "fertility": 24.54,
+          "harvested": true,
+          "lastActions": {
+            "water": -99,
+            "fertilize": -99,
+            "prune": 28,
+            "thin": 28,
+            "protect": -99
+          }
+        }
+      ],
+      "inventory": [],
+      "history": [
+        {
+          "day": 0,
+          "season": 1,
+          "type": "upgrade",
+          "text": "建设滴灌系统，运行需要日常维护费用",
+          "cost": 4200
+        },
+        {
+          "day": 0,
+          "season": 1,
+          "type": "prune",
+          "text": "朝阳园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 0,
+          "season": 1,
+          "type": "prune",
+          "text": "溪边园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 0,
+          "season": 1,
+          "type": "prune",
+          "text": "南坡园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 0,
+          "season": 1,
+          "type": "prune",
+          "text": "老藤园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 1,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 2,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 3,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 4,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 5,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 6,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 7,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 7,
+          "season": 1,
+          "type": "stage",
+          "text": "进入萌芽展叶阶段"
+        },
+        {
+          "day": 8,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 9,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 10,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 11,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 12,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 13,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 14,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 15,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 16,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 17,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 18,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 19,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 20,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 21,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 21,
+          "season": 1,
+          "type": "stage",
+          "text": "进入开花坐果阶段"
+        },
+        {
+          "day": 22,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 23,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 24,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 25,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 26,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 27,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "thin",
+          "text": "朝阳园完成疏果控产，减轻负载；总果数随之下降",
+          "cost": 130
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "prune",
+          "text": "朝阳园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "thin",
+          "text": "溪边园完成疏果控产，减轻负载；总果数随之下降",
+          "cost": 130
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "prune",
+          "text": "溪边园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "thin",
+          "text": "南坡园完成疏果控产，减轻负载；总果数随之下降",
+          "cost": 130
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "prune",
+          "text": "南坡园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "thin",
+          "text": "老藤园完成疏果控产，减轻负载；总果数随之下降",
+          "cost": 130
+        },
+        {
+          "day": 28,
+          "season": 1,
+          "type": "prune",
+          "text": "老藤园完成整枝通风，改善通风；叶量过低会影响糖度和日灼风险",
+          "cost": 110
+        },
+        {
+          "day": 29,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 30,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 31,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 32,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 33,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 34,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 35,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 35,
+          "season": 1,
+          "type": "stage",
+          "text": "进入果粒膨大阶段"
+        },
+        {
+          "day": 36,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 37,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 38,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 39,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 40,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 41,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 42,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 43,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 44,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 45,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 46,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 47,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 48,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 49,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 50,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 51,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 52,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 53,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 54,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 55,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 56,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 56,
+          "season": 1,
+          "type": "stage",
+          "text": "进入转色成熟阶段"
+        },
+        {
+          "day": 57,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 58,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 59,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 60,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 61,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 62,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 63,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 64,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 65,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 66,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 67,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 68,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 69,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 70,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 70,
+          "season": 1,
+          "type": "stage",
+          "text": "进入采收销售阶段"
+        },
+        {
+          "day": 71,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 72,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 73,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 74,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 75,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 76,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 77,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 78,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 79,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 80,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 81,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 82,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "harvest",
+          "text": "朝阳园完成采收，B 级 29478 克，糖度 21.68",
+          "cost": 220
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "harvest",
+          "text": "溪边园完成采收，B 级 29707 克，糖度 21.68",
+          "cost": 220
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "harvest",
+          "text": "南坡园完成采收，B 级 29478 克，糖度 21.68",
+          "cost": 220
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "harvest",
+          "text": "老藤园完成采收，B 级 29845 克，糖度 21.68",
+          "cost": 220
+        },
+        {
+          "day": 83,
+          "season": 1,
+          "type": "sell",
+          "text": "批发售出 118508 克葡萄",
+          "revenue": 5094,
+          "cost": 238
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "upkeep",
+          "text": "设施日常维护",
+          "cost": 36
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "stage",
+          "text": "进入本季结束阶段"
+        },
+        {
+          "day": 84,
+          "season": 1,
+          "type": "seasonEnd",
+          "text": "本季生长结束，剩余库存可继续销售"
+        }
+      ],
+      "report": {
+        "season": 1,
+        "harvestWeight": 118508,
+        "soldWeight": 118508,
+        "spoiledWeight": 0,
+        "totalRevenue": 5094,
+        "totalCosts": 9742,
+        "profit": -4648,
+        "avgBrix": 21.68,
+        "bestGrade": "B",
+        "notes": [
+          "病害或水分波动降低了商品率；通风、防护与稳定供水需要配合。",
+          "本季支出超过销售收入；设施建设费用计入当季，可在后续季节继续使用。"
+        ]
+      },
+      "facilities": {
+        "drip": true,
+        "shelter": false,
+        "coldStorage": false
+      },
+      "stats": {
+        "harvestWeight": 118508,
+        "soldWeight": 118508,
+        "spoiledWeight": 0
+      }
+    }
+  }
+]

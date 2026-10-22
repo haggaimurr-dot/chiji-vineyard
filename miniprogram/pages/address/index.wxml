@@ -1,0 +1,31 @@
+<view class="page page-pad">
+  <view wx:if="!editing">
+    <view class="tip" wx:if="selecting">点击地址用于本次订单</view>
+    <view class="tip" wx:if="loading">正在加载地址…</view>
+    <view wx:elif="error" class="tip">{{error}}<button bindtap="loadAddresses">重新加载</button></view>
+    <view wx:elif="!addresses.length" class="empty card">还没有收货地址，新增或从微信导入吧</view>
+    <view wx:for="{{addresses}}" wx:key="id" class="address-card card">
+      <view data-id="{{item.id}}" bindtap="select">
+        <view class="recipient">{{item.name}} <text>{{item.phone}}</text><text wx:if="item.isDefault" class="badge">默认</text><text wx:if="selecting && selectedId === item.id" class="badge">已选</text></view>
+        <view class="detail">{{item.province}} {{item.city}} {{item.district}} {{item.detail}}</view>
+      </view>
+      <view class="actions"><button wx:if="!item.isDefault" data-id="{{item.id}}" bindtap="setDefault" disabled="{{busy}}">设为默认</button><button data-id="{{item.id}}" bindtap="edit" disabled="{{busy}}">编辑</button><button data-id="{{item.id}}" bindtap="remove" disabled="{{busy}}">删除</button></view>
+    </view>
+    <button class="primary-btn save" bindtap="add" disabled="{{busy || loading || !!error}}">新增地址</button>
+    <button class="import-btn" bindtap="importWechat" disabled="{{busy || loading || !!error}}">从微信导入地址</button>
+  </view>
+  <view wx:else>
+    <view class="form card">
+      <label><text>收货人</text><input maxlength="30" placeholder="姓名" data-name="name" value="{{form.name}}" bindinput="field" /></label>
+      <label><text>手机号码</text><input type="number" maxlength="11" placeholder="用于配送联系" data-name="phone" value="{{form.phone}}" bindinput="field" /></label>
+      <label><text>省市区</text><picker mode="region" value="{{region}}" bindchange="chooseRegion"><view class="picker">{{form.province ? form.province + ' ' + form.city + ' ' + form.district : '请选择省 / 市 / 区'}}<text>›</text></view></picker></label>
+      <label><text>详细地址</text><textarea maxlength="120" placeholder="街道、门牌号、小区楼栋等" data-name="detail" value="{{form.detail}}" bindinput="field" /></label>
+      <label><text>设为默认</text><switch checked="{{form.isDefault}}" disabled="{{busy}}" color="#5b2a70" bindchange="toggleDefault" /></label>
+    </view>
+    <view class="tip">地址仅用于订单配送。微信导入的地址请核对后保存。</view>
+    <button class="primary-btn save" bindtap="save" loading="{{busy}}" disabled="{{busy}}">保存地址</button>
+    <button class="import-btn" bindtap="cancel" disabled="{{busy}}">取消</button>
+  </view>
+  <view class="tip"><text class="link" bindtap="privacy">隐私政策：地址用于订单配送和售后联系</text></view>
+  <view class="tip"><text class="link" bindtap="personalData">个人数据删除与账号注销 ›</text></view>
+</view>

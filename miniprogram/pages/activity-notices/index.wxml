@@ -1,0 +1,17 @@
+<view class="page page-pad">
+  <view class="section-title">活动预约通知</view>
+  <view class="hint">{{unread ? unread + ' 条未读 · ' : ''}}通知保留预约时的活动信息，当前状态以专题页为准。</view>
+  <view wx:if="{{demoMode}}" class="hint">演示通知 · 仅保存在本机</view>
+  <view class="card notice" wx:for="{{items}}" wx:key="id">
+    <view class="notice-top"><text class="success">{{item.kind === 'WAITLISTED' ? '已加入候补' : item.kind === 'PROMOTED' ? '候补转正成功' : '预约成功'}}</text><text wx:if="{{!item.read}}" class="pill pill-purple">未读</text></view>
+    <view class="notice-title">{{item.title}}</view>
+    <view class="hint">活动日期：{{item.startDate}} — {{item.endDate}}</view>
+    <view class="hint">通知时间：{{item.timeText}} · 北京时间</view>
+    <button size="mini" data-id="{{item.id}}" bindtap="openActivity" loading="{{opening === item.id}}" disabled="{{opening || loading}}">查看活动专题 →</button>
+  </view>
+  <view wx:if="{{loading}}" class="feedback">通知加载中…</view>
+  <view wx:elif="{{error}}" class="feedback"><view>{{error}}</view><button size="mini" bindtap="retry">重新加载</button></view>
+  <view wx:elif="{{!items.length}}" class="feedback">暂无活动通知，预约成功后将在这里展示。</view>
+  <button wx:elif="{{hasMore}}" size="mini" bindtap="more">继续加载</button>
+  <view wx:else class="hint">已显示全部通知</view>
+</view>

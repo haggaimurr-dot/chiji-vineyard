@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="coop-hero">
+    <view class="eyebrow">BUSINESS PARTNERSHIP</view><view class="title">让好葡萄，走得更远</view>
+    <view class="copy">团购、批发、经销合作，按产期和渠道定制规格</view>
+    <view class="facts"><view><text>稳定</text><text>产期供应</text></view><view><text>灵活</text><text>规格包装</text></view><view><text>专属</text><text>对接服务</text></view></view>
+  </view>
+  <view class="page-pad">
+    <service-info />
+    <view class="success card" wx:if="{{success}}">
+      <view class="success-icon">✓</view><view class="success-title">合作需求已收到</view>
+      <view class="success-copy">我们将根据客服服务时间联系你，请保持电话畅通。</view>
+      <button class="ghost-btn" bindtap="again">再提交一条需求</button>
+    </view>
+    <view class="form card" wx:else>
+      <view class="form-title">{{giftProductName ? '礼盒定制 · ' + giftProductName : '告诉我们你的需求'}}</view><view class="form-tip">带 * 的项目为必填</view>
+      <view class="form-tip" wx:if="{{giftLoading}}">正在加载定制商品…</view>
+      <view wx:if="{{giftError}}"><view class="form-tip">{{giftError}}</view><button class="ghost-btn" bindtap="loadGiftProduct">重新加载商品</button></view>
+      <label><text>企业/个人名称 *</text><input placeholder="请输入名称" data-name="organization" value="{{form.organization}}" bindinput="field" /></label>
+      <view class="two"><label><text>联系人 *</text><input placeholder="怎么称呼" data-name="contact" value="{{form.contact}}" bindinput="field" /></label><label><text>手机 *</text><input type="number" maxlength="11" placeholder="联系电话" data-name="phone" value="{{form.phone}}" bindinput="field" /></label></view>
+      <label><text>所在地区 *</text><input placeholder="例如：杭州 / 上海" data-name="region" value="{{form.region}}" bindinput="field" /></label>
+      <label><text>渠道类型 *</text><picker mode="selector" range="{{channels}}" value="{{channelIndex}}" bindchange="chooseChannel"><view class="picker">{{channels[channelIndex]}} <text>⌄</text></view></picker></label>
+      <label><text>预计采购量 *</text><input placeholder="例如：每周 300 箱" data-name="volume" value="{{form.volume}}" bindinput="field" /></label>
+      <label><text>合作需求</text><textarea maxlength="300" placeholder="请补充规格、时间或其他要求" data-name="demand" value="{{form.demand}}" bindinput="field" /></label>
+      <view class="agree" bindtap="toggleAgree"><text class="check {{agreed ? 'checked' : ''}}">{{agreed ? '✓' : ''}}</text><text>我已阅读并同意<text class="link" catchtap="privacy">《隐私政策》</text>，允许工作人员联系我</text></view>
+      <button class="primary-btn submit" loading="{{submitting}}" disabled="{{submitting || giftLoading || giftError}}" bindtap="submit">{{giftProductName ? '提交定制需求' : '提交合作需求'}}</button>
+    </view>
+  </view>
+</view>
+

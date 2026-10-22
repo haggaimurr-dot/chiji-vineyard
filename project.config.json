@@ -1,0 +1,42 @@
+{
+  "description": "迟记葡萄牙微信小程序",
+  "miniprogramRoot": "miniprogram/",
+  "setting": {
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "es6": true,
+    "enhance": true,
+    "minified": true,
+    "postcss": true,
+    "urlCheck": true,
+    "checkInvalidKey": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "appid": "wxb51485bb60a4e885",
+  "projectname": "chiji-grape",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {},
+  "libVersion": "3.17.3"
+}

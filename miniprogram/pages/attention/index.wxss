@@ -1,0 +1,7 @@
+.title { padding: 20rpx 0; color: var(--purple-dark); font-size: 36rpx; font-weight: 700; }
+.intro { color: var(--muted); font-size: 24rpx; line-height: 1.7; margin-bottom: 24rpx; }
+.price { color: var(--purple-dark); font-size: 28rpx; margin: 12rpx 0; }.entry button + button { margin-top: 12rpx; }
+.state { padding: 100rpx 20rpx; text-align: center; color: var(--muted); }.state button { margin-top: 30rpx; }
+.entry { padding: 28rpx; margin-bottom: 24rpx; }.entry-content { padding-bottom: 20rpx; }.name { font-size: 30rpx; font-weight: 700; margin-bottom: 10rpx; }.muted { font-size: 24rpx; }.status { margin: 16rpx 0; font-size: 24rpx; color: var(--muted); }.status.ready { color: var(--green); }.entry button { font-size: 24rpx; }
+
+.history-link { margin-bottom: 24rpx; font-size: 24rpx; }

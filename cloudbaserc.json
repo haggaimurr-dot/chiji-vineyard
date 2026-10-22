@@ -1,0 +1,15 @@
+{
+  "envId": "{{CLOUDBASE_ENV_ID}}",
+  "framework": {
+    "name": "chiji-grape",
+    "plugins": {
+      "client": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "outputPath": "admin/dist"
+        }
+      }
+    }
+  }
+}
+

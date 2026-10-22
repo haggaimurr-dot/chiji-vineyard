@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "销售合作",
+  "usingComponents": {
+    "service-info": "/components/service-info/index"
+  }
+}

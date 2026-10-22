@@ -1,0 +1,33 @@
+<view class="learning-panel" wx:if="{{view === 'series' || view === 'progress'}}">
+  <view class="course-summary card" wx:if="{{!loading && !error && totalLessons}}">
+    <view class="course-heading">{{view === 'progress' ? '我的学习进度' : '按课程系统学习'}}</view>
+    <view class="course-meta">已学完 {{completedLessons}} / {{totalLessons}} 节 · {{progressPercent}}%</view>
+    <progress percent="{{progressPercent}}" activeColor="#416746" stroke-width="5" />
+    <view class="course-note">同阶段、同品种组成系列课，按发布时间依次学习。在内容页点击「标记学完」更新进度。</view>
+  </view>
+  <view class="course-card card" wx:for="{{courses}}" wx:key="id">
+    <view class="course-meta">{{item.variety}} · {{item.lessons.length}} 节课程</view>
+    <view class="course-heading">{{item.title}}</view>
+    <view class="course-meta">学完 {{item.completed}} / {{item.lessons.length}} 节 · {{item.percent}}%</view>
+    <progress percent="{{item.percent}}" activeColor="#416746" stroke-width="4" />
+    <view class="course-actions"><button class="primary-btn" wx:if="{{item.nextId}}" data-id="{{item.nextId}}" bindtap="open">{{item.completed ? '继续学习' : '开始学习'}}</button><view wx:else class="course-done">✓ 本系列已学完</view><button class="ghost-btn" data-id="{{item.id}}" bindtap="expandCourse">{{expandedCourse === item.id ? '收起目录' : '课程目录'}}</button></view>
+    <view wx:if="{{expandedCourse === item.id}}" class="course-lessons"><view wx:for="{{item.lessons}}" wx:for-item="lesson" wx:key="id" class="lesson-row" data-id="{{lesson.id}}" bindtap="open"><text class="lesson-index">{{index + 1}}</text><text class="lesson-title">{{lesson.title}}</text><text class="lesson-status">{{lesson.completed ? '✓ 学完' : '去学习 →'}}</text></view></view>
+  </view>
+  <view class="empty" wx:if="{{loading}}">正在加载课程…</view>
+  <view class="empty" wx:elif="{{error}}"><view>{{error}}</view><button class="ghost-btn" bindtap="retry">重试</button></view>
+  <view class="empty" wx:elif="{{!courses.length}}">系列课程正在准备中，敬请期待</view>
+</view>
+<view class="learning-panel" wx:if="{{view === 'questions'}}">
+  <view class="course-note">我的课堂提问与老师回复。进入任意课程内容页即可提问；提问仅自己和后台工作人员可见。</view>
+  <view class="question-card card" wx:for="{{questions}}" wx:key="id">
+    <view class="course-meta">{{item.articleTitle}} · {{item.createdText}}</view>
+    <view class="question-text">问：{{item.question}}</view>
+    <view class="question-answer" wx:if="{{item.answer}}"><view>老师回复：{{item.answer}}</view><view class="course-meta">{{item.answeredText}}</view></view>
+    <view class="course-note" wx:else>待老师回复</view>
+    <button class="ghost-btn" data-id="{{item.articleId}}" bindtap="open">查看课程</button>
+  </view>
+  <view class="empty" wx:if="{{loading}}">正在加载问答…</view>
+  <view class="empty" wx:elif="{{error}}"><view>{{error}}</view><button class="ghost-btn" bindtap="retry">重试</button></view>
+  <view class="empty" wx:elif="{{!questions.length}}">还没有提问，学习时遇到问题可在内容页向老师提问</view>
+  <view class="empty" wx:if="{{questions.length && (hasMore || loadingMore || moreError)}}"><view wx:if="{{moreError}}">{{moreError}}</view><button class="ghost-btn" disabled="{{loadingMore}}" bindtap="loadMore">{{loadingMore ? '正在加载…' : moreError ? '重试加载' : '加载更多'}}</button></view>
+</view>

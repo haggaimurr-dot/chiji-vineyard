@@ -1,0 +1,19 @@
+<view class="live-page">
+ <view class="live-eyebrow">迟记 · 果园里的日常</view>
+ <view class="live-title">看看此刻的果园。</view>
+ <view class="live-intro">从枝头到摊位，让你多了解一点我们。</view>
+ <view class="live-tabs"><button wx:for="{{views}}" wx:key="id" class="live-tab {{selected === item.id ? 'selected' : ''}}" data-id="{{item.id}}" bindtap="selectView">{{item.title}}</button></view>
+ <view wx:if="{{loading}}" class="live-placeholder">正在读取直播信息…</view>
+ <view wx:elif="{{error}}" class="live-placeholder"><text>{{error}}</text><button class="live-button" bindtap="loadConfig">重新加载</button></view>
+ <block wx:else>
+  <block wx:for="{{views}}" wx:key="id">
+   <video wx:if="{{playing && selected === item.id}}" id="live-{{item.id}}" class="live-video" src="{{channel.url}}" autoplay="{{true}}" muted="{{true}}" controls="{{true}}" show-progress="{{false}}" show-center-play-btn="{{true}}" object-fit="contain" data-id="{{item.id}}" data-version="{{version}}" data-src="{{channel.url}}" bindplay="videoPlay" bindwaiting="videoWaiting" bindpause="videoPause" bindended="videoError" binderror="videoError" />
+  </block>
+  <view wx:if="{{!playing}}" class="live-placeholder"><text class="live-placeholder-title">{{status === 'failed' ? '直播暂时无法连接' : channel.enabled ? '看看现场的日常' : '直播暂未开启'}}</text><text class="live-placeholder-note">{{status === 'failed' ? '现场网络可能暂时中断，请稍后重试。' : channel.enabled ? '点击开始观看，画面来自当前机位。' : '这个机位准备好后，就能在这里观看。'}}</text><button wx:if="{{channel.enabled}}" class="live-button" bindtap="watchLive">{{status === 'failed' ? '重新连接' : '开始观看'}}</button></view>
+  <view wx:if="{{playing}}" class="live-state">{{status === 'playing' ? '正在播放' : status === 'paused' ? '已暂停' : '正在连接现场…'}}</view>
+  <view class="live-description">{{selected === 'orchard' ? views[0].description : views[1].description}}</view>
+  <view wx:if="{{channel.hours}}" class="live-hours">直播时间：{{channel.hours}}</view>
+  <view class="live-note">现场画面可能有短暂延迟，机位休息或网络中断时会暂停。默认静音，可在播放器内开启声音。</view>
+  <button class="live-refresh" bindtap="loadConfig">刷新机位状态</button>
+ </block>
+</view>

@@ -1,0 +1,70 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/orchard-live/index",
+    "pages/activity/index",
+    "pages/activity-notices/index",
+    "pages/shop/index",
+    "pages/classroom/index",
+    "pages/cooperation/index",
+    "pages/profile/index",
+    "pages/product/index",
+    "pages/cart/index",
+    "pages/coupons/index",
+    "pages/checkout/index",
+    "pages/orders/index",
+    "pages/order-detail/index",
+    "pages/article/index",
+    "pages/refund/index",
+    "pages/after-sales/index",
+    "pages/address/index",
+    "pages/privacy/index",
+    "pages/personal-data/index",
+    "pages/attention/index",
+    "pages/shipping-notices/index",
+    "pages/product-memory/index",
+    "pages/trace/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#fffaf1",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "迟记葡萄牙",
+    "backgroundColor": "#f7f3ea",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#756f68",
+    "selectedColor": "#5b2a70",
+    "backgroundColor": "#fffdf8",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/shop/index",
+        "text": "商城"
+      },
+      {
+        "pagePath": "pages/classroom/index",
+        "text": "种植课堂"
+      },
+      {
+        "pagePath": "pages/cooperation/index",
+        "text": "销售合作"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "__usePrivacyCheck__": true,
+  "requiredPrivateInfos": [
+    "chooseAddress"
+  ],
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

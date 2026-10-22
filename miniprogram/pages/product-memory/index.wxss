@@ -1,0 +1,16 @@
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.toolbar button { margin: 0; font-size: 24rpx; padding: 0 28rpx; }
+.hint { margin: 18rpx 0; font-size: 23rpx; line-height: 1.6; }
+.compare-link { margin: 24rpx 0; font-size: 25rpx; }
+.history-card { padding: 24rpx; margin-top: 22rpx; }
+.history-main { display: flex; gap: 22rpx; }
+.cover { display: block; width: 160rpx; height: 160rpx; flex-shrink: 0; border-radius: 16rpx; }
+.placeholder { display: flex; align-items: center; justify-content: center; background: #eee8dc; color: var(--muted); font-size: 22rpx; }
+.summary { flex: 1; min-width: 0; }.name { font-size: 28rpx; font-weight: 700; overflow-wrap: break-word; }
+.date { font-size: 22rpx; margin: 12rpx 0; }.error { color: #9e462e; font-size: 23rpx; margin-top: 12rpx; }
+.actions { display: flex; justify-content: flex-end; gap: 16rpx; margin-top: 20rpx; }.actions button { margin: 0; padding: 0 24rpx; font-size: 23rpx; }
+.empty button { margin-top: 28rpx; }.comparison { width: 100%; border-radius: 22rpx; background: var(--paper); }
+.table { display: inline-block; min-width: 100%; }.table-row { display: flex; align-items: stretch; }
+.cell { flex: 0 0 270rpx; width: 270rpx; padding: 22rpx; border-right: 1rpx solid #e9e1d6; border-bottom: 1rpx solid #e9e1d6; white-space: normal; overflow-wrap: break-word; line-height: 1.6; font-size: 25rpx; }
+.label { flex-basis: 160rpx; width: 160rpx; color: var(--purple); background: #f2ebf4; font-weight: 600; }
+.value { white-space: pre-line; }.product-cell .cover { width: 226rpx; height: 180rpx; margin-bottom: 16rpx; }.product-cell button { margin-top: 20rpx; font-size: 23rpx; }

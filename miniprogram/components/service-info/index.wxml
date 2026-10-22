@@ -1,0 +1,21 @@
+<view class="service-card">
+  <view class="heading">客服与主体信息</view>
+  <view wx:if="{{demo}}" class="demo">MOCK 演示资料 · 主体、地址与联系方式均为虚构示例</view>
+  <view wx:if="{{loading}}" class="muted">正在加载…</view>
+  <block wx:else>
+    <view wx:if="{{error}}" class="muted">{{error}}<button bindtap="load">重试</button></view>
+    <block wx:elif="{{service.enabled}}">
+      <view class="muted">服务时间：{{service.hours}}</view>
+      <view wx:if="{{service.responseTime}}" class="muted">合作回复：{{service.responseTime}}</view>
+      <view class="actions">
+        <button wx:if="{{demo && service.wechat}}" bindtap="mockContact">在线客服（演示）</button>
+        <button wx:elif="{{service.wechat}}" open-type="contact" binderror="contactError">微信在线客服</button>
+        <button wx:if="{{service.phone}}" bindtap="phone">电话：{{service.phone}}</button>
+      </view>
+    </block>
+    <view wx:else class="muted">客服暂未开放</view>
+    <view wx:if="{{policy}}" class="identity"><view>运营主体：{{policy.operator}}</view><view>联系地址：{{policy.address}}</view><view>隐私联系：{{policy.contact}}</view></view>
+    <view wx:elif="{{identityError}}" class="muted">{{identityError}}<button bindtap="load">重试资料</button></view>
+    <button class="policy" bindtap="privacy">查看隐私政策 ›</button>
+  </block>
+</view>

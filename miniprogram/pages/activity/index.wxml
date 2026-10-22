@@ -1,0 +1,38 @@
+<view class="page page-pad activity-page">
+  <view wx:if="{{loading}}" class="feedback">活动详情加载中…</view>
+  <view wx:elif="{{error}}" class="card detail-card feedback"><view>{{error}}</view><button size="mini" bindtap="loadActivity">重新加载</button><button size="mini" bindtap="goHome">返回首页</button></view>
+  <block wx:elif="{{activity}}">
+    <image wx:if="{{activity.cover && !coverFailed}}" class="topic-cover" src="{{activity.cover}}" mode="aspectFill" data-version="{{requestVersion}}" binderror="coverError" />
+    <view wx:elif="{{activity.cover}}" class="hint">活动封面暂不可用</view>
+    <view class="activity-hero">
+      <view class="hero-top"><text class="kicker">果园活动</text><text class="pill pill-purple">{{status}}</text></view>
+      <view class="activity-title">{{activity.title}}</view>
+      <view class="activity-summary">{{activity.summary}}</view>
+      <view class="activity-date">{{activity.startDate}} — {{activity.endDate}}</view><view class="time-note">北京时间 · 结束日期当天截止</view>
+      <view wx:if="{{activity.location}}" class="activity-date">活动地点：{{activity.location}}</view>
+      <button size="mini" open-type="share" class="share-button">分享活动专题</button>
+    </view>
+    <view class="card detail-card"><view class="section-title">活动详情</view><view class="content-paragraph" wx:for="{{paragraphs}}" wx:key="index"><text selectable>{{item}}</text></view><view wx:if="{{!paragraphs.length}}" class="hint">活动安排待公布</view></view>
+    <view class="card detail-card">
+      <view class="section-title">活动预约</view>
+      <view wx:if="{{reservationLoading}}" class="hint">预约状态加载中…</view>
+      <view wx:elif="{{reservationError}}" class="feedback"><view>{{reservationError}}</view><button size="mini" bindtap="loadReservations">重新加载预约</button></view>
+      <block wx:else>
+        <view class="hint">{{capacityText}}</view><view class="reservation-state">{{waitlistedActivity ? '候补第' + queuePosition + '位，递补成功后将通知你' : reserved ? '你已预约此活动' : status === '已结束' ? '活动已结束，预约已截止' : activity.reservationEnabled ? '活动开放预约' : '活动暂未开放预约'}}</view>
+        <view wx:if="{{reserved && status !== '已结束'}}" class="reminder-note">{{status === '即将开始' ? '活动将于 ' + activity.startDate + ' 开始' : '活动正在进行中'}}，可在首页查看预约提醒。</view>
+        <button wx:if="{{activityId}}" class="reservation-button {{reserved ? 'cancel-button' : ''}}" data-id="{{activityId}}" bindtap="changeReservation" loading="{{reservationBusy === activityId}}" disabled="{{reservationBusy || (!reserved && !waitlistedActivity && (status === '已结束' || !activity.reservationEnabled || (reservationFull && !activity.waitlistEnabled)))}}">{{waitlistedActivity ? '取消候补' : reserved ? '取消预约' : status === '已结束' ? '预约已截止' : reservationFull ? activity.waitlistEnabled ? '加入候补' : '名额已满' : activity.reservationEnabled ? '立即预约' : '暂未开放预约'}}</button>
+      </block>
+      <view class="hint">预约登记参与意向，具体安排以活动公告为准。预约后进入首页，可查看活动开始时间与状态提醒。</view>
+      <view wx:if="{{demoMode}}" class="hint">演示预约 · 仅保存在本机</view>
+      <block wx:if="{{!demoMode && reserved && status !== '已结束'}}">
+        <view wx:if="{{subscription && subscription.enabled}}" class="hint">可订阅一次微信提醒，在活动开始当天发送。取消预约后停止发送。</view>
+        <button wx:if="{{subscription && subscription.enabled}}" size="mini" bindtap="subscribeActivity" loading="{{subscriptionBusy}}" disabled="{{subscriptionBusy || reservationBusy || subscription.status === 'SENT' || subscription.status === 'SENDING' || subscription.status === 'UNCERTAIN'}}">{{subscription.status === 'READY' ? '重新确认微信提醒' : subscription.status === 'SENT' ? '微信提醒已发送' : subscription.status === 'SENDING' || subscription.status === 'UNCERTAIN' ? '微信提醒发送中或待核实' : '订阅活动微信提醒'}}</button>
+        <view wx:if="{{subscription && subscription.status === 'READY'}}" class="hint">已登记微信提醒；如取消后重新预约，请重新确认。</view>
+        <view wx:if="{{subscriptionError}}" class="hint">{{subscriptionError}}</view>
+        <button wx:if="{{!subscription && subscriptionError}}" size="mini" bindtap="retrySubscription">重试加载微信提醒</button>
+      </block>
+    </view>
+    <view wx:if="{{activity.productId}}" class="card detail-card"><view class="section-title">关联鲜果</view><view wx:if="{{productError}}" class="hint">{{productError}}</view><view wx:elif="{{!productAvailable}}" class="hint">关联商品已下架或暂不可用</view><view wx:elif="{{status !== '进行中'}}" class="hint">{{status === '即将开始' ? '活动开始后可查看关联商品' : '活动已结束'}}</view><button wx:else class="product-button" bindtap="openProduct">查看商品 →</button></view>
+    <button class="home-button" bindtap="goHome">返回首页</button>
+  </block>
+</view>

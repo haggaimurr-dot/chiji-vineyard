@@ -1,0 +1,36 @@
+<view class="page page-pad">
+  <view class="profile-head">
+    <view class="avatar">萄</view><view><view class="nickname">{{user.nickname}}</view><view class="welcome">欢迎来到迟记葡萄牙</view></view>
+  </view>
+  <view class="order-card card">
+    <view class="row-title"><text>我的订单</text><text data-filter="all" bindtap="orders">查看全部 →</text></view>
+    <view class="order-actions">
+      <view data-filter="pending" bindtap="orders"><text class="icon">待</text><text>待付款</text><text class="badge" wx:if="{{counts.pending}}">{{counts.pending}}</text></view>
+      <view data-filter="paid" bindtap="orders"><text class="icon">备</text><text>待发货</text><text class="badge" wx:if="{{counts.paid}}">{{counts.paid}}</text></view>
+      <view data-filter="shipping" bindtap="orders"><text class="icon">运</text><text>运输中</text><text class="badge" wx:if="{{counts.shipping}}">{{counts.shipping}}</text></view>
+      <view data-filter="refund" bindtap="orders"><text class="icon">退</text><text>退款/售后</text><text class="badge" wx:if="{{counts.refund}}">{{counts.refund}}</text></view>
+    </view>
+  </view>
+  <view class="menu card">
+    <view bindtap="goVineyardGame" role="button" aria-label="我的葡萄园，打开独立微信小游戏" aria-disabled="{{vineyardOpening}}"><text>{{vineyardOpening ? '正在进入葡萄园…' : '我的葡萄园'}}</text><text>↗</text></view>
+    <view bindtap="wallet"><text>我的券包</text><text>›</text></view>
+    <view bindtap="activityNotices"><text>活动通知</text><text>{{activityUnread ? activityUnread + ' 条未读 ' : ''}}›</text></view>
+    <view bindtap="shippingNotices"><text>发货通知</text><text>{{shippingUnread ? shippingUnread + ' 条未读 ' : ''}}›</text></view>
+    <view data-kind="favorite" bindtap="attention"><text>我的收藏</text><text>›</text></view>
+    <view data-kind="restock" bindtap="attention"><text>到货提醒</text><text>{{arrivals ? arrivals + ' 款已到货 ' : ''}}›</text></view>
+    <view data-view="favorite" bindtap="classroom"><text>课堂收藏</text><text>›</text></view>
+    <view data-view="history" bindtap="classroom"><text>学习记录</text><text>›</text></view>
+    <view data-kind="pricedrop" bindtap="attention"><text>降价提醒</text><text>{{priceDrops ? priceDrops + ' 款已降价 ' : ''}}›</text></view>
+    <view data-kind="history" bindtap="attention"><text>提醒历史</text><text>›</text></view>
+    <view data-kind="history" bindtap="productMemory"><text>浏览记录</text><text>›</text></view>
+    <view data-kind="compare" bindtap="productMemory"><text>商品对比</text><text>›</text></view>
+    <view bindtap="trace"><text>批次溯源查询</text><text>›</text></view>
+    <view bindtap="address"><text>收货地址</text><text>›</text></view>
+
+    <view bindtap="policy"><text>隐私政策</text><text>›</text></view>
+    <view bindtap="personalData"><text>账号与个人数据</text><text>›</text></view>
+  </view>
+  <service-info />
+  <view class="brand-note"><view>迟记葡萄牙</view><text>把果园、知识与好味道连接起来</text></view>
+</view>
+

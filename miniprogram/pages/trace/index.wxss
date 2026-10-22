@@ -1,0 +1,1 @@
+.trace-card{padding:32rpx;margin-bottom:24rpx;line-height:1.9;overflow-wrap:anywhere}.title{font-size:36rpx;font-weight:600;margin-bottom:16rpx}.trace-card input{border:1rpx solid #ddd;border-radius:12rpx;padding:20rpx;margin:24rpx 0}.trace-card button{margin:16rpx 0}.error{color:#b33232;margin-top:16rpx}

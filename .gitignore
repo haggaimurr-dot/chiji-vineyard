@@ -1,0 +1,36 @@
+node_modules/
+.local/
+backend/backend.new.exe
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+miniprogram_npm/
+cloudfunctions/**/node_modules/
+coverage/
+.cloudbase/
+backend/backend
+backend/backend.exe
+admin/src/**/*.js
+*.tsbuildinfo
+
+# 本机开发工具设置、证书及运行/验收产物不进入公开仓库
+project.private.config.json
+**/project.private.config.json
+*.pem
+*.key
+*.p12
+*.pfx
+docs/test-evidence/
+tests/artifacts/
+backend/*test-results*.txt
+minigame/preview/game-preview.js
+minigame/preview/field-preview.js
+minigame/field/field-wechat.js
+
+
+# 小程序 TypeScript 编译产物，由 npm run mini:build 生成
+miniprogram/**/*.js
+miniprogram/**/*.js.map

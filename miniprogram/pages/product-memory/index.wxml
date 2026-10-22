@@ -1,0 +1,37 @@
+<view class="page page-pad">
+  <view class="toolbar"><view class="section-title">{{kind === 'history' ? '最近看过' : '挑一款好味道'}}</view><button wx:if="{{entries.length && !loading}}" class="ghost-btn" bindtap="clear">清空</button></view>
+  <view class="hint muted">{{kind === 'history' ? '保留最近 50 款，重复浏览会移到最前。时间为北京时间。' : '最多对比 4 款，左右滑动查看。不同规格价格请结合净重比较。'}}</view>
+  <view class="hint muted">仅保存在当前设备，清除小程序数据后记录会丢失。</view>
+  <button wx:if="{{kind === 'history'}}" class="ghost-btn compare-link" bindtap="openCompare">查看商品对比（{{compareCount}}/4）</button>
+  <view wx:if="{{loading}}" class="empty">正在读取最新商品信息…</view>
+  <view wx:elif="{{!entries.length}}" class="empty"><view>{{kind === 'history' ? '还没有浏览记录' : '还没有选择对比商品'}}</view><button class="primary-btn" bindtap="goShop">去商城逛逛</button></view>
+  <block wx:elif="{{kind === 'history'}}">
+    <view class="history-card card" wx:for="{{entries}}" wx:key="id">
+      <view class="history-main" data-id="{{item.id}}" bindtap="openProduct">
+        <image wx:if="{{item.cover && !item.imageFailed}}" class="cover" src="{{item.cover}}" mode="aspectFill" lazy-load="{{true}}" data-id="{{item.id}}" binderror="imageError" />
+        <view wx:else class="cover placeholder">图片暂未加载</view>
+        <view class="summary"><view class="name">{{item.name}}</view><view class="muted date">{{item.dateText}}</view><view class="price-small" wx:if="{{item.priceText}}">¥{{item.priceText}} 起</view><view class="error" wx:if="{{item.error}}">{{item.error}}</view></view>
+      </view>
+      <view class="actions"><button wx:if="{{item.product}}" class="ghost-btn" data-id="{{item.id}}" bindtap="toggleCompare">{{item.comparing ? '移出对比' : '加入对比'}}</button><button class="ghost-btn" data-id="{{item.id}}" bindtap="remove">删除记录</button></view>
+    </view>
+  </block>
+  <block wx:else>
+    <view wx:if="{{entries.length < 2}}" class="hint muted">再从商城选择一款，方便比较。</view>
+    <scroll-view scroll-x="{{true}}" class="comparison">
+      <view class="table">
+        <view class="table-row">
+          <view class="cell label">商品</view>
+          <view class="cell product-cell" wx:for="{{entries}}" wx:key="id">
+            <view data-id="{{item.id}}" bindtap="openProduct"><image wx:if="{{item.cover && !item.imageFailed}}" class="cover" src="{{item.cover}}" mode="aspectFill" data-id="{{item.id}}" binderror="imageError" /><view wx:else class="cover placeholder">图片暂未加载</view><view class="name">{{item.name}}</view><view class="hint muted" wx:if="{{item.product.imageNote}}">{{item.product.imageNote}}</view><view class="error" wx:if="{{item.error}}">{{item.error}}</view></view>
+            <button class="ghost-btn" data-id="{{item.id}}" bindtap="remove">移除</button>
+          </view>
+        </view>
+        <view class="table-row" wx:for="{{rows}}" wx:key="label">
+          <view class="cell label">{{item.label}}</view><view class="cell value" wx:for="{{item.values}}" wx:for-item="value" wx:key="id">{{value.text}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    <button class="ghost-btn compare-link" bindtap="goShop">继续挑选商品</button>
+  </block>
+  <button wx:if="{{entries.length && !loading}}" class="ghost-btn compare-link" bindtap="load">刷新商品信息 / 重试</button>
+</view>

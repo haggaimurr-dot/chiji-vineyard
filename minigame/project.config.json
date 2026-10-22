@@ -1,0 +1,27 @@
+{
+  "description": "迟记葡萄园：独立微信小游戏",
+  "projectname": "chiji-vineyard-game",
+  "appid": "touristappid",
+  "compileType": "game",
+  "miniprogramRoot": "./",
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "preview" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "folder", "value": "tests" },
+      { "type": "file", "value": "field/main.js" },
+      { "type": "file", "value": "field/model.js" },
+      { "type": "file", "value": "field/navigation.js" },
+      { "type": "file", "value": "field/platform.js" },
+      { "type": "file", "value": "field/world.js" },
+      { "type": "file", "value": "field/hud.js" },
+      { "type": "file", "value": "field/wechat-entry.js" }
+    ]
+  },
+  "setting": {
+    "es6": true,
+    "urlCheck": true,
+    "minified": true,
+    "enhance": true
+  }
+}

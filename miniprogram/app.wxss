@@ -1,0 +1,44 @@
+page {
+  --purple: #5b2a70;
+  --purple-dark: #3f1853;
+  --green: #3f6f4e;
+  --green-soft: #dfe9d9;
+  --cream: #f7f3ea;
+  --paper: #fffdf8;
+  --ink: #29251f;
+  --muted: #756f68;
+  --gold: #c99a4b;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+}
+
+view, text, image, button, input, textarea, picker, scroll-view, video {
+  box-sizing: border-box;
+}
+
+button::after { border: 0; }
+
+.page { min-height: 100vh; padding-bottom: 40rpx; }
+.page-pad { padding: 28rpx; }
+.section { margin: 34rpx 0; }
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22rpx; }
+.section-title { font-size: 38rpx; line-height: 1.15; font-weight: 700; color: var(--purple-dark); }
+.section-subtitle { margin-top: 8rpx; font-size: 24rpx; color: var(--muted); }
+.link { color: var(--purple); font-size: 25rpx; }
+.card { background: var(--paper); border-radius: 28rpx; box-shadow: 0 12rpx 32rpx rgba(63, 24, 83, .06); }
+.pill { display: inline-flex; padding: 8rpx 16rpx; border-radius: 999rpx; font-size: 22rpx; line-height: 1; background: var(--green-soft); color: var(--green); }
+.pill-purple { background: #eee1f3; color: var(--purple); }
+.price { color: var(--purple); font-size: 36rpx; font-weight: 800; }
+.price-small { color: var(--purple); font-size: 28rpx; font-weight: 700; }
+.money-unit { font-size: .68em; }
+.muted { color: var(--muted); }
+.primary-btn, .secondary-btn, .ghost-btn { border-radius: 999rpx; font-weight: 650; font-size: 28rpx; }
+.primary-btn { background: var(--purple); color: white; }
+.primary-btn[disabled] { opacity: .45; color: white; }
+.secondary-btn { background: var(--green); color: white; }
+.ghost-btn { background: transparent; color: var(--purple); border: 2rpx solid rgba(91,42,112,.25); }
+.empty { padding: 100rpx 30rpx; text-align: center; color: var(--muted); }
+.safe-bottom { padding-bottom: calc(30rpx + env(safe-area-inset-bottom)); }
+
