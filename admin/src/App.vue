@@ -32,10 +32,11 @@ const retrySeconds = computed(() => Math.max(0, Math.ceil((retryAt.value - now.v
 let ticker: ReturnType<typeof setInterval> | undefined
 let sessionPoll: ReturnType<typeof setInterval> | undefined
 const active = ref('dashboard')
+const navOpen = ref(false)
 const initialLeadId = ref('')
 const leadNavigation = ref(0)
-function openLead(leadId: string) { initialLeadId.value = leadId; leadNavigation.value++; active.value = 'leads' }
-function navigate(key: string) { initialLeadId.value = ''; active.value = key }
+function openLead(leadId: string) { initialLeadId.value = leadId; leadNavigation.value++; active.value = 'leads'; navOpen.value = false }
+function navigate(key: string) { initialLeadId.value = ''; active.value = key; navOpen.value = false }
 const menuItems = [
   { key: 'security', label: '账号安全', icon: '安' },
   { key: 'dashboard', label: '经营概览', icon: '览' },
@@ -159,13 +160,14 @@ async function logout() {
   </main>
 
   <div v-else class="shell">
-    <aside class="sidebar">
+    <div v-if="navOpen" class="nav-backdrop" @click="navOpen = false"></div>
+    <aside class="sidebar" :class="{ open: navOpen }">
       <div class="logo"><span>迟</span><div><strong>迟记葡萄牙</strong><small>运营中心</small></div></div>
       <nav><button v-for="item in menu" :key="item.key" :class="{ active: active === item.key }" @click="navigate(item.key)"><span>{{ item.icon }}</span>{{ item.label }}</button></nav>
       <div class="sidebar-foot"><div class="operator"><span>运</span><div><strong>{{ currentUser.username }}</strong><small>{{ currentUser.role === 'SUPER_ADMIN' ? '超级管理员' : '运营人员' }} · 在线</small></div></div><button class="logout" @click="logout">退出登录</button></div>
     </aside>
     <section class="workspace">
-      <header class="topbar"><div><p class="eyebrow purple">CHIJIGRAPE</p><h1>{{ currentLabel }}</h1></div><div class="top-actions"><PaymentAlerts v-if="currentUser.role === 'SUPER_ADMIN'" @open="navigate('payments')" /><LeadReminders v-if="can(currentUser, 'lead.read')" :current-user-id="currentUser.id" @open="openLead" /><span v-if="isDemo" class="demo-badge">演示数据</span><span class="date">{{ new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span></div></header>
+      <header class="topbar"><button class="menu-toggle" type="button" aria-label="打开菜单" @click="navOpen = true">☰</button><div><p class="eyebrow purple">CHIJIGRAPE</p><h1>{{ currentLabel }}</h1></div><div class="top-actions"><PaymentAlerts v-if="currentUser.role === 'SUPER_ADMIN'" @open="navigate('payments')" /><LeadReminders v-if="can(currentUser, 'lead.read')" :current-user-id="currentUser.id" @open="openLead" /><span v-if="isDemo" class="demo-badge">演示数据</span><span class="date">{{ new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span></div></header>
       <div class="view"><p v-if="!currentView" class="subtle">当前账号暂无可用模块，请联系超级管理员分配权限。</p><component v-else :is="currentView" :key="`${active === 'leads' ? `leads-${leadNavigation}` : active}-${currentUser.permissions?.join(',')}`" v-bind="active === 'leads' ? { initialLeadId } : {}" /></div>
     </section>
   </div>
