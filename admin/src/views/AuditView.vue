@@ -111,4 +111,12 @@ onMounted(() => load())
 
 <style scoped>
 .audit-filters{padding:24px;margin-bottom:20px}.audit-filters fieldset{border:0;margin:0;padding:0;min-width:0}.audit-filter-grid{grid-template-columns:repeat(3,minmax(150px,1fr));gap:16px}.audit-filter-actions{display:flex;align-items:center;gap:12px;margin-top:20px}.audit-filter-actions label{display:flex;align-items:center;gap:10px;margin-left:auto;color:var(--muted);font-size:12px}.audit-filter-actions select{padding:9px;border:1px solid var(--border);border-radius:8px;background:#fbf9f5}.audit-table{overflow:auto}.audit-empty{padding:38px;text-align:center;color:var(--muted)}.audit-target{max-width:260px;overflow-wrap:anywhere}.audit-pagination{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}.audit-pagination>div{display:flex;gap:8px}.audit-metadata{display:grid;grid-template-columns:90px 1fr;gap:14px;font-size:12px}.audit-metadata dt{color:var(--muted)}.audit-metadata dd{margin:0;overflow-wrap:anywhere}.audit-detail-heading{margin-top:28px;font-size:14px}.audit-json{padding:18px;border:1px solid var(--border);border-radius:10px;background:#f8f4ee;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Mobile support (added 2026-10-23) */
+@media (max-width: 900px) {
+  .audit-filters { padding: 16px; }
+  .audit-filter-grid { grid-template-columns: 1fr; }
+  .audit-filter-actions { flex-wrap: wrap; }
+  .audit-filter-actions label { margin-left: 0; }
+  .audit-pagination { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+}
 </style>

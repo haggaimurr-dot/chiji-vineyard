@@ -520,5 +520,13 @@ button.summary-item:hover { border-color: #b9a3bc; background: #fdfafd; }
 .history-placeholder p { margin-top: 9px; font-size: 11px; }
 .save-hint { margin-right: auto; align-self: center; color: var(--muted); font-size: 10px; }
 @media (max-width: 1300px) { .lead-summary { gap: 10px; }.summary-item { padding: 17px 15px; }.summary-item p { font-size: 9px; }.lead-filters { grid-template-columns: 2fr 1fr 1fr; } }
+/* Mobile support (added 2026-10-23) */
+@media (max-width: 900px) {
+  .lead-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lead-filters { grid-template-columns: 1fr; padding: 16px; }
+  .lead-detail { grid-template-columns: 1fr; }
+  .lead-dialog { width: 100vw; }
+  .crm-funnel { padding: 16px; }
+}
 </style>
 
