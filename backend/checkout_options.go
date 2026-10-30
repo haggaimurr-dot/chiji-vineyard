@@ -216,6 +216,9 @@ func (s *Server) applyInvoice(ctx context.Context, openid string, raw json.RawMe
 	if e != nil {
 		return nil, e
 	}
+	if e = recordInvoiceTitle(ctx, tx, openid, i); e != nil {
+		return nil, e
+	}
 	return i, tx.Commit()
 }
 func (s *Server) updateInvoice(ctx context.Context, raw json.RawMessage) (any, error) {

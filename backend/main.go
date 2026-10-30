@@ -445,6 +445,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.updateTicket(ctx, openid, nil, req.Data)
 	case "ticket.returnTracking":
 		return s.returnTracking(ctx, openid, req.Data)
+	case "invoice.titles":
+		return s.miniInvoiceTitles(ctx, openid, req.Data)
 	case "invoice.apply":
 		return s.applyInvoice(ctx, openid, req.Data)
 	case "invoice.file":

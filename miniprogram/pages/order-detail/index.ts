@@ -43,7 +43,7 @@ Page({
     catch (e) { wx.showToast({ title: (e as Error).message, icon: 'none' }) }
     finally { this.setData({ loading: false }) }
   },
-  data: { packageBusy: '', packageError: '', packageTracking: {} as Record<string, Tracking>, parcelIndex: 0, parcelOptions: [] as string[], parcels: [] as Array<{carrier: string; carrierCode?: string; trackingNo: string}>, selectedParcel: null as any, progressNodes: [] as ProgressNode[], logisticsAlerts: [] as string[], demo: getApp().globalData.demoMode, rebuyBusy: false, subscribeBusy: false, subscription: null as ShippingSubscription | null, subscriptionError: '', invoiceOpen: false, invoiceKind: 'personal', invoiceTitle: '', invoiceTaxId: '', invoiceEmail: '', invoiceBusy: false, invoiceError: '', order: null as any, loading: false, loadError: '', requestVersion: 0, trackingVersion: 0, actionBusy: false, tracking:null as Tracking|null,trackingLoading:false,trackingError:'', myReviews: [] as Review[], reviewsLoadError: '', reviewId: '', reviewImages: [] as Array<{path: string; dataUrl: string}>, reviewImageBusy: false, reviewProductId: '', reviewName: '', reviewRating: 5, reviewContent: '', reviewBusy: false, reviewError: '', reviewStars: [1,2,3,4,5] },
+  data: { packageBusy: '', packageError: '', packageTracking: {} as Record<string, Tracking>, parcelIndex: 0, parcelOptions: [] as string[], parcels: [] as Array<{carrier: string; carrierCode?: string; trackingNo: string}>, selectedParcel: null as any, progressNodes: [] as ProgressNode[], logisticsAlerts: [] as string[], demo: getApp().globalData.demoMode, rebuyBusy: false, subscribeBusy: false, subscription: null as ShippingSubscription | null, subscriptionError: '', invoiceOpen: false, invoiceKind: 'personal', invoiceTitle: '', invoiceTaxId: '', invoiceEmail: '', invoiceBusy: false, invoiceError: '', invoiceHistory: [] as Array<{kind: string; title: string; taxId: string; email: string}>, invoiceHistoryIndex: -1, order: null as any, loading: false, loadError: '', requestVersion: 0, trackingVersion: 0, actionBusy: false, tracking:null as Tracking|null,trackingLoading:false,trackingError:'', myReviews: [] as Review[], reviewsLoadError: '', reviewId: '', reviewImages: [] as Array<{path: string; dataUrl: string}>, reviewImageBusy: false, reviewProductId: '', reviewName: '', reviewRating: 5, reviewContent: '', reviewBusy: false, reviewError: '', reviewStars: [1,2,3,4,5] },
   onLoad(options: Record<string, string>) { (this as any).orderId = options.id },
   onShow() { return this.load() },
   onUnload() { this.setData({ requestVersion: this.data.requestVersion + 1, trackingVersion: this.data.trackingVersion + 1 }) },
@@ -117,7 +117,24 @@ Page({
   },
   openInvoice() {
     const i = this.data.order?.invoice
-    this.setData({ invoiceOpen: !this.data.invoiceOpen, invoiceError: '', ...(i?.status === 'REJECTED' ? { invoiceKind: i.kind, invoiceTitle: i.title, invoiceTaxId: i.taxId, invoiceEmail: i.email } : {}) })
+    const opening = !this.data.invoiceOpen
+    this.setData({ invoiceOpen: opening, invoiceError: '', ...(i?.status === 'REJECTED' ? { invoiceKind: i.kind, invoiceTitle: i.title, invoiceTaxId: i.taxId, invoiceEmail: i.email } : {}) })
+    if (opening) this.loadInvoiceHistory()
+  },
+  async loadInvoiceHistory() {
+    try {
+      const res = await callApi<{ last: { kind: string; title: string; taxId: string; email: string } | null; items: Array<{ kind: string; title: string; taxId: string; email: string }> }>('invoice.titles', {})
+      const items = res.items || []
+      if (!this.data.order?.invoice && res.last) {
+        this.setData({ invoiceKind: res.last.kind, invoiceTitle: res.last.title, invoiceTaxId: res.last.taxId, invoiceEmail: res.last.email, invoiceHistoryIndex: 0 })
+      }
+      this.setData({ invoiceHistory: items })
+    } catch { /* 历史抬头加载失败不阻塞开票 */ }
+  },
+  pickInvoiceTitle(event: WechatMiniprogram.PickerChange) {
+    const idx = Number(event.detail.value)
+    const h = this.data.invoiceHistory[idx]
+    if (h) this.setData({ invoiceHistoryIndex: idx, invoiceKind: h.kind, invoiceTitle: h.title, invoiceTaxId: h.taxId, invoiceEmail: h.email })
   },
   async viewInvoice() {
     if (this.data.invoiceBusy || !this.data.order?.invoice?.fileName) return
