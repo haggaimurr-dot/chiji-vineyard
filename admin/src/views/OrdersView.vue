@@ -46,6 +46,32 @@ const filters = [
   { key: 'cancelled', label: '已取消' }, { key: 'closed', label: '已关闭' }, { key: 'refund', label: '退款 / 售后' },
   { key: 'invoice_pending', label: '待开票' }, { key: 'invoice_email', label: '发票邮件待处理' },
 ]
+type SavedOrderView = { name: string; filter: string; keyword: string }
+const savedViews = ref<SavedOrderView[]>([])
+function orderViewKey() {
+  try { return 'chiji_order_views_' + ((JSON.parse(localStorage.getItem('chiji_admin_user') || '{}') as { id?: string }).id || 'anon') }
+  catch { return 'chiji_order_views_anon' }
+}
+function loadSavedViews() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(orderViewKey()) || '[]')
+    savedViews.value = Array.isArray(raw) ? raw.filter(v => v && typeof v.name === 'string').slice(0, 20) : []
+  } catch { savedViews.value = [] }
+}
+function persistViews() { try { localStorage.setItem(orderViewKey(), JSON.stringify(savedViews.value)) } catch { /* quota */ } }
+function saveCurrentView() {
+  const name = window.prompt('为当前筛选（状态 + 关键词）命名', `${visibleFilters.value.find(f => f.key === filter.value)?.label || ''}${appliedKeyword.value ? ' · ' + appliedKeyword.value : ''}`.trim() || '我的筛选')
+  if (!name || !name.trim()) return
+  savedViews.value = [{ name: name.trim().slice(0, 24), filter: filter.value, keyword: appliedKeyword.value }, ...savedViews.value.filter(v => v.name !== name.trim())].slice(0, 20)
+  persistViews()
+}
+function applySavedView(view: SavedOrderView) {
+  keyword.value = view.keyword; appliedKeyword.value = view.keyword
+  if (visibleFilters.value.some(f => f.key === view.filter)) filter.value = view.filter
+  resetSearch()
+}
+function deleteSavedView(index: number) { savedViews.value.splice(index, 1); persistViews() }
+loadSavedViews()
 let listRequest = 0, refundRequest = 0
 async function loadOrders() {
   const request = ++listRequest
@@ -227,6 +253,11 @@ function closeEvidence() { evidenceRequest++; evidenceRefund.value = null }
     <input v-model="keyword" :disabled="operationBusy" placeholder="订单号、商品、规格、收件人、手机或运单号" maxlength="80" aria-label="订单搜索" />
     <button v-permission="'order.read'" class="button primary" :disabled="operationBusy">搜索</button><button v-if="keyword || appliedKeyword" type="button" class="button secondary" :disabled="operationBusy" @click="clearSearch">清空</button>
   </form>
+  <div class="saved-views" aria-label="已保存的筛选视图">
+    <span class="saved-views-label">快捷筛选</span>
+    <button v-for="(view, i) in savedViews" :key="view.name" type="button" class="chip" :title="`状态：${view.filter}；关键词：${view.keyword || '无'}`" @click="applySavedView(view)">{{ view.name }}<span class="chip-x" role="button" tabindex="0" aria-label="删除" @click.stop="deleteSavedView(i)" @keydown.enter.stop="deleteSavedView(i)">×</span></button>
+    <button type="button" class="chip chip-add" @click="saveCurrentView">＋ 保存当前筛选</button>
+  </div>
   <p v-if="appliedKeyword" class="order-search-caption">搜索「{{ appliedKeyword }}」 · {{ visibleFilters.find(f => f.key === filter)?.label }}</p>
   <p v-if="success" class="alert order-success" role="status">{{ success }}</p>
   <p v-if="error" class="alert error" role="alert">{{ error }}</p>
