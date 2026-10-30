@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -175,7 +177,10 @@ func (s *Server) contentLibrary(ctx context.Context, actor Claims, action string
 		return nil, err
 	}
 	if r.ID == "" {
-		r.ID = randomID("RES")
+		// randomID 含下划线且超长，不符合资源编号规则，此处生成合规编号。
+		var b [8]byte
+		_, _ = rand.Read(b[:])
+		r.ID = "RES" + hex.EncodeToString(b[:])
 	}
 	if len(r.ID) > 30 || strings.ContainsAny(r.ID, "/%_ .") {
 		return nil, errors.New("资源编号无效")
