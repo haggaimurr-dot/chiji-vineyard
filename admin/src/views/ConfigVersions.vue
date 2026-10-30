@@ -207,6 +207,7 @@ onMounted(() => { load(); loadOrders(); loadRollouts() })
     <div class="form-row"><label>灰度比例（%）<input type="number" v-model.number="rolloutPercent" min="1" max="100" :disabled="rolloutBusy" /></label><button class="button secondary" :disabled="rolloutBusy" @click="fillHomePayload">填入当前首页配置</button></div>
     <label>灰度配置 JSON<textarea v-model="rolloutPayload" rows="8" :disabled="rolloutBusy" placeholder="粘贴或点上方按钮填入首页配置 JSON 后修改"></textarea></label>
     <button class="button primary" :disabled="rolloutBusy || !rolloutPayload.trim()" @click="saveRollout">{{ rolloutBusy ? "创建中…" : "创建灰度" }}</button></div>
+  </section>
   <section class="panel table-panel history-panel">
     <div class="panel-head"><div><h3>配置版本与回滚</h3><p>保存与回滚均保留完整快照；时间为北京时间</p></div><button class="button secondary small" :disabled="loading || locked" @click="load()">刷新版本</button></div>
     <div class="history-filters">
