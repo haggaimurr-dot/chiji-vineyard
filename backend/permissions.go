@@ -44,7 +44,7 @@ var actionPermissions = map[string]string{
 	"admin.media.upload": "media.upload",
 	"admin.config.get":   "config.read", "admin.coupon.get": "config.read", "admin.coupon.stats": "config.read",
 	"admin.config.save": "super", "admin.config.submit": "config.read", "admin.config.changeOrders": "super", "admin.config.decide": "super", "admin.home.save": "super", "admin.activity.oversellCheck": "config.read", "admin.privacy.save": "super", "admin.coupon.save": "super", "admin.config.versions": "super", "admin.config.rollback": "super", "admin.audit.list": "super", "admin.audit.export": "super", "admin.config.compare": "super",
-	"admin.account.list": "super", "admin.account.save": "super", "admin.account.resetPassword": "super", "admin.account.permissions": "super",
+	"admin.account.list": "super", "admin.account.save": "super", "admin.account.resetPassword": "super", "admin.account.permissions": "super", "admin.account.handover": "super",
 	"admin.security.status": "session", "admin.security.setup": "session", "admin.security.enable": "session", "admin.security.disable": "session", "admin.account.changePassword": "session",
 	"admin.session": "session", "admin.session.list": "session", "admin.session.revoke": "session", "admin.logout": "session",
 	"admin.login.logs": "session",
