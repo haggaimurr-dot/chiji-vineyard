@@ -519,9 +519,10 @@ async function containerCall<T>(action: string, data: ApiData, retry = true): Pr
   })
   if (response.statusCode === 401 && retry) {
     wx.removeStorageSync(TOKEN_KEY)
-    await loginContainer()
+    try { await loginContainer() } catch (e) { throw e instanceof Error && e.message.includes('网络') ? e : new Error('登录已过期，请重新进入小程序') }
     return containerCall<T>(action, data, false)
   }
+  if (response.statusCode === 401) throw new Error('登录已过期，请重新进入小程序')
   return response.data as ApiResponse<T>
 }
 
@@ -532,15 +533,31 @@ async function loginContainer(confirm = ''): Promise<string> {
   return loginInFlight
 }
 
+function friendlyLoginError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error || '')
+  if (/request:fail|timeout|ENOTFOUND|ECONN/i.test(message)) return new Error('网络连接失败，请检查网络后重试')
+  return new Error(message || '微信登录失败，请稍后重试')
+}
+
+async function wxLoginWithRetry(): Promise<string> {
+  try { return (await wx.login()).code }
+  catch (e) {
+    try { return (await wx.login()).code } catch (_) { throw friendlyLoginError(e) }
+  }
+}
+
 async function performLogin(confirm = ''): Promise<string> {
   const app = getApp<IAppOption>()
-  const login = await wx.login()
-  const response = await wx.cloud.callContainer({
-    config: { env: app.globalData.cloudEnv },
-    path: '/api', method: 'POST',
-    header: { 'X-WX-SERVICE': app.globalData.cloudService, 'Content-Type': 'application/json' },
-    data: { action: 'auth.login', data: { code: login.code, confirm } },
-  })
+  const code = await wxLoginWithRetry()
+  let response: any
+  try {
+    response = await wx.cloud.callContainer({
+      config: { env: app.globalData.cloudEnv },
+      path: '/api', method: 'POST',
+      header: { 'X-WX-SERVICE': app.globalData.cloudService, 'Content-Type': 'application/json' },
+      data: { action: 'auth.login', data: { code, confirm } },
+    })
+  } catch (e) { throw friendlyLoginError(e) }
   const result = response.data as ApiResponse<{ token: string }>
   if (!result?.ok || !result.data?.token) {
     const message = (result as any)?.error?.message || '微信登录失败'
@@ -548,7 +565,22 @@ async function performLogin(confirm = ''): Promise<string> {
     throw new Error(message)
   }
   wx.setStorageSync(TOKEN_KEY, result.data.token)
+  lastLoginAt = Date.now()
   return result.data.token
+}
+
+// 登录态缓存：登录成功后记录时间，供页面快速判断；token 本体仍在 storage。
+let lastLoginAt = 0
+export function loginState(): { loggedIn: boolean; at: number } {
+  const token = wx.getStorageSync(TOKEN_KEY) as string
+  return { loggedIn: !!token, at: lastLoginAt }
+}
+// 预热登录：小程序启动时即换取 token，首屏接口不再排队等待登录。
+export async function ensureLogin(): Promise<void> {
+  const app = getApp<IAppOption>()
+  if (app.globalData.demoMode) return
+  if (wx.getStorageSync(closedKey) === true) return
+  try { if (!wx.getStorageSync(TOKEN_KEY)) await loginContainer() } catch (_) { /* 首屏仍可浏览，调用时再登录 */ }
 }
 
 export async function restartAccount() {

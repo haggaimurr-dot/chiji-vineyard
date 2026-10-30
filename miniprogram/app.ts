@@ -1,4 +1,4 @@
-import { callApi } from './utils/api'
+import { callApi , ensureLogin } from './utils/api'
 import { closedKey } from './utils/personal-data'
 
 App<IAppOption>({
@@ -14,6 +14,8 @@ App<IAppOption>({
         env: this.globalData.cloudEnv || undefined,
         traceUser: true,
       })
+      // 预热登录：提前换取 token，首屏接口不再排队等待
+      void ensureLogin()
     }
   },
   onShow() {
