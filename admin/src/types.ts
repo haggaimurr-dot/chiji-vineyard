@@ -243,6 +243,7 @@ export interface Dashboard {
   behaviorFunnel: { visitors: number; cartUsers: number; createdUsers: number; paidUsers: number; receivedUsers: number; startedAt: string | null; partial: boolean }
   revenue: number
   paidOrders: number
+  previous: { grossRevenue: number; refundedAmount: number; netRevenue: number; paidOrders: number }
   pendingShipment: number
   pendingRefund: number
   newLeads: number

@@ -72,6 +72,12 @@ func (d *dashboardFixture) QueryContext(_ context.Context, q string, args []driv
 	if strings.HasPrefix(q, "SELECT COUNT(*)") {
 		return singleShippingRow(int64(2)), nil
 	}
+	if strings.HasPrefix(q, "SELECT COALESCE(SUM(CASE WHEN o.payment_status") {
+		if len(args) != 2 || args[0].Value.(time.Time).Format(time.RFC3339) != "2026-09-14T16:00:00Z" || args[1].Value.(time.Time).Format(time.RFC3339) != "2026-09-17T16:00:00Z" {
+			return nil, errors.New("wrong previous-period boundaries")
+		}
+		return singleShippingRow(int64(10000), int64(1000), int64(3)), nil
+	}
 	return nil, errors.New("unexpected query")
 }
 
@@ -113,6 +119,10 @@ func TestDashboardAggregatesAndSnapshot(t *testing.T) {
 			f := m["funnel"].(M)
 			if f["created"] != int64(6) || f["paid"] != int64(4) || f["received"] != int64(2) || trend[0].NetRevenue+trend[1].NetRevenue != m["revenue"] {
 				t.Fatal("funnel or daily totals differ")
+			}
+			prev := m["previous"].(M)
+			if prev["grossRevenue"] != int64(10000) || prev["refundedAmount"] != int64(1000) || prev["netRevenue"] != int64(9000) || prev["paidOrders"] != int64(3) {
+				t.Fatalf("wrong previous-period comparison: %+v", prev)
 			}
 		}
 	}

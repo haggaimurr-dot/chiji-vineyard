@@ -72,6 +72,11 @@ const coverageDate = computed(() => {
   return value ? beijingDate(new Date(value)) : ''
 })
 const percentage = (count: number, total: number) => total ? `${(count / total * 100).toFixed(1)}%` : '—'
+const deltaText = (current: number, previous: number) => {
+  if (!previous) return current ? '上一周期无数据' : '—'
+  const pct = (current - previous) / Math.abs(previous) * 100
+  return `较上一周期 ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`
+}
 const orderStatus = (order: Order) => order.refundStatus === 'APPLIED' ? '退款审核' : order.paymentStatus === 'REFUNDED' ? '已退款' : order.fulfillmentStatus === 'RECEIVED' ? '已收货' : order.fulfillmentStatus === 'SHIPPED' ? '运输中' : order.paymentStatus === 'PAID' ? '待发货' : ['CLOSED', 'CANCELLED'].includes(order.orderStatus) ? '已关闭' : '待付款'
 </script>
 
@@ -90,8 +95,8 @@ const orderStatus = (order: Order) => order.refundStatus === 'APPLIED' ? '退款
   <div v-if="stats" :aria-busy="loading" :class="{ 'overview-updating': loading }">
     <p class="overview-range">统计范围：{{ stats.startDate }} 至 {{ stats.endDate }} · 订单当前状态</p>
     <div class="metric-grid overview-metrics">
-      <article class="metric"><span>退款后净收入</span><strong>{{ money(stats.revenue) }}</strong><small>实付 {{ money(stats.grossRevenue) }} − 成功退款 {{ money(stats.refundedAmount) }}</small></article>
-      <article class="metric"><span>已支付订单</span><strong>{{ stats.paidOrders }}</strong><small>含退款中、部分退款和全额退款订单</small></article>
+      <article class="metric"><span>退款后净收入</span><strong>{{ money(stats.revenue) }}</strong><small>实付 {{ money(stats.grossRevenue) }} − 成功退款 {{ money(stats.refundedAmount) }}</small><small class="delta">{{ deltaText(stats.revenue, stats.previous.netRevenue) }}</small></article>
+      <article class="metric"><span>已支付订单</span><strong>{{ stats.paidOrders }}</strong><small>含退款中、部分退款和全额退款订单</small><small class="delta">{{ deltaText(stats.paidOrders, stats.previous.paidOrders) }}</small></article>
       <article class="metric"><span>期间复购率</span><strong>{{ stats.buyers ? stats.repurchaseRate.toFixed(1) + '%' : '—' }}</strong><small>{{ stats.repeatBuyers }} 位复购买家 / {{ stats.buyers }} 位有效买家</small></article>
     </div>
     <p class="overview-note">净收入为所选期间下单订单的实付总额（含运费）减截至当前已成功退款；待审核、处理中及失败退款不扣减。此数值不扣除成本，不代表利润或期间现金流水。</p>
@@ -140,6 +145,7 @@ const orderStatus = (order: Order) => order.refundStatus === 'APPLIED' ? '退款
 .overview-range { margin-bottom: 12px; }
 .overview-metrics, .overview-backlog { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .overview-metrics .metric small { line-height: 1.6; }
+.overview-metrics .metric small.delta { color: var(--purple); }
 .overview-note { margin: 14px 0; }
 .overview-updating { opacity: .5; pointer-events: none; }
 .overview-error { color: var(--danger); margin: 16px 0; }

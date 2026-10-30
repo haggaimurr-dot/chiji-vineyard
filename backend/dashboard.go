@@ -137,6 +137,17 @@ func (s *Server) dashboard(ctx context.Context, raw json.RawMessage) (any, error
 	if err != nil {
 		return nil, err
 	}
+	// Previous-period comparison: same length, immediately before the range.
+	prevEnd := start
+	prevStart := start.Add(-end.Sub(start))
+	var prevGross, prevRefunded, prevPaid int64
+	if err = tx.QueryRowContext(ctx, `SELECT COALESCE(SUM(CASE WHEN o.payment_status IN ('PAID','REFUNDING','REFUNDED') THEN o.total ELSE 0 END),0),
+		COALESCE(SUM(CASE WHEN o.payment_status IN ('PAID','REFUNDING','REFUNDED') THEN COALESCE(r.amount,0) ELSE 0 END),0),
+		COALESCE(SUM(CASE WHEN o.payment_status IN ('PAID','REFUNDING','REFUNDED') THEN 1 ELSE 0 END),0)
+		FROM orders o LEFT JOIN (SELECT order_id,SUM(amount) amount FROM refunds WHERE status='SUCCEEDED' GROUP BY order_id) r ON r.order_id=o.id
+		WHERE o.created_at>=? AND o.created_at<?`, prevStart, prevEnd).Scan(&prevGross, &prevRefunded, &prevPaid); err != nil {
+		return nil, err
+	}
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
@@ -145,6 +156,7 @@ func (s *Server) dashboard(ctx context.Context, raw json.RawMessage) (any, error
 		rate = float64(repeat) / float64(len(buyers)) * 100
 	}
 	return M{"startDate": d.StartDate, "endDate": d.EndDate, "revenue": gross - refunded, "grossRevenue": gross, "refundedAmount": refunded, "paidOrders": paid,
+		"previous": M{"grossRevenue": prevGross, "refundedAmount": prevRefunded, "netRevenue": prevGross - prevRefunded, "paidOrders": prevPaid},
 		"pendingShipment": shipping, "pendingRefund": refunds, "newLeads": leads, "products": products, "articles": articles,
 		"buyers": len(buyers), "repeatBuyers": repeat, "repurchaseRate": rate, "trend": trend, "behaviorFunnel": behavior,
 		"funnel": M{"created": created, "paid": paid, "received": received}}, nil
