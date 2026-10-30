@@ -41,6 +41,12 @@ func liveNoticeMessage(user, channel, noticeText, noticeAt string, c shippingMes
 
 func validLiveChannel(channel string) bool { return channel == "orchard" || channel == "stall" }
 
+func liveChannelOf(h HomeConfig, channel string) OrchardLiveChannel {
+	if h.Live == nil { return OrchardLiveChannel{} }
+	if channel == "stall" { return h.Live.Stall }
+	return h.Live.Orchard
+}
+
 func (s *Server) liveNoticeStatus(ctx context.Context, openid string, raw json.RawMessage) (any, error) {
 	var d struct {
 		Channel string `json:"channel"`
@@ -55,10 +61,7 @@ func (s *Server) liveNoticeStatus(ctx context.Context, openid string, raw json.R
 	if err := s.store.loadConfig(ctx, "home", &h); err != nil {
 		return nil, err
 	}
-	ch := h.Live.Orchard
-	if d.Channel == "stall" {
-		ch = h.Live.Stall
-	}
+	ch := liveChannelOf(h, d.Channel)
 	var status string
 	if err := s.store.db.QueryRowContext(ctx, "SELECT push_status FROM live_notice_subscriptions WHERE openid=? AND channel=?", openid, d.Channel).Scan(&status); err != nil {
 		status = "NONE"
@@ -89,10 +92,7 @@ func (s *Server) liveNoticeSubscribe(ctx context.Context, openid string, raw jso
 	if err := s.store.loadConfig(ctx, "home", &h); err != nil {
 		return nil, err
 	}
-	ch := h.Live.Orchard
-	if d.Channel == "stall" {
-		ch = h.Live.Stall
-	}
+	ch := liveChannelOf(h, d.Channel)
 	status := "CANCELLED"
 	if d.Accept {
 		status = "READY"
@@ -118,7 +118,7 @@ func (s *Server) sendLiveNotices(ctx context.Context) (any, error) {
 	for _, ch := range []struct {
 		id  string
 		cfg OrchardLiveChannel
-	}{{"orchard", h.Live.Orchard}, {"stall", h.Live.Stall}} {
+	}{{"orchard", liveChannelOf(h, "orchard")}, {"stall", liveChannelOf(h, "stall")}} {
 		if ch.cfg.NoticeAt == "" || ch.cfg.NoticeAt > deadline {
 			continue
 		}
