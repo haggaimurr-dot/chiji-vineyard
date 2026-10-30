@@ -16,9 +16,14 @@ type Coupon struct {
 	Name      string `json:"name"`
 	Minimum   int    `json:"minimum"`
 	Amount    int    `json:"amount"`
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
-	Active    bool   `json:"active"`
+	// 券类型扩展（新增）：AMOUNT=满减（默认，兼容老券），PERCENT=折扣，FREIGHT=免邮。
+	Type        string `json:"type,omitempty"`
+	Percent     int    `json:"percent,omitempty"`     // 折扣率：85=八五折
+	MaxDiscount int    `json:"maxDiscount,omitempty"` // 折扣上限（分），0=不限
+	NewUserOnly bool   `json:"newUserOnly,omitempty"` // 新人券
+	StartDate   string `json:"startDate"`
+	EndDate     string `json:"endDate"`
+	Active      bool   `json:"active"`
 }
 type CouponConfig struct {
 	Items []Coupon `json:"items"`
@@ -69,6 +74,15 @@ func validateDelivery(date string, items []OrderItem, now time.Time) error {
 	}
 	return nil
 }
+func couponType(c Coupon) string {
+	switch c.Type {
+	case "PERCENT", "FREIGHT":
+		return c.Type
+	default:
+		return "AMOUNT"
+	}
+}
+
 func discountCoupon(c Coupon, q *Quote, now time.Time) error {
 	day := chinaDay(now)
 	if !c.Active || day < c.StartDate || day > c.EndDate {
@@ -77,10 +91,23 @@ func discountCoupon(c Coupon, q *Quote, now time.Time) error {
 	if q.Subtotal < c.Minimum {
 		return errors.New("商品金额未达到优惠券使用门槛")
 	}
-	if c.Amount <= 0 {
-		return errors.New("优惠券金额无效")
+	switch couponType(c) {
+	case "PERCENT":
+		if c.Percent < 1 || c.Percent > 99 {
+			return errors.New("折扣率无效")
+		}
+		q.Discount = q.Subtotal * (100 - c.Percent) / 100
+		if c.MaxDiscount > 0 && q.Discount > c.MaxDiscount {
+			q.Discount = c.MaxDiscount
+		}
+	case "FREIGHT":
+		q.Discount = q.Freight
+	default:
+		if c.Amount <= 0 {
+			return errors.New("优惠券金额无效")
+		}
+		q.Discount = c.Amount
 	}
-	q.Discount = c.Amount
 	if q.Discount >= q.Subtotal {
 		q.Discount = q.Subtotal - 1
 	}
@@ -134,6 +161,15 @@ func (s *Server) couponQuote(ctx context.Context, q interface {
 	}
 	for _, c := range config.Items {
 		if c.Code == code {
+			if c.NewUserOnly {
+				var hist int
+				if e := q.QueryRowContext(ctx, "SELECT COUNT(*) FROM orders WHERE openid=? AND order_status NOT IN ('CANCELLED','CLOSED')", openid).Scan(&hist); e != nil {
+					return e
+				}
+				if hist > 0 {
+					return errors.New("该优惠券仅限新用户使用")
+				}
+			}
 			return discountCoupon(c, quote, time.Now())
 		}
 	}
@@ -155,7 +191,17 @@ func validateCoupons(c *CouponConfig) error {
 		x.Name = clean(x.Name, 60)
 		_, a := time.Parse("2006-01-02", x.StartDate)
 		_, b := time.Parse("2006-01-02", x.EndDate)
-		if !couponRE.MatchString(x.Code) || seen[x.Code] || x.Name == "" || x.Amount < 1 || x.Amount > 10000000 || x.Minimum < 0 || x.Minimum > 10000000 || a != nil || b != nil || x.StartDate > x.EndDate {
+		t := couponType(*x)
+		typeOK := true
+		switch t {
+		case "PERCENT":
+			typeOK = x.Percent >= 1 && x.Percent <= 99 && x.MaxDiscount >= 0 && x.MaxDiscount <= 10000000
+		case "FREIGHT":
+			typeOK = true
+		default:
+			typeOK = x.Amount >= 1 && x.Amount <= 10000000
+		}
+		if !couponRE.MatchString(x.Code) || seen[x.Code] || x.Name == "" || x.Minimum < 0 || x.Minimum > 10000000 || !typeOK || a != nil || b != nil || x.StartDate > x.EndDate {
 			return errors.New("优惠券编码、金额或有效期无效（编码不可重复）")
 		}
 		seen[x.Code] = true
