@@ -3,7 +3,17 @@ import type { Order } from './types'
 
 export interface WalletCoupon {
   code: string; name: string; minimum: number; amount: number; startDate: string; endDate: string; active: boolean
+  type?: 'AMOUNT' | 'PERCENT' | 'FREIGHT'; percent?: number; maxDiscount?: number; newUserOnly?: boolean
   status: string; reason: string
+}
+export function couponType(c: WalletCoupon): 'AMOUNT' | 'PERCENT' | 'FREIGHT' {
+  return c.type === 'PERCENT' || c.type === 'FREIGHT' ? c.type : 'AMOUNT'
+}
+export function couponFace(c: WalletCoupon): string {
+  const t = couponType(c)
+  if (t === 'PERCENT') return `${c.percent || 0} 折`
+  if (t === 'FREIGHT') return '免邮'
+  return `¥${(c.amount / 100).toFixed(2)}`
 }
 export const demoCoupons = [
   { code: 'DEMO10', name: '演示满99减10券', minimum: 9900, amount: 1000, startDate: '2020-01-01', endDate: '2099-12-31', active: true },
@@ -24,7 +34,19 @@ export function demoWallet(orders: Order[]): WalletCoupon[] {
   }).filter((c): c is WalletCoupon => c !== null)
 }
 export function couponSaving(c: WalletCoupon, subtotal: number): number {
-  return c.status === 'AVAILABLE' && subtotal >= c.minimum ? Math.max(0, Math.min(c.amount, subtotal - 1)) : 0
+  if (c.status !== 'AVAILABLE' || subtotal < c.minimum) return 0
+  const t = couponType(c)
+  if (t === 'PERCENT') {
+    const raw = Math.floor(subtotal * (100 - (c.percent || 0)) / 100)
+    const capped = c.maxDiscount ? Math.min(raw, c.maxDiscount) : raw
+    return Math.max(0, Math.min(capped, subtotal - 1))
+  }
+  // 免邮券的抵扣额取决于运费（客户端未知），自动选券时不参与比较
+  if (t === 'FREIGHT') return 0
+  return Math.max(0, Math.min(c.amount, subtotal - 1))
+}
+export function couponSelectable(c: WalletCoupon, subtotal: number): boolean {
+  return c.status === 'AVAILABLE' && subtotal >= c.minimum
 }
 export function bestCoupon(wallet: WalletCoupon[], subtotal: number): string {
   const compare = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0

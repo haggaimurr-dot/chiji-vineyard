@@ -1,5 +1,5 @@
 import { callApi } from '../../utils/api'
-import { couponSaving, type WalletCoupon } from '../../utils/coupons'
+import { couponFace, couponSelectable, couponSaving, type WalletCoupon } from '../../utils/coupons'
 import { money } from '../../utils/format'
 
 Page({
@@ -12,7 +12,7 @@ Page({
     this.setData({ busy: true, error: '' })
     try {
       const wallet = await callApi<WalletCoupon[]>('coupon.wallet')
-      const coupons = wallet.map(c => ({ ...c, amountText: money(c.amount), minimumText: money(c.minimum), usable: c.status === 'AVAILABLE', selectable: couponSaving(c, this.data.subtotal) > 0, reason: this.data.selecting && c.status === 'AVAILABLE' && this.data.subtotal < c.minimum ? '本单商品金额未达到门槛' : c.reason }))
+      const coupons = wallet.map(c => ({ ...c, amountText: couponFace(c), minimumText: money(c.minimum), usable: c.status === 'AVAILABLE', selectable: couponSelectable(c, this.data.subtotal), newUserTag: c.newUserOnly ? '新人券' : '', reason: this.data.selecting && c.status === 'AVAILABLE' && this.data.subtotal < c.minimum ? '本单商品金额未达到门槛' : c.reason }))
       this.setData({ coupons }); this.render()
     } catch (e) { this.setData({ coupons: [], visible: [], error: (e as Error).message }) }
     finally { this.setData({ busy: false }) }

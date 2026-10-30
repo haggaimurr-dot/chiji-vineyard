@@ -81,3 +81,41 @@ func TestInvoiceValidation(t *testing.T) {
 		t.Fatal("rejected refund should permit invoice")
 	}
 }
+
+func TestCouponTypes(t *testing.T) {
+	now := time.Date(2026, 10, 4, 0, 0, 0, 0, time.UTC)
+	// 折扣券：八五折
+	c := Coupon{Code: "P85", Type: "PERCENT", Percent: 85, Minimum: 0, StartDate: "2026-10-04", EndDate: "2026-10-04", Active: true}
+	q := Quote{Subtotal: 10000, Freight: 1200}
+	if e := discountCoupon(c, &q, now); e != nil || q.Discount != 1500 || q.Total != 9700 || q.CouponCode != "P85" {
+		t.Fatalf("percent coupon wrong: %+v %v", q, e)
+	}
+	// 折扣券：上限生效
+	c.MaxDiscount = 1000
+	q = Quote{Subtotal: 10000, Freight: 1200}
+	if e := discountCoupon(c, &q, now); e != nil || q.Discount != 1000 || q.Total != 10200 {
+		t.Fatalf("percent cap wrong: %+v %v", q, e)
+	}
+	// 折扣券：非法折扣率
+	c.Percent = 0
+	if discountCoupon(c, &q, now) == nil {
+		t.Fatal("zero percent accepted")
+	}
+	// 免邮券
+	c = Coupon{Code: "FREESHIP", Type: "FREIGHT", Minimum: 9900, StartDate: "2026-10-04", EndDate: "2026-10-04", Active: true}
+	q = Quote{Subtotal: 9900, Freight: 1200}
+	if e := discountCoupon(c, &q, now); e != nil || q.Discount != 1200 || q.Total != 9900 {
+		t.Fatalf("freight coupon wrong: %+v %v", q, e)
+	}
+	// 免邮券：未达门槛
+	q = Quote{Subtotal: 9899, Freight: 1200}
+	if discountCoupon(c, &q, now) == nil {
+		t.Fatal("freight below threshold accepted")
+	}
+	// 老券（无 Type）兼容为满减
+	c = Coupon{Code: "OLD", Minimum: 0, Amount: 500, StartDate: "2026-10-04", EndDate: "2026-10-04", Active: true}
+	q = Quote{Subtotal: 1000, Freight: 0}
+	if e := discountCoupon(c, &q, now); e != nil || q.Discount != 500 || q.Total != 500 {
+		t.Fatalf("legacy coupon wrong: %+v %v", q, e)
+	}
+}

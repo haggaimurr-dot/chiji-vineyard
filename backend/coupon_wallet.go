@@ -154,6 +154,10 @@ type couponStat struct {
 	Name       string  `json:"name"`
 	Minimum    int     `json:"minimum"`
 	Amount     int     `json:"amount"`
+	Type       string  `json:"type"`
+	Percent    int     `json:"percent"`
+	MaxDiscount int    `json:"maxDiscount"`
+	NewUserOnly bool   `json:"newUserOnly"`
 	Issued     int     `json:"issued"`
 	Used       int     `json:"used"`
 	Expired    int     `json:"expired"`
@@ -176,7 +180,7 @@ func (s *Server) couponStats(ctx context.Context) (any, error) {
 	stats := []couponStat{}
 	total := couponStat{}
 	for _, item := range config.Items {
-		st := couponStat{Code: item.Code, Name: item.Name, Minimum: item.Minimum, Amount: item.Amount}
+		st := couponStat{Code: item.Code, Name: item.Name, Minimum: item.Minimum, Amount: item.Amount, Type: couponType(item), Percent: item.Percent, MaxDiscount: item.MaxDiscount, NewUserOnly: item.NewUserOnly}
 		if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM user_coupons WHERE code=?", item.Code).Scan(&st.Issued); err != nil {
 			return nil, err
 		}

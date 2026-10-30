@@ -4,5 +4,5 @@
   <view class="hint" wx:if="{{busy}}">正在加载券包…</view>
   <view class="empty" wx:elif="{{error}}"><text>{{error}}</text><button bindtap="load">重试</button></view>
   <view class="empty" wx:elif="{{!visible.length}}">暂无优惠券，输入兑换码加入券包</view>
-  <view class="coupon card {{item.usable ? '' : 'muted'}}" wx:for="{{visible}}" wx:key="code"><view class="amount">¥{{item.amountText}}<text>满¥{{item.minimumText}}可用</text></view><view class="info"><view class="title">{{item.name}}</view><text>{{item.code}}</text><text>{{item.startDate}} 至 {{item.endDate}}</text><text>{{item.reason}}</text><button size="mini" wx:if="{{selecting}}" data-code="{{item.code}}" bindtap="choose" disabled="{{!item.selectable || busy || redeemBusy}}">选择此券</button></view></view>
+  <view class="coupon card {{item.usable ? '' : 'muted'}}" wx:for="{{visible}}" wx:key="code"><view class="amount">{{item.amountText}}<text>满¥{{item.minimumText}}可用</text></view><view class="info"><view class="title">{{item.name}}<text wx:if="{{item.newUserTag}}" class="tag-new">{{item.newUserTag}}</text></view><text>{{item.code}}</text><text>{{item.startDate}} 至 {{item.endDate}}</text><text>{{item.reason}}</text><button size="mini" wx:if="{{selecting}}" data-code="{{item.code}}" bindtap="choose" disabled="{{!item.selectable || busy || redeemBusy}}">选择此券</button></view></view>
 </view>
