@@ -8,6 +8,7 @@ import { searchAdminProducts, parseProductCSV } from './product-management'
 import { sameReviewContent, validateResource } from './content-library'
 import { can } from './permissions'
 import type { ContentResource } from './types'
+import type { Dashboard } from './types'
 import { orderExceptions } from './picking'
 import { demoDashboard } from './dashboard'
 const demoCommerceActivity = [
@@ -260,6 +261,25 @@ function saveArticle(input: Article): Article {
 }
 readArticleState()
 
+function demoDashboardExport(d: Dashboard): { filename: string; content: string } {
+  const yuan = (cents: number) => (cents / 100).toFixed(2)
+  const rows: string[][] = [
+    ['经营概览报表', `${d.startDate} 至 ${d.endDate}`],
+    ['指标', '数值'],
+    ['净收入（元）', yuan(d.revenue)],
+    ['毛收入（元）', yuan(d.grossRevenue)],
+    ['退款金额（元）', yuan(d.refundedAmount)],
+    ['支付订单数', String(d.paidOrders)],
+    [],
+    ['每日趋势', ''],
+    ['日期', '支付订单数', '毛收入（元）', '退款金额（元）', '净收入（元）'],
+    ...d.trend.map(t => [t.date, String(t.paidOrders), yuan(t.grossRevenue), yuan(t.refundedAmount), yuan(t.netRevenue)]),
+  ]
+  const esc = (v: string) => /["\n,]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+  const content = '\ufeff' + rows.map(r => r.map(esc).join(',')).join('\r\n')
+  return { filename: `经营概览_${d.startDate}_${d.endDate}.csv`, content }
+}
+
 export async function mockCall<T>(action: string, data: any = {}): Promise<T> {
   await wait()
   if (action === 'admin.dashboard') leads = leadStore.read().items
@@ -280,7 +300,11 @@ export async function mockCall<T>(action: string, data: any = {}): Promise<T> {
   else if (action === 'admin.account.permissions') result = demoSavePermissions(data.accountId, data.permissions, actor!)
   else if (action.startsWith('admin.payment.')) result = paymentDemo(action, data)
   else if (action === 'admin.media.upload') result = { fileID: data.dataUrl }
-  else if (action === 'admin.dashboard') result = demoDashboard(orders, refunds, data, { pendingShipment: orders.filter((o) => o.paymentStatus === 'PAID' && ['UNFULFILLED', 'PREPARING'].includes(o.fulfillmentStatus) && ['NONE', 'REJECTED', 'PARTIAL'].includes(o.refundStatus)).length, pendingRefund: refunds.filter((r) => r.status === 'APPLIED').length, newLeads: leads.filter((l) => l.status === 'NEW').length, products: products.length, articles: articles.filter((a) => a.status === 'PUBLISHED').length }, demoCommerceActivity)
+  else if (action === 'admin.dashboard.export') {
+    const demo = demoDashboard(orders, refunds, data, { pendingShipment: 0, pendingRefund: 0, newLeads: 0, products: 0, articles: 0 }, demoCommerceActivity)
+    result = demoDashboardExport(demo)
+  }
+    else if (action === 'admin.dashboard') result = demoDashboard(orders, refunds, data, { pendingShipment: orders.filter((o) => o.paymentStatus === 'PAID' && ['UNFULFILLED', 'PREPARING'].includes(o.fulfillmentStatus) && ['NONE', 'REJECTED', 'PARTIAL'].includes(o.refundStatus)).length, pendingRefund: refunds.filter((r) => r.status === 'APPLIED').length, newLeads: leads.filter((l) => l.status === 'NEW').length, products: products.length, articles: articles.filter((a) => a.status === 'PUBLISHED').length }, demoCommerceActivity)
   else if (action === 'admin.review.list') {
     let items = JSON.parse(localStorage.getItem('chiji_admin_demo_reviews') || 'null') || clone(demoReviews)
     const page = data.page || 1

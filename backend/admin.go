@@ -232,6 +232,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.resolveReviewAlert(ctx, actor, req.Data)
 	case "admin.dashboard":
 		return s.dashboard(ctx, req.Data)
+	case "admin.dashboard.export":
+		return s.dashboardExport(ctx, actor, req.Data)
 	case "admin.product.search":
 		return s.searchAdminProducts(ctx, req.Data)
 	case "admin.product.import":

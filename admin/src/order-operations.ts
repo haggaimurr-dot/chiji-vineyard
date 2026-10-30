@@ -67,7 +67,7 @@ export function exportOrders(orders: Order[], filename = 'orders.csv'): OrderExp
   return { filename, count: orders.length, content: '\uFEFF' + [headers.map(header => csvCell(header)).join(','), ...lines].join('\r\n') + '\r\n' }
 }
 
-export function downloadCSV(result: OrderExportResult): void {
+export function downloadCSV(result: Pick<OrderExportResult, "filename" | "content">): void {
   const blob = new Blob([result.content], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob), link = document.createElement('a')
   link.href = url; link.download = result.filename; link.hidden = true

@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { api, isDemo, money } from '../api'
 import { beijingDate, dashboardRange, shiftDate } from '../dashboard'
 import { can, currentAdmin } from '../permissions'
+import { downloadCSV } from '../order-operations'
 import type { Dashboard, Lead, LeadListResult, Order } from '../types'
 
 const today = beijingDate()
@@ -37,6 +38,17 @@ function choosePreset(value: string) {
   endDate.value = beijingDate()
   startDate.value = value === 'month' ? `${endDate.value.slice(0, 7)}-01` : shiftDate(endDate.value, -(Number(value) - 1))
   void load()
+}
+const exporting = ref(false)
+const exportError = ref('')
+async function exportReport() {
+  if (exporting.value) return
+  exporting.value = true; exportError.value = ''
+  try {
+    const result = await api<{ filename: string; content: string }>('admin.dashboard.export', dashboardRange({ startDate: startDate.value, endDate: endDate.value }))
+    downloadCSV(result)
+  } catch (e) { exportError.value = e instanceof Error ? e.message : '导出失败' }
+  finally { exporting.value = false }
 }
 async function loadRecent() {
   recentError.value = ''
@@ -87,7 +99,8 @@ const orderStatus = (order: Order) => order.refundStatus === 'APPLIED' ? '退款
   </div>
   <section class="panel overview-filters">
     <div class="overview-presets"><strong>统计日期</strong><button v-for="option in [{ value: '1', label: '今天' }, { value: '7', label: '近7天' }, { value: '30', label: '近30天' }, { value: 'month', label: '本月' }]" :key="option.value" :class="{ selected: preset === option.value }" :disabled="loading" @click="choosePreset(option.value)">{{ option.label }}</button></div>
-    <form @submit.prevent="load"><label>开始日期<input v-model="startDate" type="date" :max="today" required :disabled="loading" @input="preset = 'custom'" /></label><span>至</span><label>结束日期<input v-model="endDate" type="date" :max="today" required :disabled="loading" @input="preset = 'custom'" /></label><button class="primary" :disabled="loading">{{ loading ? '加载中…' : '查询' }}</button></form>
+    <form @submit.prevent="load"><label>开始日期<input v-model="startDate" type="date" :max="today" required :disabled="loading" @input="preset = 'custom'" /></label><span>至</span><label>结束日期<input v-model="endDate" type="date" :max="today" required :disabled="loading" @input="preset = 'custom'" /></label><button class="primary" :disabled="loading">{{ loading ? '加载中…' : '查询' }}</button><button type="button" class="secondary" :disabled="loading || exporting" @click="exportReport">{{ exporting ? '导出中…' : '导出报表' }}</button></form>
+    <p v-if="exportError" class="form-error" role="alert">{{ exportError }}</p>
     <p>按北京时间下单日期统计，含首尾两天；最多366天。{{ isDemo ? '当前为演示数据。' : '' }}</p>
   </section>
   <div v-if="error" class="panel overview-error" role="alert">{{ error }} <button @click="load">重新加载</button></div>
