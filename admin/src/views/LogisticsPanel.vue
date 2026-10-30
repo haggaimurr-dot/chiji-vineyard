@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { api, dateTime } from '../api'
+import { confirmAction } from '../confirm'
 import type { LogisticsTask, Order, Parcel } from '../types'
 const props = defineProps<{ orders: Order[] }>()
 const emit = defineEmits<{ changed: [] }>()
@@ -34,7 +35,7 @@ async function saveTask() {
 }
 async function addParcel() {
   if (!order.value || busy.value) return
-  if (!confirm('确认此包裹已交寄？保存后将把全部运单同步到微信。')) return
+  if (!(await confirmAction({ title: '确认交寄', message: '确认此包裹已交寄？保存后将把全部运单同步到微信。', confirmText: '确认已交寄' }))) return
   busy.value = true; error.value = ''; message.value = ''
   try {
     const result = await api<{shipment: NonNullable<Order['shipment']>}>('admin.order.addParcel', { orderId:orderId.value, ...form.value })

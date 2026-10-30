@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import ProductTools from './ProductTools.vue'
 import { api, money } from '../api'
+import { confirmAction } from '../confirm'
 import type { Product } from '../types'
 import { productBatchError, giftCustomizationError } from '../product-content'
 import InventoryPanel from './InventoryPanel.vue'
@@ -27,7 +28,7 @@ function toggleSelect(id: string) { const i = selected.value.indexOf(id); if (i 
 function toggleSelectAll() { selected.value = pageAllSelected.value ? [] : products.value.map(p => p.id) }
 async function batchStatus(status: 'PUBLISHED' | 'DRAFT') {
   if (!selected.value.length || selBusy.value) return
-  if (!window.confirm(`确认将 ${selected.value.length} 个商品${status === 'PUBLISHED' ? '上架' : '下架为草稿'}？`)) return
+  if (!(await confirmAction({ title: '批量上下架', message: `确认将 ${selected.value.length} 个商品${status === 'PUBLISHED' ? '上架' : '下架为草稿'}？`, danger: status !== 'PUBLISHED' }))) return
   selBusy.value = true; selMsg.value = ''
   try {
     const result = await api<{ updated: number }>('admin.product.batchStatus', { ids: selected.value, status })
@@ -39,7 +40,7 @@ async function batchStatus(status: 'PUBLISHED' | 'DRAFT') {
 }
 async function duplicateProduct(product: Product) {
   if (selBusy.value) return
-  if (!window.confirm(`复制「${product.name}」为草稿（规格库存置零）？`)) return
+  if (!(await confirmAction({ title: '复制商品', message: `复制「${product.name}」为草稿（规格库存置零）？` }))) return
   selBusy.value = true; selMsg.value = ''
   try {
     const created = await api<Product>('admin.product.duplicate', { id: product.id })

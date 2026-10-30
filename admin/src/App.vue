@@ -10,6 +10,7 @@ import ContentView from './views/ContentView.vue'
 import LeadsView from './views/LeadsView.vue'
 import SettingsView from './views/SettingsView.vue'
 import LeadReminders from './components/LeadReminders.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
 import ReviewsView from './views/ReviewsView.vue'
 import AuditView from './views/AuditView.vue'
 import PaymentsView from './views/PaymentsView.vue'
@@ -171,5 +172,6 @@ async function logout() {
       <header class="topbar"><button class="menu-toggle" type="button" aria-label="打开菜单" @click="navOpen = true">☰</button><div><p class="eyebrow purple">CHIJIGRAPE</p><h1>{{ currentLabel }}</h1></div><div class="top-actions"><PaymentAlerts v-if="currentUser.role === 'SUPER_ADMIN'" @open="navigate('payments')" /><ReviewAlerts v-if="can(currentUser, 'review.read')" @open="navigate('reviews')" /><LeadReminders v-if="can(currentUser, 'lead.read')" :current-user-id="currentUser.id" @open="openLead" /><span v-if="isDemo" class="demo-badge">演示数据</span><span class="date">{{ new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span></div></header>
       <div class="view"><p v-if="!currentView" class="subtle">当前账号暂无可用模块，请联系超级管理员分配权限。</p><component v-else :is="currentView" :key="`${active === 'leads' ? `leads-${leadNavigation}` : active}-${currentUser.permissions?.join(',')}`" v-bind="active === 'leads' ? { initialLeadId } : {}" /></div>
     </section>
+    <ConfirmDialog />
   </div>
 </template>

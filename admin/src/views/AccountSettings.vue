@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { api } from '../api'
+import { confirmAction } from '../confirm'
 import { permissionOptions, defaultPermissions } from '../permissions'
 
 type Account = { id: string; username: string; role: 'SUPER_ADMIN' | 'OPERATOR'; active: boolean; permissions?: string[] }
@@ -120,6 +121,9 @@ async function submit() {
     if (Array.from(password.value).length < 10) { formError.value = '密码至少需要 10 位'; return }
     if (Array.from(password.value).length > 128) { formError.value = '密码最多 128 位'; return }
     if (password.value !== confirmation.value) { formError.value = '两次输入的密码不一致'; return }
+  }
+  if (mode.value === 'permissions' && target.value) {
+    if (!(await confirmAction({ title: '保存权限', message: `确认更新 ${target.value.username} 的权限？已有登录会话将立即按新权限校验。`, danger: true, confirmText: '保存权限' }))) return
   }
   busy.value = true
   error.value = ''

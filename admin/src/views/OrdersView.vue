@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { api, dateTime, money } from '../api'
+import { confirmAction } from '../confirm'
 import { can, currentAdmin } from '../permissions'
 import { canEditShipment, canShip, fulfillmentStateLabel, orderStateLabel, orderSummary, paymentStateLabel, refundStateLabel, validateShipment } from '../orders'
 import type { Order, OrderSearchResult, Refund, Tracking } from '../types'
@@ -220,7 +221,7 @@ async function refundAction(refund: Refund, action: string, data: Record<string,
   finally { refundBusy.value = '' }
 }
 async function approve(refund: Refund) {
-  if (!confirm(`确认原路退回 ${money(refund.amount)}？处理中重试将复用原退款单号。`)) return
+  if (!(await confirmAction({ title: '确认退款', message: `确认原路退回 ${money(refund.amount)}？处理中重试将复用原退款单号。`, danger: true, confirmText: '确认退款' }))) return
   await refundAction(refund, 'admin.refund.approve')
 }
 async function reject(refund: Refund) {

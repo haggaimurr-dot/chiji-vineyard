@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { api, dateTime } from '../api'
+import { confirmAction } from '../confirm'
 import LeadRecordsEditor from '../components/LeadRecordsEditor.vue'
 import { validateLeadRecords, calendarReminder } from '../lead-records'
 import type { LeadRecords } from '../types'
@@ -49,7 +50,7 @@ async function loadDuplicates() {
 }
 async function mergeLeads() {
   if (!selected.value || !mergeSourceIds.value.length || mergeBusy.value) return
-  if (!confirm(`确认将 ${mergeSourceIds.value.length} 条重复线索的跟进记录合并到当前线索？来源线索将标记为已关闭。`)) return
+  if (!(await confirmAction({ title: '合并重复线索', message: `确认将 ${mergeSourceIds.value.length} 条重复线索的跟进记录合并到当前线索？来源线索将标记为已关闭。`, danger: true, confirmText: '确认合并' }))) return
   mergeBusy.value = true; saveError.value = ''
   try { const r = await api<{ merged: number; followUpCount: number }>('admin.lead.merge', { targetId: selected.value.id, sourceIds: mergeSourceIds.value }); saveSuccess.value = `已合并 ${r.merged} 条线索，当前共 ${r.followUpCount} 条跟进记录`; mergeSourceIds.value = []; await loadDuplicates(); await load() }
   catch (e) { saveError.value = message(e) }

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import ShippingRegions from './ShippingRegions.vue'
 import { validateShippingDetails, type ShippingRule } from '../../../miniprogram/utils/shipping'
 import { api, isDemo } from '../api'
+import { confirmAction } from '../confirm'
 import { currentAdmin } from '../permissions'
 import RuntimeOperations from './RuntimeOperations.vue'
 import AccountSettings from './AccountSettings.vue'
@@ -50,6 +51,7 @@ async function refreshAfterRollback() {
 }
 async function save() {
   if (!ready.value || locked.value) return
+  if (!(await confirmAction({ title: '发布运费配置', message: '确认保存并发布运费配置？将立即对全站生效并记版本。', confirmText: '保存发布' }))) return
   saved.value = false
   error.value = ''
   busy.value = true

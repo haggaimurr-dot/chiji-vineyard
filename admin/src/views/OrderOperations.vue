@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { api, isDemo } from '../api'
+import { confirmAction } from '../confirm'
 import { canShip, downloadCSV, orderFilter, validateShipmentItems } from '../order-operations'
 import type { BatchShipmentResult, Order, OrderExportResult, ShipmentItem, Waybill, WaybillConfig, WaybillLabel, WaybillQuotes } from '../types'
 
@@ -79,7 +80,7 @@ async function submitBatch() {
   const items = remaining.value.map(({ orderId, carrier, carrierCode, trackingNo }) => ({ orderId, carrier: carrier.trim(), carrierCode: carrierCode.trim().toUpperCase(), trackingNo: trackingNo.trim() }))
   const issues = validateShipmentItems(items)
   if (issues.length) { batchError.value = issues.join('；'); return }
-  if (!confirm(`确认这 ${items.length} 笔订单已交寄？提交后将标记发货并同步微信。`)) return
+  if (!(await confirmAction({ title: '批量确认交寄', message: `确认这 ${items.length} 笔订单已交寄？提交后将标记发货并同步微信。`, confirmText: '确认发货' }))) return
   busy.value = true; batchError.value = ''; batchSummary.value = ''
   try {
     const result = await api<BatchShipmentResult>('admin.order.batchShip', { items })
@@ -125,7 +126,7 @@ async function createLabel() {
 async function cancelLabel() {
   if (!labelOrder.value || !label.value || busy.value || labelBusy.value) return
   if (!cancelReason.value.trim()) { labelError.value = '请填写取消原因'; return }
-  if (!confirm('确认包裹尚未交寄并取消此面单？取消成功后原面单不可使用。')) return
+  if (!(await confirmAction({ title: '取消电子面单', message: '确认包裹尚未交寄并取消此面单？取消成功后原面单不可使用。', danger: true, confirmText: '确认取消' }))) return
   busy.value = true; labelError.value = ''
   try {
     label.value = await api<Waybill>('admin.waybill.cancel', { orderId: labelOrder.value.id, waybillId: label.value.id, reason: cancelReason.value })
@@ -144,7 +145,7 @@ async function syncLabel() {
 
 async function shipLabel() {
   if (!labelOrder.value || !label.value || busy.value) return
-  if (!confirm('确认包裹已交寄？将使用这张面单的运单号发货并同步微信。')) return
+  if (!(await confirmAction({ title: '面单发货', message: '确认包裹已交寄？将使用这张面单的运单号发货并同步微信。', confirmText: '确认发货' }))) return
   busy.value = true; labelError.value = ''
   try {
     const result = await api<{ shipment: NonNullable<Order['shipment']> }>('admin.order.ship', { orderId: labelOrder.value.id, carrier: label.value.carrier, carrierCode: label.value.carrierCode, trackingNo: label.value.trackingNo })
