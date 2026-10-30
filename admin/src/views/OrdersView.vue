@@ -17,6 +17,7 @@ import PickingSheet from './PickingSheet.vue'
 import OrderAlertPanel from './OrderAlertPanel.vue'
 import AfterSalesReasonReport from './AfterSalesReasonReport.vue'
 import NotifyStats from './NotifyStats.vue'
+import TicketSatisfactionStats from './TicketSatisfactionStats.vue'
 import { orderExceptions } from '../picking'
 import { logisticsAlerts, orderProgress } from '../order-progress'
 
@@ -250,7 +251,7 @@ function closeEvidence() { evidenceRequest++; evidenceRefund.value = null }
 <template>
   <LogisticsPanel v-if="workspace === 'logistics'" :orders="orders" @changed="loadOrders" />
   <div class="toolbar"><div><h2>订单与售后</h2><p>查找订单、管理发货与处理售后</p></div><button class="button secondary" :disabled="loading || refundsLoading || operationBusy" @click="refresh">刷新</button></div>
-  <div class="segmented order-filters" aria-label="订单运营模块"><button v-for="item in [{ key: 'orders', label: '订单与售后' }, { key: 'picking', label: '拣货单' }, { key: 'logistics', label: '物流与异常任务' }, { key: 'exceptions', label: '异常订单工作台' }, { key: 'shipTimeout', label: '异常提醒' }, { key: 'aftersalesReport', label: '售后分析' }, { key: 'notifyStats', label: '通知统计' }]" :key="item.key" :class="{ active: workspace === item.key }" :aria-pressed="workspace === item.key" :disabled="operationBusy" @click="switchWorkspace(item.key)">{{ item.label }}</button></div>
+  <div class="segmented order-filters" aria-label="订单运营模块"><button v-for="item in [{ key: 'orders', label: '订单与售后' }, { key: 'picking', label: '拣货单' }, { key: 'logistics', label: '物流与异常任务' }, { key: 'exceptions', label: '异常订单工作台' }, { key: 'shipTimeout', label: '异常提醒' }, { key: 'aftersalesReport', label: '售后分析' }, { key: 'notifyStats', label: '通知统计' }, { key: 'satisStats', label: '满意度' }]" :key="item.key" :class="{ active: workspace === item.key }" :aria-pressed="workspace === item.key" :disabled="operationBusy" @click="switchWorkspace(item.key)">{{ item.label }}</button></div>
   <p v-if="workspace === 'exceptions'" class="alert">集中处理微信发货同步失败、发货提醒失败或结果待核实、退款失败及已开票邮件异常。使用订单操作重试；退款与邮件结果待核实请先核对服务记录。</p>
   <div class="segmented order-filters" aria-label="订单状态筛选"><button v-for="item in visibleFilters" :key="item.key" :class="{ active: filter === item.key }" :aria-pressed="filter === item.key" :disabled="operationBusy" @click="filter = item.key">{{ item.label }}</button></div>
   <form class="order-search" @submit.prevent="search">
@@ -270,6 +271,7 @@ function closeEvidence() { evidenceRequest++; evidenceRefund.value = null }
   <OrderAlertPanel v-if="workspace === 'shipTimeout'" ref="alertPanel"/>
   <AfterSalesReasonReport v-if="workspace === 'aftersalesReport'"/>
   <NotifyStats v-if="workspace === 'notifyStats'"/>
+  <TicketSatisfactionStats v-if="workspace === 'satisStats'"/>
   <PickingSheet v-if="workspace === 'picking'" :selected-ids="selectedIds" :disabled="loading || operationBusy || !!listError" @update:busy="operationBusy = $event" />
   <OrderPackages v-if="packageOrder" :order="packageOrder" @close="packageOrderId = ''" @changed="loadOrders" @busy="operationBusy = $event"/>
   <section class="panel table-panel orders-table-panel" :aria-busy="loading">

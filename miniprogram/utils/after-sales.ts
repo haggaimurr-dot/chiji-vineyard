@@ -4,6 +4,7 @@ export interface AfterSalesTicket {
  id: string; orderId: string; orderNo: string; refundId?: string; category: string; status: string; owner?: string; version: number; createdAt: string; updatedAt: string
  dueAt?: string; userRead?: number; adminRead?: number
  messages: Array<{role: string; content: string; createdAt: string; attachments?: TicketAttachment[]}>
+ satisfaction?: { rating: number; comment: string }
 }
 export const ticketStatuses: Record<string,string> = { OPEN: '待处理', PROCESSING: '处理中', RESOLVED: '已解决', CLOSED: '已关闭' }
 export const ticketCategories: Record<string,string> = { QUALITY: '品质问题', DELIVERY: '物流问题', INVOICE: '发票问题', OTHER: '其他问题' }

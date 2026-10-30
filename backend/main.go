@@ -293,6 +293,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.store.notifySubscribe(ctx, openid, req.Data)
 	case "notify.pref.set":
 		return s.store.notifyPrefSet(ctx, openid, req.Data)
+	case "ticket.rate":
+		return s.rateTicket(ctx, openid, req.Data)
 	case "activity.notice.list":
 		return s.store.activityNotices(ctx, openid, req.Data)
 	case "activity.notice.read":

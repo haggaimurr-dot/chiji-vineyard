@@ -2,3 +2,8 @@
 
 .return-box { margin-bottom:32rpx; padding:24rpx; border:1rpx solid #e5dfeb; border-radius:16rpx; }
 .return-box input { margin:12rpx 0 20rpx; padding:16rpx; background:#f7f5fa; border-radius:12rpx; }
+.satisfaction-box{margin-top:24rpx;padding-top:16rpx;border-top:1px solid #f0ede6}
+.stars{color:#e8a93d;font-size:32rpx;letter-spacing:4rpx}
+.stars-row{padding:12rpx 0}
+.star{font-size:56rpx;color:#ddd;padding:0 8rpx}
+.star.on{color:#e8a93d}

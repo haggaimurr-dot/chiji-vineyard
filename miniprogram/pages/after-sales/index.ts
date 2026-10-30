@@ -4,7 +4,7 @@ import { ticketStatuses, ticketCategories, ticketReminder, validateAttachments, 
 let reminderTimer: ReturnType<typeof setInterval> | undefined
 Page({
  returnDraft: false,
- data: {returnStatuses, carrier:'', carrierCode:'SF', trackingNo:'', returnTracking:null as {message:string;events:Array<{time:string;context:string}>} | null, attachments:[] as TicketAttachment[], orderId:'', tickets:[] as Array<AfterSalesTicket & {statusText:string; categoryText:string; reminderText:string; dueAt:string}>, selected:null as AfterSalesTicket | null, loading:false, busy:false, error:'', content:'', reply:'', category:'OTHER', categoryIndex:3, categoryLabels:['品质问题','物流问题','发票问题','其他问题'], creating:false, offset:0, hasMore:false, demo:getApp().globalData.demoMode},
+ data: {returnStatuses, rateValue: 5, rateComment: '', satisfactionStars: '', carrier:'', carrierCode:'SF', trackingNo:'', returnTracking:null as {message:string;events:Array<{time:string;context:string}>} | null, attachments:[] as TicketAttachment[], orderId:'', tickets:[] as Array<AfterSalesTicket & {statusText:string; categoryText:string; reminderText:string; dueAt:string}>, selected:null as AfterSalesTicket | null, loading:false, busy:false, error:'', content:'', reply:'', category:'OTHER', categoryIndex:3, categoryLabels:['品质问题','物流问题','发票问题','其他问题'], creating:false, offset:0, hasMore:false, demo:getApp().globalData.demoMode},
  onLoad(options: Record<string,string | undefined>) { this.setData({orderId:options.id || ''}); this.load() },
  onShow() { this.load(true); if(reminderTimer) clearInterval(reminderTimer); reminderTimer=setInterval(()=>{ if(!this.data.busy && !this.data.loading && !this.data.creating && !this.data.reply && !this.data.attachments.length && !this.returnDraft) this.load(true) },30000) },
  onHide() { if(reminderTimer) clearInterval(reminderTimer) },
@@ -22,9 +22,21 @@ Page({
  chooseCategory(event: WechatMiniprogram.PickerChange) { const index=Number(event.detail.value); this.setData({categoryIndex:index,category:['QUALITY','DELIVERY','INVOICE','OTHER'][index]}) },
  async select(event: WechatMiniprogram.TouchEvent) { const ticket=this.data.tickets.find(t=>t.id===event.currentTarget.dataset.id); if(ticket) {
   this.returnDraft=false
-  this.setData({selected:ticket,returnTracking:null,carrier:ticket.return?.shipment?.carrier || '',carrierCode:ticket.return?.shipment?.carrierCode || 'SF',trackingNo:ticket.return?.shipment?.trackingNo || '',reply:'',attachments:[],error:'',creating:false,busy:true})
-  try { const result=await callApi<AfterSalesTicket>('ticket.read',{id:ticket.id,version:ticket.version,readThrough:ticket.messages.length}); if(this.data.selected?.id===result.id) this.setData({selected:result}); this.setData({tickets:this.data.tickets.map(t=>t.id===result.id ? {...t,...result,reminderText:ticketReminder(result,'USER').text} : t)}) } catch(e) {this.setData({error:(e as Error).message})} finally {this.setData({busy:false})}
+  this.setData({selected:ticket,returnTracking:null,rateValue:5,rateComment:'',satisfactionStars:ticket.satisfaction ? '★'.repeat(ticket.satisfaction.rating) + '☆'.repeat(5-ticket.satisfaction.rating) : '',carrier:ticket.return?.shipment?.carrier || '',carrierCode:ticket.return?.shipment?.carrierCode || 'SF',trackingNo:ticket.return?.shipment?.trackingNo || '',reply:'',attachments:[],error:'',creating:false,busy:true})
+  try { const result=await callApi<AfterSalesTicket>('ticket.read',{id:ticket.id,version:ticket.version,readThrough:ticket.messages.length}); if(this.data.selected?.id===result.id) this.setData({selected:result,satisfactionStars:result.satisfaction ? '★'.repeat(result.satisfaction.rating) + '☆'.repeat(5-result.satisfaction.rating) : ''}); this.setData({tickets:this.data.tickets.map(t=>t.id===result.id ? {...t,...result,reminderText:ticketReminder(result,'USER').text} : t)}) } catch(e) {this.setData({error:(e as Error).message})} finally {this.setData({busy:false})}
  } },
+ setRate(e: WechatMiniprogram.TouchEvent) { this.setData({ rateValue: Number(e.currentTarget.dataset.v) }) },
+ setRateComment(e: WechatMiniprogram.Input) { this.setData({ rateComment: e.detail.value }) },
+ async submitRate() {
+  if (this.data.busy || !this.data.selected) return
+  this.setData({ busy: true, error: '' })
+  try {
+   await callApi('ticket.rate', { ticketId: this.data.selected.id, rating: this.data.rateValue, comment: this.data.rateComment })
+   wx.showToast({ title: '评价成功，谢谢！', icon: 'success' })
+   await this.load(true)
+  } catch (e) { this.setData({ error: (e as Error).message }) }
+  finally { this.setData({ busy: false }) }
+ },
  async create() {
   if(this.data.busy) return
   const content=this.data.content.trim(); if(!content) {this.setData({error:'请填写问题描述'});return}

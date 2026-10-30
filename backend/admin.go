@@ -508,6 +508,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.searchLeads(ctx, d)
 	case "admin.notify.stats":
 		return s.notifyStats(ctx, req.Data)
+	case "admin.ticket.satisfactionStats":
+		return s.ticketSatisfactionStats(ctx, req.Data)
 	case "admin.lead.channelStats":
 		return s.leadChannelStats(ctx, req.Data)
 	case "admin.lead.funnel":
