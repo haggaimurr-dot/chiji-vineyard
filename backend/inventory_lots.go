@@ -324,3 +324,41 @@ func (s *Server) inventoryLotMovements(ctx context.Context, raw json.RawMessage)
 	}
 	return M{"items": items, "total": total, "offset": d.Offset, "limit": 20}, rows.Err()
 }
+
+// resolveScan resolves a scanned batch QR code to its batch/product/SKUs for fast stock operations.
+func (s *Server) resolveScan(ctx context.Context, raw json.RawMessage) (any, error) {
+	var d struct {
+		Code string `json:"code"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	code := strings.TrimSpace(d.Code)
+	if code == "" {
+		return nil, errors.New("请扫描或输入批次码")
+	}
+	var batchID, productID, number, status string
+	err := s.store.db.QueryRowContext(ctx, "SELECT id,product_id,batch_number,status FROM product_batches WHERE id=? OR JSON_UNQUOTE(JSON_EXTRACT(payload,'$.code'))=? LIMIT 1", code, code).Scan(&batchID, &productID, &number, &status)
+	if err != nil {
+		return nil, errors.New("未找到该批次码")
+	}
+	var productName string
+	_ = s.store.db.QueryRowContext(ctx, "SELECT JSON_UNQUOTE(JSON_EXTRACT(payload,'$.name')) FROM products WHERE id=?", productID).Scan(&productName)
+	rows, err := s.store.db.QueryContext(ctx, "SELECT id,name FROM skus WHERE product_id=? AND active=1 ORDER BY sort_order,id", productID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	skus := []M{}
+	for rows.Next() {
+		var id, name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		skus = append(skus, M{"skuId": id, "skuName": name})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return M{"batchId": batchID, "batchNumber": number, "status": status, "productId": productID, "productName": productName, "skus": skus}, nil
+}

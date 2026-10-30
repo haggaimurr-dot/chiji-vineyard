@@ -12,6 +12,13 @@ const busy=ref(false),error=ref(''),success=ref(''),warehouse=ref<Warehouse|null
 const selected=computed(()=>lots.value.find(l=>l.warehouseId===warehouseId.value&&l.batchId===batchId.value))
 const batchName=(id:string)=>batches.value.find(b=>b.id===id)?.number||id
 const warehouseName=(id:string)=>warehouses.value.find(w=>w.id===id)?.name||id
+type ScanResult={batchId:string;batchNumber:string;productId:string;productName:string;skus:Array<{skuId:string;skuName:string}>}
+const scanCode=ref(''),scanInfo=ref<ScanResult|null>(null),scanError=ref('')
+async function scan(){const code=scanCode.value.trim();if(!code||busy.value)return;busy.value=true;scanError.value='';try{
+ const r=await api<ScanResult>('admin.inventory.resolveScan',{code});scanInfo.value=r;scanCode.value=''
+ if(r.skus.length){skuId.value=r.skus[0].skuId;await load();batchId.value=r.batchId}
+ else{scanError.value='该批次商品暂无可用规格'}
+}catch(e){scanError.value=(e as Error).message;scanInfo.value=null}finally{busy.value=false}}
 let request=0
 async function load(next=0){const id=++request;busy.value=true;error.value='';try{
  const [w,a]=await Promise.all([api<{items:Warehouse[]}>('admin.inventory.locations'),api<{items:InventoryAlert[]}>('admin.inventory.alerts')]);if(id!==request)return;warehouses.value=w.items;skus.value=a.items
@@ -26,7 +33,9 @@ async function submit(){busy.value=true;error.value='';success.value='';try{awai
 <template>
 <section class="panel lot-panel">
  <div class="toolbar"><h3>批次库存与多仓库</h3><button class="button secondary" :disabled="busy" @click="load(offset)">刷新</button><button v-permission="'inventory.write'" class="button primary" :disabled="busy" @click="warehouse={id:'',name:'',active:true,version:0}">新增仓库</button></div>
- <p>采购入库增加可售库存；损耗扣减指定仓库批次，不能扣减预占库存。期初分配将已有库存登记到仓库批次，总库存不变。</p>
+ <form class="scan-form" @submit.prevent="scan"><label>扫码出入库<input v-model.trim="scanCode" placeholder="扫描批次二维码后回车" :disabled="busy" /></label><button class="button secondary" :disabled="busy||!scanCode.trim()">识别</button><span v-if="scanInfo" class="scan-info">已识别：{{scanInfo.productName}} / 批次 {{scanInfo.batchNumber}}，请选仓库并确认数量</span></form>
+ <p v-if="scanError" class="form-error" role="alert">{{scanError}}</p>
+ <p>采购入库增加可售库存；损耗扣减指定仓库批次，不能扣减预占库存。期初分配将已有库存登记到仓库批次，总库存不变。扫码枪即键盘输入，回车自动识别批次并填充商品与批次。</p>
  <p>分仓数量为可售与预占的实物合计。付款和盘点减少实物时先扣未分配数量，再按仓库、批次编号顺序扣减；退款回补到未分配库存。流水仅记录启用后的服务内操作，云数据库仍需复验。</p>
  <p v-if="error" class="form-error" role="alert">{{error}}</p><p v-if="success" role="status">{{success}}</p>
  <div class="row-actions"><span v-for="w in warehouses" :key="w.id">{{w.name}}（{{w.active?'启用':'停用'}}）<button v-permission="'inventory.write'" class="text-button" :disabled="busy" @click="warehouse={...w}">编辑</button></span></div>
@@ -49,5 +58,8 @@ async function submit(){busy.value=true;error.value='';success.value='';try{awai
 <div v-if="warehouse" class="modal-backdrop"><form class="drawer" @submit.prevent="saveWarehouse"><div class="drawer-head"><h2>{{warehouse.id?'编辑仓库':'新增仓库'}}</h2><button type="button" class="close" :disabled="busy" @click="warehouse=null">×</button></div><div class="drawer-body form-grid"><label>仓库名称<input v-model.trim="warehouse.name" maxlength="80" required :disabled="busy"/></label><label>状态<select v-model="warehouse.active" :disabled="busy"><option :value="true">启用</option><option :value="false">停用</option></select></label><p>停用保留库存和历史，暂停该仓库的手工入出库；订单自动扣减仍可能涉及已有库存。</p><p v-if="error" class="form-error" role="alert">{{error}}</p></div><div class="drawer-foot"><button class="button primary" :disabled="busy">保存仓库</button></div></form></div>
 </template>
 <style scoped>
-.lot-panel{padding:24px}.lot-panel p{line-height:1.7;margin:16px 0}.row-actions{flex-wrap:wrap;margin:16px 0}.table-panel{overflow:auto;margin:20px 0}select,input,textarea{padding:10px;border:1px solid var(--border);border-radius:8px}table{min-width:600px}h3{margin-top:20px}
+.lot-panel{padding:24px}
+.scan-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;background:var(--purple-soft);border-radius:10px;padding:12px 16px}
+.scan-form label{display:grid;gap:6px;font-size:12px}
+.scan-info{font-size:12px;color:var(--purple)}.lot-panel p{line-height:1.7;margin:16px 0}.row-actions{flex-wrap:wrap;margin:16px 0}.table-panel{overflow:auto;margin:20px 0}select,input,textarea{padding:10px;border:1px solid var(--border);border-radius:8px}table{min-width:600px}h3{margin-top:20px}
 </style>

@@ -29,7 +29,7 @@ var actionPermissions = map[string]string{
 	"admin.product.list": "product.read", "admin.product.save": "product.write", "admin.product.batchStatus": "product.write", "admin.product.duplicate": "product.write",
 	"admin.inventory.locations": "product.read", "admin.inventory.lots": "product.read", "admin.inventory.lot.movements": "product.read", "admin.inventory.warehouse.save": "inventory.write", "admin.inventory.receive": "inventory.write", "admin.inventory.loss": "inventory.write", "admin.inventory.allocate": "inventory.write",
 	"admin.inventory.set": "inventory.write", "admin.inventory.batch": "inventory.write",
-	"admin.inventory.movements": "product.read", "admin.inventory.alerts": "product.read", "admin.inventory.alert.save": "inventory.write",
+	"admin.inventory.movements": "product.read", "admin.inventory.alerts": "product.read", "admin.inventory.alert.save": "inventory.write", "admin.inventory.resolveScan": "product.read",
 	"admin.order.split": "order.ship", "admin.order.package.ship": "order.ship", "admin.order.packages.sync": "order.ship", "admin.order.events": "order.read",
 	"admin.order.list": "order.read", "admin.order.search": "order.read", "admin.order.tracking": "order.read",
 	"admin.order.picking":         "order.read",

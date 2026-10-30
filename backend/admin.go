@@ -186,6 +186,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.inventoryLots(ctx, req.Data)
 	case "admin.inventory.lot.movements":
 		return s.inventoryLotMovements(ctx, req.Data)
+	case "admin.inventory.resolveScan":
+		return s.resolveScan(ctx, req.Data)
 	case "admin.inventory.warehouse.save":
 		return s.saveWarehouse(ctx, actor, req.Data)
 	case "admin.inventory.receive", "admin.inventory.loss", "admin.inventory.allocate":
