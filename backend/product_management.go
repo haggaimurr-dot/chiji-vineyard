@@ -263,7 +263,7 @@ func (s *Server) batchProductStatus(ctx context.Context, actor Claims, raw json.
 	}
 	defer tx.Rollback()
 	for _, id := range d.IDs {
-		res, err := tx.ExecContext(ctx, "UPDATE products SET status=? WHERE id=?", d.Status, id)
+		res, err := tx.ExecContext(ctx, "UPDATE products SET status=?,payload=JSON_SET(payload,'$.status',?) WHERE id=?", d.Status, d.Status, id)
 		if err != nil {
 			return nil, err
 		}
