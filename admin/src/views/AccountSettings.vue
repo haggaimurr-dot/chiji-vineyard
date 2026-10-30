@@ -7,7 +7,7 @@ import { permissionOptions, defaultPermissions } from '../permissions'
 type Account = { id: string; username: string; role: 'SUPER_ADMIN' | 'OPERATOR'; active: boolean; permissions?: string[] }
 type AccountResult = Account & { currentSessionRevoked?: boolean }
 type ResetResult = { id: string; sessionRevoked: boolean; currentSessionRevoked: boolean }
-type Mode = 'create' | 'reset' | 'toggle' | 'permissions'
+type Mode = 'create' | 'reset' | 'toggle' | 'permissions' | 'handover'
 
 const accounts = ref<Account[]>([])
 const ready = ref(false)
@@ -26,6 +26,7 @@ const active = ref(true)
 const permissions = ref<string[]>(defaultPermissions())
 const password = ref('')
 const confirmation = ref('')
+const handoverTo = ref('')
 const currentUser = (() => {
   try {
     const stored = JSON.parse(localStorage.getItem('chiji_admin_user') || '{}')
@@ -34,8 +35,8 @@ const currentUser = (() => {
   catch { return {} as { id?: string; username?: string } }
 })()
 const activeSuperAdmins = computed(() => accounts.value.filter(a => a.active && a.role === 'SUPER_ADMIN').length)
-const title = computed(() => mode.value === 'permissions' ? '设置账号权限' : mode.value === 'create' ? '添加后台账号' : mode.value === 'reset' ? '重置账号密码' : target.value?.active ? '停用后台账号' : '启用后台账号')
-const submitLabel = computed(() => mode.value === 'permissions' ? '保存权限' : mode.value === 'create' ? '创建账号' : mode.value === 'reset' ? '确认重置密码' : target.value?.active ? '确认停用' : '确认启用')
+const title = computed(() => mode.value === 'permissions' ? '设置账号权限' : mode.value === 'create' ? '添加后台账号' : mode.value === 'reset' ? '重置账号密码' : mode.value === 'handover' ? '离职交接' : target.value?.active ? '停用后台账号' : '启用后台账号')
+const submitLabel = computed(() => mode.value === 'permissions' ? '保存权限' : mode.value === 'create' ? '创建账号' : mode.value === 'reset' ? '确认重置密码' : mode.value === 'handover' ? '确认交接' : target.value?.active ? '确认停用' : '确认启用')
 
 function isCurrent(account: Account) { return currentUser.id ? account.id === currentUser.id : account.username === currentUser.username }
 function disabledReason(account: Account) {
@@ -64,6 +65,7 @@ async function openEditor(nextMode: Mode, account: Account | null = null) {
   permissions.value = account?.permissions ? [...account.permissions] : defaultPermissions()
   password.value = ''
   confirmation.value = ''
+  handoverTo.value = ''
   formError.value = ''
   message.value = ''
   await nextTick()
@@ -145,6 +147,15 @@ async function submit() {
       if (result.currentSessionRevoked) expiredSession()
       return
     }
+    if (mode.value === 'handover' && target.value) {
+      if (!handoverTo.value) { formError.value = '请选择接收线索的账号'; busy.value = false; return }
+      if (!(await confirmAction({ title: '离职交接', message: `确认将 ${target.value.username} 名下的全部合作线索交接给 ${accounts.value.find(a => a.id === handoverTo.value)?.username}？交接记录将写入线索历史。`, danger: true, confirmText: '确认交接' }))) { busy.value = false; return }
+      const result = await api<{ transferred: number; from: string; to: string }>('admin.account.handover', { fromAdminId: target.value.id, toAdminId: handoverTo.value })
+      message.value = `已将 ${result.from} 名下的 ${result.transferred} 条合作线索交接给 ${result.to}。`
+      busy.value = false
+      closeEditor()
+      return
+    }
     const account = mode.value === 'create'
       ? { username: username.value.trim(), password: password.value, role: role.value, active: active.value, permissions: role.value === 'OPERATOR' ? permissions.value : undefined }
       : { ...target.value!, active: !target.value!.active }
@@ -188,6 +199,7 @@ async function submit() {
         <button v-if="account.role === 'OPERATOR'" class="text-button" type="button" :disabled="busy || loading" :aria-label="`设置 ${account.username} 的权限`" @click="openEditor('permissions', account)">设置权限</button>
         <button class="text-button" type="button" :disabled="busy || loading" :aria-label="`重置 ${account.username} 的密码`" @click="openEditor('reset', account)">重置密码</button>
         <button class="text-button" type="button" :disabled="busy || loading || !!disabledReason(account)" :title="disabledReason(account)" :aria-label="`${account.active ? '停用' : '启用'} ${account.username}`" @click="openEditor('toggle', account)">{{ account.active ? '停用' : '启用' }}</button>
+        <button v-if="isSuper && !isCurrent(account)" class="text-button" type="button" :disabled="busy || loading" :aria-label="`交接 ${account.username} 的线索`" @click="openEditor('handover', account)">交接</button>
       </div>
     </div>
     <p class="account-note subtle">当前账号不可停用；至少保留一个启用的超级管理员。</p>
@@ -234,6 +246,10 @@ async function submit() {
           <label>{{ mode === 'create' ? '初始密码' : '新密码' }}<input v-if="mode === 'reset'" ref="firstInput" v-model="password" type="password" required maxlength="256" autocomplete="new-password" :disabled="busy" placeholder="至少 10 位，最多 128 位" /><input v-else v-model="password" type="password" required maxlength="256" autocomplete="new-password" :disabled="busy" placeholder="至少 10 位，最多 128 位" /></label>
           <label>确认密码<input v-model="confirmation" type="password" required maxlength="256" autocomplete="new-password" :disabled="busy" placeholder="再次输入密码" /></label>
           <p class="account-help">密码仅用于本次提交，保存或取消后清空。</p>
+        </template>
+        <template v-else-if="mode === 'handover'">
+          <p class="account-warning">将 {{ target?.username }} 名下的全部合作线索转给另一位在职管理员，交接记录写入线索历史。建议先交接再停用账号。</p>
+          <label>接收账号<select v-model="handoverTo" :disabled="busy"><option value="">请选择</option><option v-for="a in accounts.filter(x => x.id !== target?.id && x.active)" :key="a.id" :value="a.id">{{ a.username }} · {{ a.role === 'SUPER_ADMIN' ? '超级管理员' : '运营人员' }}</option></select></label>
         </template>
         <p v-else-if="mode === 'toggle'" class="account-warning">{{ target?.active ? '停用期间此账号无法登录，已登录会话也无法继续操作。' : '启用后此账号可使用原密码登录；如需新密码，请重置密码。' }}</p>
         <p v-if="formError" class="form-error" role="alert">{{ formError }}</p>

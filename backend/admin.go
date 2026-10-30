@@ -170,6 +170,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return M{"id": actor.Subject, "username": actor.Username, "role": actor.Role, "permissions": permissions}, e
 	case "admin.account.permissions":
 		return s.saveAccountPermissions(ctx, actor, req.Data)
+	case "admin.account.handover":
+		return s.accountHandover(ctx, actor, req.Data)
 	case "admin.liveNotice.send":
 		if err = super(); err != nil {
 			return nil, err
@@ -952,6 +954,12 @@ func (s *Server) saveAccount(ctx context.Context, actor Claims, raw json.RawMess
 		}
 		detail["before"] = M{"role": existing.Role, "active": existing.Active, "permissions": beforePerms}
 		detail["after"] = M{"role": a.Role, "active": active, "permissions": a.Permissions}
+	}
+	if existing != nil && existing.Active && !active {
+		if err = revokeAdminSessions(ctx, tx, id); err != nil {
+			return nil, err
+		}
+		detail["sessionsRevoked"] = true
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_ACCOUNT_SAVE", id, jsonValue(detail)); err != nil {
 		return nil, err
