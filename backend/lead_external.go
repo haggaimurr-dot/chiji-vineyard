@@ -90,6 +90,7 @@ func (s *Store) deliverLeadReminder(ctx context.Context, candidate Lead, endpoin
 func (s *Store) runLeadExternalReminders(ctx context.Context) {
 	endpoint, token := os.Getenv("CRM_REMINDER_GATEWAY_URL"), os.Getenv("CRM_REMINDER_GATEWAY_TOKEN")
 	if endpoint == "" || token == "" {
+		s.heartbeat(ctx, "lead_external_reminders", "DISABLED")
 		return
 	}
 	if e := leadGatewayURL(endpoint); e != nil {

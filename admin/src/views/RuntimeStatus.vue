@@ -9,9 +9,9 @@
     <table>
       <thead><tr><th>组件</th><th>状态</th><th>上次运行</th><th>说明</th></tr></thead>
       <tbody>
-        <tr v-for="it in items" :key="it.component" :class="{ bad: it.status !== 'OK' }">
+        <tr v-for="it in items" :key="it.component" :class="{ bad: !['OK','DISABLED'].includes(it.status) }">
           <td>{{ it.label }}</td>
-          <td><span :class="['dot', it.status === 'OK' ? 'ok' : 'bad']"></span>{{ statusText(it.status) }}</td>
+          <td><span :class="['dot', ['OK','DISABLED'].includes(it.status) ? 'ok' : 'bad']"></span>{{ statusText(it.status) }}</td>
           <td>{{ it.lastRunAgo || '—' }}</td>
           <td class="muted">{{ it.detail || '—' }}</td>
         </tr>
@@ -30,7 +30,7 @@ const healthy = ref<boolean | null>(null)
 const checkedAt = ref('')
 const loading = ref(false)
 
-function statusText(s: string) { return s === 'OK' ? '正常' : s === 'STALE' ? '心跳超时' : s === 'DOWN' ? '不可用' : '未知' }
+function statusText(s: string) { return s === 'OK' ? '正常' : s === 'STALE' ? '心跳超时' : s === 'DOWN' ? '不可用' : s === 'DISABLED' ? '未启用' : '未知' }
 
 async function load() {
   loading.value = true

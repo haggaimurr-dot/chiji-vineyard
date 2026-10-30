@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -29,21 +30,23 @@ func (s *Server) runtimeStatus(ctx context.Context) (any, error) {
 		{"notify_worker", "通知分发", 5 * time.Minute},
 		{"lead_external_reminders", "线索外部提醒", 30 * time.Minute},
 	}
-	rows, err := s.store.db.QueryContext(ctx, "SELECT component,last_run,detail FROM runtime_heartbeats")
+	rows, err := s.store.db.QueryContext(ctx, "SELECT component,TIMESTAMPDIFF(SECOND,last_run,NOW()),detail FROM runtime_heartbeats")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	beats := map[string]time.Time{}
+	beats := map[string]int64{}
 	details := map[string]string{}
 	for rows.Next() {
 		var c string
-		var t time.Time
+		var agoSec sql.NullInt64
 		var d string
-		if err = rows.Scan(&c, &t, &d); err != nil {
+		if err = rows.Scan(&c, &agoSec, &d); err != nil {
 			return nil, err
 		}
-		beats[c] = t
+		if agoSec.Valid {
+			beats[c] = agoSec.Int64
+		}
 		details[c] = d
 	}
 	if err = rows.Err(); err != nil {
@@ -53,14 +56,17 @@ func (s *Server) runtimeStatus(ctx context.Context) (any, error) {
 	items := []M{}
 	allOK := true
 	for _, c := range components {
-		last, ok := beats[c.name]
+		agoSec, ok := beats[c.name]
 		status := "UNKNOWN"
 		ago := ""
 		if ok {
-			ago = now.Sub(last).Round(time.Second).String()
-			if now.Sub(last) <= c.maxStale {
+			ago = (time.Duration(agoSec) * time.Second).Round(time.Second).String()
+			switch {
+			case details[c.name] == "DISABLED":
+				status = "DISABLED"
+			case time.Duration(agoSec)*time.Second <= c.maxStale:
 				status = "OK"
-			} else {
+			default:
 				status = "STALE"
 				allOK = false
 			}
