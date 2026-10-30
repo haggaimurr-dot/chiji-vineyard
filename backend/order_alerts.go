@@ -65,18 +65,23 @@ func (s *Store) scanAbnormalOrders(ctx context.Context) error {
 }
 
 func (s *Store) runOrderAlertScanner(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	for {
+	// 启动即扫描一次，重启后能补上遗漏的提醒。
+	scanOnce := func() {
 		job, cancel := context.WithTimeout(ctx, 60*time.Second)
+		defer cancel()
 		if err := s.scanAbnormalOrders(job); err != nil && ctx.Err() == nil {
 			log.Printf("order alert scan: %v", err)
 		}
-		cancel()
+	}
+	scanOnce()
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			scanOnce()
 		}
 	}
 }
