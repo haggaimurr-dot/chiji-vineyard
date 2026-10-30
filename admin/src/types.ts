@@ -108,7 +108,7 @@ export interface Refund {
   createdAt: string
 }
 
-export interface ContentResource { id: string; name: string; kind: 'tag' | 'image' | 'video'; url?: string; note?: string; version: number }
+export interface ContentResource { id: string; name: string; kind: 'tag' | 'image' | 'video'; url?: string; note?: string; tags?: string[]; version: number }
 
 export interface Article {
   tags?: string[]

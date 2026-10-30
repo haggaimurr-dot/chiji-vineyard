@@ -12,12 +12,13 @@ import (
 )
 
 type ContentResource struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Kind    string `json:"kind"`
-	URL     string `json:"url,omitempty"`
-	Note    string `json:"note,omitempty"`
-	Version int    `json:"version"`
+	ID      string   `json:"id"`
+	Name    string   `json:"name"`
+	Kind    string   `json:"kind"`
+	URL     string   `json:"url,omitempty"`
+	Note    string   `json:"note,omitempty"`
+	Tags    []string `json:"tags,omitempty"`
+	Version int      `json:"version"`
 }
 
 func validateContentResource(r ContentResource) (ContentResource, error) {
@@ -28,6 +29,23 @@ func validateContentResource(r ContentResource) (ContentResource, error) {
 	if r.Kind != "tag" && r.Kind != "image" && r.Kind != "video" {
 		return r, errors.New("素材类型无效")
 	}
+	cleaned := []string{}
+	for _, t := range r.Tags {
+		t = strings.TrimSpace(t)
+		if t == "" {
+			continue
+		}
+		if len([]rune(t)) > 20 {
+			return r, errors.New("单个标签最多20字")
+		}
+		if !slices.Contains(cleaned, t) {
+			cleaned = append(cleaned, t)
+		}
+	}
+	if len(cleaned) > 10 {
+		return r, errors.New("标签最多10个")
+	}
+	r.Tags = cleaned
 	if r.Kind == "tag" {
 		r.URL = ""
 	} else {

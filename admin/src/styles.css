@@ -318,3 +318,5 @@ body:has(.after-sales-panel) .row-actions { flex-wrap: wrap; }
 .chip-x{color:var(--muted);font-size:14px;line-height:1;padding:0 2px}
 .chip-x:hover{color:var(--danger)}
 .chip-add{border-style:dashed;color:var(--muted)}
+.res-tags{margin:4px 0;display:flex;gap:6px;flex-wrap:wrap}
+.res-tag{background:#f0ede6;border-radius:10px;padding:2px 10px;font-size:12px;color:#6b5f4c}
