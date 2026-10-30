@@ -23,7 +23,8 @@
     "pages/attention/index",
     "pages/shipping-notices/index",
     "pages/product-memory/index",
-    "pages/trace/index"
+    "pages/trace/index",
+    "pages/notify-settings/index"
   ],
   "window": {
     "navigationBarBackgroundColor": "#fffaf1",

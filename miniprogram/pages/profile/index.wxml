@@ -16,6 +16,7 @@
     <view bindtap="wallet"><text>我的券包</text><text>›</text></view>
     <view bindtap="activityNotices"><text>活动通知</text><text>{{activityUnread ? activityUnread + ' 条未读 ' : ''}}›</text></view>
     <view bindtap="shippingNotices"><text>发货通知</text><text>{{shippingUnread ? shippingUnread + ' 条未读 ' : ''}}›</text></view>
+    <view bindtap="notifySettings"><text>消息通知设置</text><text>›</text></view>
     <view data-kind="favorite" bindtap="attention"><text>我的收藏</text><text>›</text></view>
     <view data-kind="restock" bindtap="attention"><text>到货提醒</text><text>{{arrivals ? arrivals + ' 款已到货 ' : ''}}›</text></view>
     <view data-view="favorite" bindtap="classroom"><text>课堂收藏</text><text>›</text></view>

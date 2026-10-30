@@ -213,6 +213,8 @@ func (s *Server) changeShipment(ctx context.Context, actor Claims, raw json.RawM
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
+	// 订单触达（新增）：发货后排入微信+短信通知。
+	s.store.notifyOrderEvent(ctx, o.OpenID, notifyKindOrderShipped, o.OrderNo, "已发货")
 	o.Shipment = &shipment
 	committedShipment := shipment
 	if err = s.wechat.uploadShipping(*o, shipment); err != nil {

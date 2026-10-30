@@ -41,6 +41,7 @@ Page({
   trace() { wx.navigateTo({url:'/pages/trace/index'}) },
   address() { wx.navigateTo({ url: '/pages/address/index' }) },
   shippingNotices() { wx.navigateTo({ url: '/pages/shipping-notices/index' }) },
+  notifySettings() { wx.navigateTo({ url: '/pages/notify-settings/index' }) },
   activityNotices() { wx.navigateTo({ url: '/pages/activity-notices/index' }) },
   policy() { wx.navigateTo({url:'/pages/privacy/index'}) },
   personalData() { wx.navigateTo({url:'/pages/personal-data/index'}) },

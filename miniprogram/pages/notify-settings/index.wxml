@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="header"><text class="title">消息通知设置</text><text class="desc">订单发货/收货通过微信或短信提醒你，可随时关闭</text></view>
+  <block wx:if="{{loading}}"><view class="empty">加载中…</view></block>
+  <block wx:else>
+    <view wx:for="{{kinds}}" wx:key="kind" class="kind-card">
+      <view class="kind-title">{{item.label}}</view>
+      <view class="row">
+        <text>微信通知</text>
+        <block wx:if="{{!wechatConfigured}}"><text class="hint">模板未配置</text></block>
+        <button wx:else size="mini" bindtap="subscribe" data-kind="{{item.kind}}" disabled="{{busy===item.kind}}">{{item.wechatAccepted ? '已订阅·重新订阅' : '去订阅'}}</button>
+        <switch checked="{{item.wechatEnabled}}" bindchange="togglePref" data-kind="{{item.kind}}" data-channel="WECHAT"/>
+      </view>
+      <view class="row">
+        <text>短信通知</text>
+        <block wx:if="{{!smsConfigured}}"><text class="hint">短信通道未配置</text></block>
+        <switch wx:else checked="{{item.smsEnabled}}" bindchange="togglePref" data-kind="{{item.kind}}" data-channel="SMS"/>
+      </view>
+    </view>
+  </block>
+</view>

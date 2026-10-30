@@ -42,6 +42,7 @@ func main() {
 	go s.runLiveNoticeScanner(publisherCtx)
 	go store.runReviewAlertScanner(publisherCtx)
 	go store.runOrderAlertScanner(publisherCtx)
+	go store.runNotifyWorker(publisherCtx)
 	go s.runAutoInvoices(publisherCtx)
 	go store.runLeadExternalReminders(publisherCtx)
 	port := os.Getenv("PORT")
@@ -286,6 +287,12 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.store.setActivityReservation(ctx, openid, req.Data)
 	case "activity.checkin.code":
 		return s.store.activityCheckinCode(ctx, openid, req.Data)
+	case "notify.config":
+		return s.store.notifyConfig(ctx, openid)
+	case "notify.subscribe":
+		return s.store.notifySubscribe(ctx, openid, req.Data)
+	case "notify.pref.set":
+		return s.store.notifyPrefSet(ctx, openid, req.Data)
 	case "activity.notice.list":
 		return s.store.activityNotices(ctx, openid, req.Data)
 	case "activity.notice.read":
@@ -817,6 +824,8 @@ func (s *Server) confirmOrder(ctx context.Context, openid, id string) (any, erro
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
+	// 订单触达（新增）：确认收货后排入微信+短信通知。
+	s.store.notifyOrderEvent(ctx, o.OpenID, notifyKindOrderReceived, o.OrderNo, "已确认收货")
 	return o, nil
 }
 func (s *Server) applyRefund(ctx context.Context, openid string, raw json.RawMessage) (any, error) {
