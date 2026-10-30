@@ -465,6 +465,18 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 			return nil, err
 		}
 		return s.exportAudit(ctx, actor, req.Data)
+	case "admin.config.submit":
+		return s.submitConfigChange(ctx, actor, req.Data)
+	case "admin.config.changeOrders":
+		if err = super(); err != nil {
+			return nil, err
+		}
+		return s.configChangeOrders(ctx, req.Data)
+	case "admin.config.decide":
+		if err = super(); err != nil {
+			return nil, err
+		}
+		return s.decideConfigChange(ctx, actor, req.Data)
 	case "admin.config.versions":
 		if err = super(); err != nil {
 			return nil, err

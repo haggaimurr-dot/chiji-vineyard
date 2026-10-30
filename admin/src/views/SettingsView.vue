@@ -18,6 +18,15 @@ const ready = ref(false)
 const busy = ref(false)
 const couponBusy = ref(false), homeBusy = ref(false), rollbackBusy = ref(false), reloading = ref(false)
 const editorEpoch = ref(0), historyRevision = ref(0)
+const isSuper = computed(() => currentAdmin().role === 'SUPER_ADMIN')
+const submitted = ref(false)
+async function submitApproval() {
+  if (!ready.value || locked.value || busy.value) return
+  saved.value = false; submitted.value = false; error.value = ''; busy.value = true
+  try { validateShippingDetails(shipping.value); await api('admin.config.submit', { key: 'shipping', payload: shipping.value }); submitted.value = true }
+  catch (e) { error.value = (e as Error).message }
+  finally { busy.value = false }
+}
 const locked = computed(() => busy.value || couponBusy.value || homeBusy.value || rollbackBusy.value || reloading.value)
 async function loadShipping() {
   reloading.value = true
@@ -63,9 +72,11 @@ async function save() {
       <ShippingRegions :rule="shipping" :disabled="!ready || locked" @changed="saved = false" />
       <p v-if="reloading" class="success-text" role="status">正在读取最新运费配置…</p>
       <p v-if="saved" class="success-text" role="status">配置已保存</p>
+      <p v-if="submitted" class="success-text" role="status">已提交审批，SUPER_ADMIN 批准后生效</p>
       <p v-if="error" class="form-error" role="alert">{{ error }}</p>
       <button v-if="!ready && error" type="button" class="button secondary" :disabled="locked" @click="loadShipping">重新加载运费</button>
-      <button class="button primary" :disabled="!ready || locked">{{ busy ? '保存中…' : '保存配置' }}</button>
+      <button v-if="isSuper" class="button primary" :disabled="!ready || locked">{{ busy ? '保存中…' : '保存配置' }}</button>
+      <button v-else type="button" class="button primary" :disabled="!ready || locked" @click="submitApproval">{{ busy ? '提交中…' : '提交审批' }}</button>
     </form>
     <section class="panel checklist">
       <div class="panel-head"><div><h3>生产上线检查</h3><p>正式支付前必须全部完成</p></div></div>

@@ -9,6 +9,28 @@ const emit = defineEmits<{ busy: [value: boolean]; restored: [key: ConfigKey] }>
 const labels: Record<ConfigKey, string> = { shipping: '运费规则', coupons: '优惠券', home: '首页运营位', privacy: '隐私政策' }
 const actions: Record<ConfigVersion['action'], string> = { BASELINE: '初始快照', SAVE: '保存配置', ROLLBACK: '回滚配置' }
 const key = ref<ConfigKey | ''>('')
+const isSuper = computed(() => { try { return JSON.parse(localStorage.getItem('chiji-admin') || '{}').role === 'SUPER_ADMIN' } catch { return false } })
+interface ChangeOrder { id: string; configKey: ConfigKey; payload: unknown; status: string; createdBy: string; createdAt: string; decidedBy: string; decidedAt: string; note: string }
+const orders = ref<ChangeOrder[]>([])
+const ordersLoading = ref(false), ordersError = ref(''), decideNote = ref(''), decidingId = ref('')
+async function loadOrders() {
+  if (!isSuper.value) return
+  ordersLoading.value = true; ordersError.value = ''
+  try { const r = await api<{ items: ChangeOrder[] }>('admin.config.changeOrders', { status: 'PENDING' }); orders.value = r.items }
+  catch (e) { ordersError.value = (e as Error).message }
+  finally { ordersLoading.value = false }
+}
+async function decide(order: ChangeOrder, approve: boolean) {
+  if (decidingId.value) return
+  decidingId.value = order.id; ordersError.value = ''
+  try {
+    await api('admin.config.decide', { id: order.id, approve, note: decideNote.value.trim() })
+    decideNote.value = ''
+    await loadOrders()
+    await load(0)
+  } catch (e) { ordersError.value = (e as Error).message }
+  finally { decidingId.value = '' }
+}
 const items = ref<ConfigVersion[]>([])
 const currentVersions = ref<Partial<Record<ConfigKey, number>>>({})
 const total = ref(0), limit = ref(20), offset = ref(0)
@@ -123,11 +145,21 @@ async function rollback() {
 }
 
 function close() { if (!rollingBack.value) selected.value = null }
-watch(() => props.revision, () => { confirming.value = false; void load() })
-onMounted(() => load())
+watch(() => props.revision, () => { confirming.value = false; void load(); void loadOrders() })
+onMounted(() => { load(); loadOrders() })
 </script>
 
 <template>
+  <section v-if="isSuper" class="panel table-panel history-panel">
+    <div class="panel-head"><div><h3>配置变更审批</h3><p>普通管理员提交的变更单，批准后立即生效并记版本</p></div><button class="button secondary small" :disabled="ordersLoading" @click="loadOrders()">刷新</button></div>
+    <p v-if="ordersError" class="history-notice form-error" role="alert">{{ ordersError }}</p>
+    <div class="history-table"><table><thead><tr><th>配置</th><th>提交人</th><th>时间</th><th>变更内容</th><th>审批</th></tr></thead><tbody>
+      <tr v-if="ordersLoading"><td colspan="5" class="history-empty">正在加载变更单…</td></tr>
+      <tr v-else-if="!orders.length"><td colspan="5" class="history-empty">暂无待审批变更单</td></tr>
+      <tr v-else v-for="order in orders" :key="order.id"><td><strong>{{ labels[order.configKey] }}</strong></td><td>{{ order.createdBy }}</td><td>{{ dateTime(order.createdAt) }}</td><td><pre class="history-json mini">{{ JSON.stringify(order.payload, null, 2) }}</pre></td>
+        <td><div class="row-actions"><button class="button primary small" :disabled="!!decidingId" @click="decide(order, true)">{{ decidingId === order.id ? '处理中…' : '批准' }}</button><button class="button secondary small" :disabled="!!decidingId" @click="decide(order, false)">驳回</button></div><input v-model="decideNote" class="note-input" maxlength="200" placeholder="审批备注（可选）" /></td></tr>
+    </tbody></table></div>
+  </section>
   <section class="panel table-panel history-panel">
     <div class="panel-head"><div><h3>配置版本与回滚</h3><p>保存与回滚均保留完整快照；时间为北京时间</p></div><button class="button secondary small" :disabled="loading || locked" @click="load()">刷新版本</button></div>
     <div class="history-filters">
@@ -183,6 +215,7 @@ onMounted(() => load())
 <style scoped>
 .compare-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:12px}.compare-form label{display:grid;gap:8px;font-size:12px}.compare-form input{width:100px;padding:9px;border:1px solid var(--border);border-radius:8px}.config-change{margin:16px 0;padding:14px;border:1px solid var(--border);border-radius:10px;font-size:12px;overflow-wrap:anywhere}.compare-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.compare-values>div{min-width:0}.compare-values small{color:var(--muted)}.compare-values pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:10px;background:var(--cream);border-radius:6px}.compare-values>div:last-child pre{background:var(--purple-soft)}
 .history-panel{margin-bottom:24px}.history-filters{display:flex;align-items:end;gap:16px;padding:18px 24px;border-bottom:1px solid var(--border)}.history-filters label{display:grid;gap:7px;font-size:11px;font-weight:700}.history-filters select{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:#fbf9f5}.current-versions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto;color:var(--muted);font-size:11px}.current-versions span{padding:7px 9px;background:var(--cream);border-radius:8px}.history-notice{margin:16px 24px}.history-table{overflow:auto}.history-empty{text-align:center;padding:34px;color:var(--muted)}.history-pagination{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}.history-pagination>div{display:flex;gap:8px}.history-metadata{display:grid;grid-template-columns:90px 1fr;gap:12px;font-size:12px}.history-metadata dt{color:var(--muted)}.history-metadata dd{margin:0;overflow-wrap:anywhere}.snapshot-title{margin-top:24px;font-size:14px}.history-json{padding:18px;border:1px solid var(--border);border-radius:10px;background:#f8f4ee;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.rollback-form{display:grid;gap:16px;margin-top:24px;padding:18px;border:1px solid #dec9e0;border-radius:12px;background:var(--purple-soft)}.rollback-form p{font-size:12px;line-height:1.8}.rollback-form label{display:grid;gap:9px;font-size:12px;font-weight:700}.rollback-form textarea{width:100%;padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--paper)}
+.history-json.mini{max-height:180px;overflow:auto;font-size:11px;padding:10px}.note-input{width:150px;margin-top:6px;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:11px}
 @media(max-width:1180px){.history-filters{flex-wrap:wrap}.current-versions{width:100%;margin-left:0}.history-table table{min-width:640px}}
 /* Mobile support (added 2026-10-23) */
 @media (max-width: 700px) {
