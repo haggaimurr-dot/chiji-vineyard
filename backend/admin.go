@@ -210,6 +210,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.orderEvents(ctx, mustID(req.Data, "orderId"), "")
 	case "admin.order.tracking":
 		return s.tracking(ctx, mustID(req.Data, "orderId"), "", mustID(req.Data, "trackingNo"), mustID(req.Data, "carrierCode"), mustID(req.Data, "packageId"))
+	case "admin.activity.oversellCheck":
+		return s.activityOversellCheck(ctx)
 	case "admin.home.save", "admin.privacy.save":
 		if err = super(); err != nil {
 			return nil, err

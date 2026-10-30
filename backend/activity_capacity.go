@@ -263,3 +263,45 @@ func reconcileHomeActivities(ctx context.Context, tx *sql.Tx, key string, old []
 	}
 	return nil
 }
+
+// 超售检测：逐个活动比对预约数与容量，容量调整后超出的也能发现。
+type activityOversellRow struct {
+	ActivityID string `json:"activityId"`
+	Title      string `json:"title"`
+	Capacity   int    `json:"capacity"`
+	Reserved   int    `json:"reserved"`
+	Waitlisted int    `json:"waitlisted"`
+	OverBy     int    `json:"overBy"`
+}
+
+func (s *Server) activityOversellCheck(ctx context.Context) (any, error) {
+	var payload []byte
+	if err := s.store.db.QueryRowContext(ctx, "SELECT payload FROM configs WHERE config_key='home'").Scan(&payload); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+	var h HomeConfig
+	if len(payload) > 0 {
+		if err := json.Unmarshal(payload, &h); err != nil {
+			return nil, err
+		}
+	}
+	rows := []activityOversellRow{}
+	for _, a := range h.Activities {
+		if a.Capacity <= 0 {
+			continue
+		}
+		var reserved, waitlisted int
+		if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_reservations WHERE activity_id=?", a.ID).Scan(&reserved); err != nil {
+			return nil, err
+		}
+		if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_waitlist WHERE activity_id=?", a.ID).Scan(&waitlisted); err != nil {
+			return nil, err
+		}
+		row := activityOversellRow{ActivityID: a.ID, Title: a.Title, Capacity: a.Capacity, Reserved: reserved, Waitlisted: waitlisted}
+		if reserved > a.Capacity {
+			row.OverBy = reserved - a.Capacity
+		}
+		rows = append(rows, row)
+	}
+	return M{"items": rows}, nil
+}

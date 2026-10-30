@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { api } from '../api'
 import type { HomeConfig, Product } from '../types'
 
 const props = defineProps<{ home: HomeConfig; products: Product[]; disabled: boolean; pending: boolean; dirty: boolean }>()
@@ -6,6 +8,15 @@ const emit = defineEmits<{ save: []; preview: [] }>()
 function add() {
   if (props.disabled || (props.home.activities?.length || 0) >= 12) return
   ;(props.home.activities ||= []).push({ id: `activity-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`, reservationEnabled: false, title: '', summary: '', content: '', startDate: '', endDate: '', productId: '' })
+}
+const oversell = ref<Array<{ activityId: string; title: string; capacity: number; reserved: number; waitlisted: number; overBy: number }> | null>(null)
+const oversellBusy = ref(false), oversellError = ref('')
+async function checkOversell() {
+  if (oversellBusy.value) return
+  oversellBusy.value = true; oversellError.value = ''
+  try { const r = await api<{ items: typeof oversell.value }>('admin.activity.oversellCheck'); oversell.value = r.items }
+  catch (e) { oversellError.value = (e as Error).message }
+  finally { oversellBusy.value = false }
 }
 function move(index: number, delta: number) {
   const items = props.home.activities || [], target = index + delta
@@ -37,7 +48,10 @@ function move(index: number, delta: number) {
         </div>
         <div class="activity-actions"><button type="button" class="text-button" :disabled="index === 0" @click="move(index, -1)">上移</button><button type="button" class="text-button" :disabled="index === (home.activities?.length || 0) - 1" @click="move(index, 1)">下移</button><button type="button" class="text-button" @click="home.activities?.splice(index, 1)">删除活动</button></div>
       </fieldset>
-      <div class="activity-actions"><button type="button" class="button secondary" :disabled="(home.activities?.length || 0) >= 12" @click="add">新增活动</button><button class="button primary" :disabled="pending">{{ pending ? '请先回读上次保存值' : '保存活动与首页' }}</button></div>
+      <div class="activity-actions"><button type="button" class="button secondary" :disabled="(home.activities?.length || 0) >= 12" @click="add">新增活动</button><button class="button primary" :disabled="pending">{{ pending ? '请先回读上次保存值' : '保存活动与首页' }}</button><button type="button" class="button secondary" :disabled="oversellBusy" @click="checkOversell">{{ oversellBusy ? '检测中…' : '超售检测' }}</button></div>
+<p v-if="oversellError" class="form-error" role="alert">{{ oversellError }}</p>
+<div v-if="oversell"><p v-if="!oversell.length" class="subtle">暂无设置容量的活动</p>
+<p v-for="row in oversell" :key="row.activityId" :class="{ 'form-error': row.overBy > 0 }">{{ row.title }}：容量 {{ row.capacity }} / 已预约 {{ row.reserved }} / 候补 {{ row.waitlisted }}<strong v-if="row.overBy > 0">　超售 {{ row.overBy }} 人</strong><span v-else>　正常</span></p></div>
     </fieldset>
   </form>
 </template>

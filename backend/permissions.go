@@ -43,7 +43,7 @@ var actionPermissions = map[string]string{
 	"admin.lead.funnel": "lead.read", "admin.lead.list": "lead.read", "admin.lead.search": "lead.read", "admin.lead.get": "lead.read", "admin.lead.owners": "lead.read", "admin.lead.history": "lead.read", "admin.lead.reminders": "lead.read", "admin.lead.deliveries": "lead.read", "admin.lead.update": "lead.write",
 	"admin.media.upload": "media.upload",
 	"admin.config.get":   "config.read", "admin.coupon.get": "config.read", "admin.coupon.stats": "config.read",
-	"admin.config.save": "super", "admin.home.save": "super", "admin.privacy.save": "super", "admin.coupon.save": "super", "admin.config.versions": "super", "admin.config.rollback": "super", "admin.audit.list": "super", "admin.audit.export": "super", "admin.config.compare": "super",
+	"admin.config.save": "super", "admin.home.save": "super", "admin.activity.oversellCheck": "config.read", "admin.privacy.save": "super", "admin.coupon.save": "super", "admin.config.versions": "super", "admin.config.rollback": "super", "admin.audit.list": "super", "admin.audit.export": "super", "admin.config.compare": "super",
 	"admin.account.list": "super", "admin.account.save": "super", "admin.account.resetPassword": "super", "admin.account.permissions": "super",
 	"admin.security.status": "session", "admin.security.setup": "session", "admin.security.enable": "session", "admin.security.disable": "session", "admin.account.changePassword": "session",
 	"admin.session": "session", "admin.session.list": "session", "admin.session.revoke": "session", "admin.logout": "session",
