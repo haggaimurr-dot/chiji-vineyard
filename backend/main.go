@@ -313,7 +313,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		e = s.store.attachAttention(ctx, openid, products)
 		return products, e
 	case "product.detail":
-		p, e := s.store.product(ctx, mustID(req.Data, "id"), false)
+		productID := mustID(req.Data, "id")
+		p, e := s.store.product(ctx, productID, false)
 		if e != nil || p == nil {
 			return p, e
 		}
@@ -322,7 +323,7 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		if e != nil {
 			return nil, e
 		}
-		if products[0].LinkedArticles, e = s.store.productLinkedArticles(ctx, products[0].ID); e != nil {
+		if products[0].LinkedArticles, e = s.store.productLinkedArticles(ctx, productID); e != nil {
 			return nil, e
 		}
 		return products[0], nil
