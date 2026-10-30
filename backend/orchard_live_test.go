@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"reflect"
 )
 
 func TestOrchardLiveConfig(t *testing.T) {
@@ -46,7 +47,7 @@ func TestOrchardLiveConfig(t *testing.T) {
 	if err = json.Unmarshal(raw, &read); err != nil {
 		t.Fatal(err)
 	}
-	if read.Live == nil || *read.Live != *home.Live {
+	if read.Live == nil || !reflect.DeepEqual(read.Live, home.Live) {
 		t.Fatal("two independent camera configurations must survive persistence")
 	}
 }
