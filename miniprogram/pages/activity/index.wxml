@@ -19,7 +19,8 @@
       <view wx:elif="{{reservationError}}" class="feedback"><view>{{reservationError}}</view><button size="mini" bindtap="loadReservations">重新加载预约</button></view>
       <block wx:else>
         <view class="hint">{{capacityText}}</view><view class="reservation-state">{{waitlistedActivity ? '候补第' + queuePosition + '位，递补成功后将通知你' : reserved ? '你已预约此活动' : status === '已结束' ? '活动已结束，预约已截止' : activity.reservationEnabled ? '活动开放预约' : '活动暂未开放预约'}}</view>
-        <view wx:if="{{reserved && status !== '已结束'}}" class="reminder-note">{{status === '即将开始' ? '活动将于 ' + activity.startDate + ' 开始' : '活动正在进行中'}}，可在首页查看预约提醒。</view>
+        <view wx:if="{{reserved && status !== '已结束'}}" class="checkin-card"><view class="section-title">现场签到码</view><view wx:if="{{checkinLoading}}" class="hint">签到码加载中…</view><view wx:elif="{{checkinError}}" class="feedback"><view>{{checkinError}}</view><button size="mini" bindtap="loadCheckinCode">重试</button></view><view wx:elif="{{checkinCode}}"><view class="checkin-code">{{checkinCode}}</view><view class="hint">活动现场出示此码核销入场</view><button size="mini" bindtap="copyCheckinCode">复制签到码</button></view></view>
+      <view wx:if="{{reserved && status !== '已结束'}}" class="reminder-note">{{status === '即将开始' ? '活动将于 ' + activity.startDate + ' 开始' : '活动正在进行中'}}，可在首页查看预约提醒。</view>
         <button wx:if="{{activityId}}" class="reservation-button {{reserved ? 'cancel-button' : ''}}" data-id="{{activityId}}" bindtap="changeReservation" loading="{{reservationBusy === activityId}}" disabled="{{reservationBusy || (!reserved && !waitlistedActivity && (status === '已结束' || !activity.reservationEnabled || (reservationFull && !activity.waitlistEnabled)))}}">{{waitlistedActivity ? '取消候补' : reserved ? '取消预约' : status === '已结束' ? '预约已截止' : reservationFull ? activity.waitlistEnabled ? '加入候补' : '名额已满' : activity.reservationEnabled ? '立即预约' : '暂未开放预约'}}</button>
       </block>
       <view class="hint">预约登记参与意向，具体安排以活动公告为准。预约后进入首页，可查看活动开始时间与状态提醒。</view>

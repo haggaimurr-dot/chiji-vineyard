@@ -284,6 +284,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.store.activityReservationStatus(ctx, openid)
 	case "activity.reservation.set":
 		return s.store.setActivityReservation(ctx, openid, req.Data)
+	case "activity.checkin.code":
+		return s.store.activityCheckinCode(ctx, openid, req.Data)
 	case "activity.notice.list":
 		return s.store.activityNotices(ctx, openid, req.Data)
 	case "activity.notice.read":

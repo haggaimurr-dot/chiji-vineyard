@@ -16,6 +16,7 @@ Page({
     subscriptionBusy: false, subscriptionError: '',
     loading: true, error: '', requestVersion: 0,
     demoMode: getApp<IAppOption>().globalData.demoMode,
+    checkinCode: '', checkinLoading: false, checkinError: '',
     ...reservationData,
   },
   onLoad(options: Record<string, string>) {
@@ -48,12 +49,25 @@ Page({
       wx.setNavigationBarTitle({ title: activity.title })
       await this.loadReservations(version)
       await this.loadSubscription(version)
+      await this.loadCheckinCode(version)
     } catch (error) {
       if (version === this.data.requestVersion) this.setData({ error: (error as Error).message || '活动加载失败，请重试', activity: null })
     } finally {
       if (version === this.data.requestVersion) this.setData({ loading: false })
     }
   },
+  async loadCheckinCode(expectedVersion?: number) {
+    const version = expectedVersion === undefined ? this.data.requestVersion : expectedVersion
+    if (this.data.demoMode || !this.data.activityId || !this.data.reserved) { if (version === this.data.requestVersion) this.setData({ checkinCode: '', checkinError: '' }); return }
+    this.setData({ checkinLoading: true, checkinError: '' })
+    try {
+      const result = await callApi<{ code: string }>('activity.checkin.code', { activityId: this.data.activityId })
+      if (version === this.data.requestVersion) this.setData({ checkinCode: result.code || '', checkinLoading: false })
+    } catch (e) {
+      if (version === this.data.requestVersion) this.setData({ checkinCode: '', checkinLoading: false, checkinError: (e as Error).message || '签到码加载失败' })
+    }
+  },
+  copyCheckinCode() { if (this.data.checkinCode) wx.setClipboardData({ data: this.data.checkinCode }) },
   ...reservationActions,
   async loadSubscription(expectedVersion?: number) {
     const version = expectedVersion === undefined ? this.data.requestVersion : expectedVersion

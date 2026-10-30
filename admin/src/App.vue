@@ -17,6 +17,7 @@ import PaymentsView from './views/PaymentsView.vue'
 import PaymentAlerts from './components/PaymentAlerts.vue'
 import ReviewAlerts from './components/ReviewAlerts.vue'
 import ReminderTasks from './views/ReminderTasks.vue'
+import ActivityCheckin from './views/ActivityCheckin.vue'
 
 const token = ref(localStorage.getItem('chiji_admin_token') || '')
 const readUser = () => { try { return JSON.parse(localStorage.getItem('chiji_admin_user') || '{"username":"","role":""}') } catch { return { username: '', role: '' } } }
@@ -54,13 +55,14 @@ const menuItems = [
   { key: 'orders', label: '订单与售后', icon: '单' },
   { key: 'reviews', label: '商品评价', icon: '评' },
   { key: 'content', label: '种植内容', icon: '课' },
+  { key: 'checkin', label: '活动签到', icon: '签' },
   { key: 'leads', label: '合作线索', icon: '合' },
   { key: 'settings', label: '运营配置', icon: '设' },
   { key: 'payments', label: '微信支付', icon: '付' },
   { key: 'audit', label: '操作日志', icon: '志' },
 ]
 const menu = computed(() => menuItems.filter((item) => (item.key !== 'reminders' || can(currentUser.value, 'product.read')) && (!['settings', 'audit', 'payments'].includes(item.key) || currentUser.value.role === 'SUPER_ADMIN')))
-const views: Record<string, any> = { security: PersonalSecurity, payments: PaymentsView, reviews: ReviewsView, dashboard: DashboardView, products: ProductsView, orders: OrdersView, content: ContentView, leads: LeadsView, settings: SettingsView, audit: AuditView }
+const views: Record<string, any> = { security: PersonalSecurity, payments: PaymentsView, reviews: ReviewsView, dashboard: DashboardView, products: ProductsView, orders: OrdersView, content: ContentView, leads: LeadsView, settings: SettingsView, audit: AuditView, checkin: ActivityCheckin }
 views.reminders = ReminderTasks
 const currentView = computed(() => menu.value.some((item) => item.key === active.value) ? views[active.value] : views[menu.value[0]?.key || ''])
 const currentLabel = computed(() => menu.value.find((item) => item.key === active.value)?.label || menu.value[0]?.label || '暂无可用模块')
