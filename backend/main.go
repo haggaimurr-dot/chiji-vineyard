@@ -318,6 +318,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		products := []Product{*p}
 		e = s.store.attachAttention(ctx, openid, products)
 		return products[0], e
+	case "reminder.click":
+		return s.store.recordReminderClick(ctx, openid, req.Data)
 	case "product.attention.set":
 		return s.store.setAttention(ctx, openid, req.Data)
 	case "product.attention.history":

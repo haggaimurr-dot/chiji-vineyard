@@ -9,8 +9,13 @@ const selected = ref<ReminderTask | null>(null), note = ref(''), action = ref(''
 type History = { id: string; productName: string; kind: string; skuName: string; status: string; detail: string; createdAt: string }
 const historyUser = ref(''), history = ref<History[]>([]), historyOffset = ref(0), historyMore = ref(false)
 const at = (s: string) => new Date(s).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+type KindStat = { kind: string; byStatus: Record<string, number>; total: number; sent: number; clicked: number; clickRate: number }
+const stats = ref<KindStat[]>([])
+const kindName = (k: string) => k === 'restock' ? '到货提醒' : '降价提醒'
+async function loadStats() { try { const r = await api<{ items: KindStat[] }>('admin.reminder.stats', {}); stats.value = r.items } catch { stats.value = [] } }
 async function refresh() { data.value = await api('admin.reminder.tasks', { kind: kind.value, status: status.value, offset: offset.value }) }
 async function load(page = 0) {
+  void loadStats()
   if (busy.value) return
   busy.value = true; error.value = ''; offset.value = page
   try { await refresh() } catch (e) { error.value = (e as Error).message } finally { busy.value = false }
@@ -30,13 +35,14 @@ async function showHistory(user: string, page = 0) {
   try { const result = await api<{ items: History[]; hasMore: boolean }>('admin.reminder.history', { openid: user, offset: page }); history.value = result.items; historyMore.value = result.hasMore; historyUser.value = user; historyOffset.value = page }
   catch (e) { error.value = (e as Error).message } finally { busy.value = false }
 }
-onMounted(() => load())
+onMounted(() => { load(); loadStats() })
 </script>
 
 <template>
   <section class="panel reminder-panel">
     <div class="section-head"><div><h2>通知任务看板</h2><p class="subtle">到货与降价订阅通知 · 时间为北京时间</p></div><button class="button" :disabled="busy" @click="load(offset)">刷新</button></div>
     <p v-if="isDemo" class="demo-note">演示任务仅用于查看与模拟处置，不发送微信消息；刷新页面恢复示例数据。</p>
+    <div class="reach-stats"><div v-for="s in stats" :key="s.kind" class="reach-card"><h3>{{ kindName(s.kind) }}</h3><dl><div><dt>订阅总数</dt><dd>{{ s.total }}</dd></div><div><dt>已发送</dt><dd>{{ s.sent }}</dd></div><div><dt>点击回流</dt><dd>{{ s.clicked }}</dd></div><div><dt>点击率</dt><dd>{{ s.clickRate.toFixed(1) }}%</dd></div></dl><p class="subtle">状态分布：{{ Object.entries(s.byStatus).map(([k, v]) => (labels[k] || k) + '×' + v).join('、') || '—' }}</p></div></div>
     <div class="counts"><button v-for="(label, key) in labels" :key="key" :disabled="busy" @click="status = String(key); load()"><span>{{ label }}</span><strong>{{ data.counts[key] || 0 }}</strong></button></div>
     <form class="filters" @submit.prevent="load()"><label>通知类型<select v-model="kind" :disabled="busy"><option value="">全部类型</option><option value="restock">到货提醒</option><option value="pricedrop">降价提醒</option></select></label><label>任务状态<select v-model="status" :disabled="busy"><option value="">全部状态</option><option value="issues">失败处置入口</option><option v-for="(label, key) in labels" :key="key" :value="key">{{ label }}</option></select></label><button class="button primary" :disabled="busy">筛选</button><button type="button" class="button" :disabled="busy" @click="status = 'issues'; load()">查看待处置任务</button></form>
     <p v-if="error" class="form-error" role="alert">{{ error }}</p><p v-if="message" role="status">{{ message }}</p>
@@ -49,6 +55,7 @@ onMounted(() => load())
 </template>
 <style scoped>
 .reminder-panel { padding: 24px; margin-bottom: 20px; }
+.reach-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0; }.reach-card { padding: 14px 16px; background: #fbf9f6; border: 1px solid #e9e2d8; border-radius: 12px; }.reach-card h3 { margin: 0 0 8px; font-size: 13px; }.reach-card dl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0; }.reach-card dt { font-size: 11px; color: #8a7f72; }.reach-card dd { margin: 2px 0 0; font-size: 18px; font-weight: 700; color: #75425f; }
 .counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
 .counts button { display: grid; gap: 8px; padding: 16px; text-align: left; background: #f7f5fa; border: 1px solid #e7e1ed; border-radius: 12px; }
 .counts strong { font-size: 24px; color: #75425f; }

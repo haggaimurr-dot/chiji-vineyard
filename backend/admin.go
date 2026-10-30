@@ -95,6 +95,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.reminderTasks(ctx, req.Data)
 	case "admin.reminder.resolve":
 		return s.store.resolveReminderTask(ctx, actor, req.Data)
+	case "admin.reminder.stats":
+		return s.store.reminderStats(ctx)
 	case "admin.reminder.history":
 		var d struct {
 			OpenID string `json:"openid"`

@@ -16,7 +16,7 @@ var errPermission = errors.New("权限不足，无法执行此操作")
 var actionPermissions = map[string]string{
 	"admin.logistics.tasks": "order.read", "admin.logistics.task.save": "order.ship", "admin.order.addParcel": "order.ship", "admin.waybill.cancel": "order.ship", "admin.waybill.history": "order.read",
 	"admin.course.list": "article.read", "admin.course.save": "article.write",
-	"admin.reminder.tasks": "product.read", "admin.reminder.history": "product.read", "admin.reminder.resolve": "product.write",
+	"admin.reminder.tasks": "product.read", "admin.reminder.history": "product.read", "admin.reminder.stats": "product.read", "admin.reminder.resolve": "product.write",
 	"admin.classroom.questions": "article.read", "admin.classroom.answer": "article.write",
 	"admin.ticket.list": "refund.read", "admin.ticket.read": "refund.read", "admin.ticket.create": "refund.approve", "admin.ticket.update": "refund.approve", "admin.ticket.sla": "refund.read", "admin.ticket.sla.save": "super", "admin.ticket.returnTracking": "refund.read",
 	"admin.invoice.autoConfig": "order.read", "admin.invoice.autoIssue": "invoice.write",

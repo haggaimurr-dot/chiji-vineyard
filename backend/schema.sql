@@ -261,6 +261,8 @@ CREATE TABLE IF NOT EXISTS restock_notifications (
   template_id VARCHAR(200) NOT NULL,
   push_status VARCHAR(20) NOT NULL DEFAULT 'READY',
   push_error VARCHAR(240) NOT NULL DEFAULT '',
+  clicked_at DATETIME(3) NULL,
+  clicked_at DATETIME(3) NULL,
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (openid,product_id),
   INDEX idx_restock_pending (push_status,updated_at)
