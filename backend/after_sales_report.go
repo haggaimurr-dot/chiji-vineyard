@@ -67,7 +67,7 @@ func (s *Server) aftersalesReasonReport(ctx context.Context, raw json.RawMessage
 	rep := reasonReport{StartDate: start, EndDate: end, RefundReasons: []refundReasonStat{}, TicketCategories: []ticketCategoryStat{}}
 	// 退款原因分布（含已拒绝：用于分析申请原因构成）。
 	rows, err := s.store.db.QueryContext(ctx, `SELECT reason,COUNT(*),COALESCE(SUM(amount),0) FROM refunds
-		WHERE created_at>=? AND created_at<? ORDER BY COUNT(*) DESC`, start+" 00:00:00", end+" 23:59:59.999")
+		WHERE created_at>=? AND created_at<? GROUP BY reason ORDER BY COUNT(*) DESC`, start+" 00:00:00", end+" 23:59:59.999")
 	if err != nil {
 		return nil, err
 	}
