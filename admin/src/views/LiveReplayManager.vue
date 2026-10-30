@@ -1,4 +1,13 @@
 <template>
+  <fieldset class="live-config"><legend>直播带货统计</legend>
+    <p class="muted">近 {{ statsDays }} 天直播间来源订单（已付款）。归因口径：从直播间挂品进入下单。</p>
+    <div class="row"><label>近 <input type="number" v-model.number="statsDays" min="1" max="365" style="width:64px"> 天</label><button class="button small" @click="loadStats">刷新</button></div>
+    <table v-if="sourceStats.length">
+      <thead><tr><th>机位</th><th>订单数</th><th>金额</th></tr></thead>
+      <tbody><tr v-for="it in sourceStats" :key="it.channel"><td>{{ it.channel === 'orchard' ? '果园内部' : '园外摊位' }}</td><td>{{ it.orders }}</td><td>¥{{ (it.amount / 100).toFixed(2) }}</td></tr></tbody>
+    </table>
+    <p v-else class="muted">暂无直播来源订单</p>
+  </fieldset>
   <fieldset class="live-config"><legend>直播回放</legend>
     <p class="muted">按机位维护回放视频，用户在直播页可回看。地址须为 HTTPS 的 .mp4 或 .m3u8。</p>
     <div class="row">
@@ -46,6 +55,12 @@ const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
 const editing = ref<(Replay & { id: string }) | null>(null)
+const statsDays = ref(30)
+const sourceStats = ref<Array<{ channel: string; orders: number; amount: number }>>([])
+async function loadStats() {
+  try { const res = await api<{ items: Array<{ channel: string; orders: number; amount: number }> }>('admin.live.sourceStats', { days: statsDays.value }); sourceStats.value = res.items || [] }
+  catch (e: any) { error.value = e.message || '统计加载失败' }
+}
 
 const filtered = computed(() => filterChannel.value ? items.value.filter(i => i.channel === filterChannel.value) : items.value)
 function fmtDuration(s: number) { if (!s) return '—'; const m = Math.floor(s / 60); return m >= 60 ? `${Math.floor(m / 60)}时${m % 60}分` : `${m}分${s % 60}秒` }
@@ -72,7 +87,7 @@ async function remove(it: Replay) {
   try { await api('admin.live.replay.delete', { id: it.id }); await load() }
   catch (e: any) { alert(e.message || '删除失败') }
 }
-onMounted(load)
+onMounted(() => { load(); loadStats() })
 </script>
 <style scoped>
 .live-config { margin-top: 16px; }

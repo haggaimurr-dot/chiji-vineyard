@@ -150,3 +150,78 @@ func (s *Server) adminLiveReplayDelete(ctx context.Context, actor Claims, raw js
 	_, _ = s.store.db.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "LIVE_REPLAY_DELETE", id, jsonValue(M{}))
 	return M{"deleted": true}, nil
 }
+
+// liveProducts：直播间挂品列表（用户端）。
+func (s *Server) liveProducts(ctx context.Context, raw json.RawMessage) (any, error) {
+	var d struct {
+		Channel string `json:"channel"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	if !validReplayChannel(d.Channel) {
+		return nil, errors.New("机位无效")
+	}
+	// 复用 homeFor：取当前生效的首页配置。
+	h, err := s.store.homeFor(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	if h.Live != nil {
+		if d.Channel == "orchard" {
+			ids = h.Live.Orchard.ProductIDs
+		} else {
+			ids = h.Live.Stall.ProductIDs
+		}
+	}
+	out := []M{}
+	for _, id := range ids {
+		p, err := s.store.product(ctx, id, false)
+		if err != nil || p == nil || p.Status != "PUBLISHED" {
+			continue
+		}
+		price := 0
+		if len(p.SKUs) > 0 {
+			price = p.SKUs[0].Price
+			for _, sk := range p.SKUs {
+				if sk.Price < price {
+					price = sk.Price
+				}
+			}
+		}
+		out = append(out, M{"id": p.ID, "name": p.Name, "cover": p.Cover, "price": price})
+	}
+	return out, nil
+}
+
+// liveSourceStats：直播来源订单统计（管理端）。
+func (s *Server) liveSourceStats(ctx context.Context, raw json.RawMessage) (any, error) {
+	var d struct {
+		Days int `json:"days"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	if d.Days <= 0 {
+		d.Days = 30
+	}
+	if d.Days > 365 {
+		d.Days = 365
+	}
+	rows, err := s.store.db.QueryContext(ctx, "SELECT JSON_UNQUOTE(JSON_EXTRACT(payload,'$.sourceLive')),COUNT(*),COALESCE(SUM(total),0) FROM orders WHERE JSON_UNQUOTE(JSON_EXTRACT(payload,'$.sourceLive')) IN ('orchard','stall') AND payment_status<>'UNPAID' AND created_at>=DATE_SUB(NOW(),INTERVAL ? DAY) GROUP BY JSON_UNQUOTE(JSON_EXTRACT(payload,'$.sourceLive'))", d.Days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []M{}
+	for rows.Next() {
+		var ch string
+		var n, sum int
+		if err = rows.Scan(&ch, &n, &sum); err != nil {
+			return nil, err
+		}
+		items = append(items, M{"channel": ch, "orders": n, "amount": sum})
+	}
+	return M{"days": d.Days, "items": items}, nil
+}

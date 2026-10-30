@@ -12,6 +12,7 @@ Page({
   home: {} as HomeConfig, loading: true, error: '', playing: false,
   status: 'ready', version: 0, visible: false, notice: { show: false, text: '', countdown: '', subscribed: false, pushConfigured: false, busy: false },
   replays: [] as Array<{id:string;title:string;url:string;coverUrl:string;durationSec:number;playedAt:string}>, replayPlaying: '',
+  liveProducts: [] as Array<{id:string;name:string;cover:string;price:number}>,
  },
  onShow() { this.setData({ visible: true }); return this.loadConfig() },
  onHide() { this.stopPlayback(); this.setData({ visible: false, version: this.data.version + 1 }) },
@@ -32,6 +33,7 @@ Page({
    this.setData({ home, channel: liveChannel(home, this.data.selected), loading: false })
    this.loadNotice()
    this.loadReplays()
+   this.loadLiveProducts()
   } catch (_) {
    if (version !== this.data.version || !this.data.visible) return
    this.setData({ loading: false, error: '果园直播信息暂时无法加载，请重试。', channel: { enabled: false, url: '', hours: '' } })
@@ -45,6 +47,7 @@ Page({
   this.setData({ selected: id, version: this.data.version + 1, loading: false, channel: liveChannel(this.data.home, id), replayPlaying: '' })
   this.loadNotice()
   this.loadReplays()
+  this.loadLiveProducts()
   // A switch during a pending request must not leave an empty or stale configuration.
   if (pending || !this.data.home.banners) return this.loadConfig()
  },
@@ -79,6 +82,16 @@ Page({
    const replays = await callApi<Array<{id:string;title:string;url:string;coverUrl:string;durationSec:number;playedAt:string}>>('live.replay.list', { channel: this.data.selected })
    this.setData({ replays: replays || [] })
   } catch (_) { this.setData({ replays: [] }) }
+ },
+ async loadLiveProducts() {
+  try {
+   const products = await callApi<Array<{id:string;name:string;cover:string;price:number}>>('live.products', { channel: this.data.selected })
+   this.setData({ liveProducts: products || [] })
+  } catch (_) { this.setData({ liveProducts: [] }) }
+ },
+ openProduct(event: WechatMiniprogram.BaseEvent) {
+  const id = event.currentTarget.dataset.id as string
+  wx.navigateTo({ url: `/pages/product/index?id=${encodeURIComponent(id)}&from=live:${this.data.selected}` })
  },
  playReplay(event: WechatMiniprogram.BaseEvent) {
   const id = event.currentTarget.dataset.id as string

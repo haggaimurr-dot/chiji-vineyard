@@ -305,6 +305,14 @@ func validateHomeReferences(ctx context.Context, tx *sql.Tx, h HomeConfig) error
 			products[a.ProductID] = true
 		}
 	}
+	// 直播间挂品（新增）：仅允许上架且有可用规格的商品。
+	if h.Live != nil {
+		for _, ch := range []OrchardLiveChannel{h.Live.Orchard, h.Live.Stall} {
+			for _, id := range ch.ProductIDs {
+				products[id] = true
+			}
+		}
+	}
 	for i, ids := range []map[string]bool{products, articles} {
 		ordered := make([]string, 0, len(ids))
 		for id := range ids {

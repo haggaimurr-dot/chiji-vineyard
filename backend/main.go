@@ -470,6 +470,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.liveNoticeStatus(ctx, openid, req.Data)
 	case "live.replay.list":
 		return s.liveReplayList(ctx, req.Data)
+	case "live.products":
+		return s.liveProducts(ctx, req.Data)
 	case "liveNotice.subscribe":
 		return s.liveNoticeSubscribe(ctx, openid, req.Data)
 	case "invoice.titles":
@@ -663,7 +665,15 @@ func (s *Server) createOrder(ctx context.Context, openid string, raw json.RawMes
 		}
 		sourceArticleID = d.SourceArticleID
 	}
-	o := Order{DeliveryDate: d.DeliveryDate, ID: id, OrderNo: no, OpenID: openid, OrderStatus: "PENDING_PAYMENT", PaymentStatus: "UNPAID", FulfillmentStatus: "UNFULFILLED", RefundStatus: "NONE", Items: items, Address: address, Quote: quote, Note: clean(d.Note, 100), SourceArticleID: sourceArticleID, CreatedAt: nowString(), ExpiresAt: time.Now().Add(30 * time.Minute)}
+	// 直播归因（新增）：从直播间挂品下单时记录来源机位。
+	sourceLive := ""
+	if d.SourceLive != "" {
+		if d.SourceLive != "orchard" && d.SourceLive != "stall" {
+			return nil, errors.New("直播来源无效")
+		}
+		sourceLive = d.SourceLive
+	}
+	o := Order{DeliveryDate: d.DeliveryDate, ID: id, OrderNo: no, OpenID: openid, OrderStatus: "PENDING_PAYMENT", PaymentStatus: "UNPAID", FulfillmentStatus: "UNFULFILLED", RefundStatus: "NONE", Items: items, Address: address, Quote: quote, Note: clean(d.Note, 100), SourceArticleID: sourceArticleID, SourceLive: sourceLive, CreatedAt: nowString(), ExpiresAt: time.Now().Add(30 * time.Minute)}
 	appendOrderEvent(&o, "ORDER_CREATED", "订单已创建", "用户", "")
 	_, err = tx.ExecContext(ctx, "INSERT INTO orders(id,order_no,openid,order_status,payment_status,fulfillment_status,refund_status,total,payload,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?)", o.ID, o.OrderNo, openid, o.OrderStatus, o.PaymentStatus, o.FulfillmentStatus, o.RefundStatus, o.Quote.Total, jsonValue(o), o.ExpiresAt)
 	if err != nil {

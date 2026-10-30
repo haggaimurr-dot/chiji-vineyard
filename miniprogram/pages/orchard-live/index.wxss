@@ -4,3 +4,10 @@ page{background:#f8f6f0}.live-page{padding:46rpx 40rpx 70rpx;color:#303c2d}.live
 .replay-title{font-size:32rpx;font-weight:700}
 .replay-item{padding:20rpx 0;border-bottom:1px solid #f5f3ee}
 .replay-item-title{font-size:28rpx;display:block}
+
+.live-product{display:flex;align-items:center;gap:20rpx;padding:20rpx 0;border-bottom:1px solid #f5f3ee}
+.live-product-cover{width:120rpx;height:120rpx;border-radius:12rpx}
+.live-product-info{flex:1}
+.live-product-name{font-size:28rpx;display:block}
+.live-product-price{font-size:28rpx;color:#c65d21;font-weight:700}
+.live-product-go{font-size:26rpx;color:#999}

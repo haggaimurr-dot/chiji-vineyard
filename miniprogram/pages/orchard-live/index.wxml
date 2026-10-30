@@ -16,6 +16,16 @@
   <view wx:if="{{notice.show}}" class="live-notice"><text class="live-notice-title">开播预告</text><text class="live-notice-text">{{notice.text}}</text><text class="live-notice-countdown">{{notice.countdown}}</text><button wx:if="{{notice.pushConfigured}}" class="live-button" bindtap="subscribeNotice" loading="{{notice.busy}}" disabled="{{notice.busy}}">{{notice.subscribed ? "已订阅提醒" : "订阅开播提醒"}}</button></view>
   <view class="live-note">现场画面可能有短暂延迟，机位休息或网络中断时会暂停。默认静音，可在播放器内开启声音。</view>
   <button class="live-refresh" bindtap="loadConfig">刷新机位状态</button>
+ <view class="replay-section"><text class="replay-title">直播间好物</text>
+  <view wx:if="{{!liveProducts.length}}" class="live-note">本机位暂无挂品。</view>
+  <block wx:for="{{liveProducts}}" wx:key="id">
+   <view class="live-product" data-id="{{item.id}}" bindtap="openProduct">
+    <image class="live-product-cover" src="{{item.cover}}" mode="aspectFill"/>
+    <view class="live-product-info"><text class="live-product-name">{{item.name}}</text><text class="live-product-price">¥{{(item.price/100).toFixed(2)}}</text></view>
+    <text class="live-product-go">去购买 ›</text>
+   </view>
+  </block>
+ </view>
  <view class="replay-section"><text class="replay-title">直播回放</text>
   <view wx:if="{{!replays.length}}" class="live-note">暂无回放，敬请期待。</view>
   <block wx:for="{{replays}}" wx:key="id">

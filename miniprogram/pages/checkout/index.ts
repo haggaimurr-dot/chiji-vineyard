@@ -92,7 +92,8 @@ Page({
     try {
       const entrySource: string = wx.getStorageSync('chiji_checkout_source') || ''
       const sourceArticleId = entrySource.startsWith('article:') ? entrySource.slice(8) : ''
-      const payload = { items: this.data.items, address: this.data.address, note: this.data.note, couponCode: this.data.couponCode, deliveryDate: this.data.deliveryDate, sourceArticleId }
+      const sourceLive = entrySource.startsWith('live:') ? entrySource.slice(5) : ''
+      const payload = { items: this.data.items, address: this.data.address, note: this.data.note, couponCode: this.data.couponCode, deliveryDate: this.data.deliveryDate, sourceArticleId, sourceLive }
       const fingerprint = checkoutIntent(payload)
       const storageKey = getApp().globalData.demoMode ? 'chiji_demo_checkout_attempt' : 'chiji_checkout_attempt'
       const previous = wx.getStorageSync(storageKey)

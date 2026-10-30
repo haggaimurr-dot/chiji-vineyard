@@ -142,6 +142,7 @@ type Order struct {
 	Quote                Quote          `json:"quote"`
 	Note                 string         `json:"note,omitempty"`
 	SourceArticleID      string         `json:"sourceArticleId,omitempty"`
+	SourceLive           string         `json:"sourceLive,omitempty"`
 	Shipment             *Shipment      `json:"shipment,omitempty"`
 	PaymentAttempted     bool           `json:"-"`
 	PaidAt               string         `json:"paidAt,omitempty"`

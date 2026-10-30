@@ -519,6 +519,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 			return nil, err
 		}
 		return s.adminLiveReplaySave(ctx, actor, req.Data)
+	case "admin.live.sourceStats":
+		return s.liveSourceStats(ctx, req.Data)
 	case "admin.live.replay.delete":
 		if err = super(); err != nil {
 			return nil, err

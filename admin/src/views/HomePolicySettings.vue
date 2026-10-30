@@ -21,7 +21,7 @@ const previewElement=ref<HTMLElement|null>(null)
 let mounted=true, generation=0
 let pendingSnapshot: HomeConfig | PrivacyPolicy | null = null
 const clone = <T,>(value:T):T => JSON.parse(JSON.stringify(toRaw(value))) as T
-const normalizeHome = (value:HomeConfig):HomeConfig => ({...value,live:{orchard:{enabled:false,url:'',hours:'',...value.live?.orchard},stall:{enabled:false,url:'',hours:'',...value.live?.stall}},customerService:value.customerService||{enabled:false,wechat:false,phone:"",hours:"",responseTime:""},activities:value.activities||[],announcements:value.announcements||[],launchCalendar:value.launchCalendar||[]})
+const normalizeHome = (value:HomeConfig):HomeConfig => ({...value,live:{orchard:{enabled:false,url:'',hours:'',productIds:[],...value.live?.orchard,productIds:value.live?.orchard?.productIds||[]},stall:{enabled:false,url:'',hours:'',productIds:[],...value.live?.stall,productIds:value.live?.stall?.productIds||[]}},customerService:value.customerService||{enabled:false,wechat:false,phone:"",hours:"",responseTime:""},activities:value.activities||[],announcements:value.announcements||[],launchCalendar:value.launchCalendar||[]})
 const fingerprint = (value:unknown) => JSON.stringify(value,(_key,item:unknown)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item)
 const same = (a:unknown,b:unknown) => fingerprint(a) === fingerprint(b)
 const homeDirty=computed(()=>home.value !== null && !same(home.value,savedHome.value))
@@ -157,7 +157,9 @@ async function uploadBanner(event:Event,index:number) {
     <label>直播时间说明<input v-model.trim="home.live[view.id].hours" maxlength="100" placeholder="例如：每日 08:00–18:00，雨天暂停"/></label>
     <label>下次开播预告时间<input v-model="home.live[view.id].noticeAt" type="datetime-local" :disabled="false"/></label>
     <label>预告文案<input v-model.trim="home.live[view.id].noticeText" maxlength="100" placeholder="例如：明早 8 点采摘直播，欢迎预约"/></label>
-   </div></fieldset>
+   </div>
+   <h4>直播间挂品（最多10件，仅上架商品可保存）</h4><div v-for="(id,index) in home.live[view.id].productIds" :key="index" class="selection-row"><select v-model="home.live[view.id].productIds[index]" required><option value="">请选择</option><option v-for="p in products" :value="p.id">{{p.name}}</option><option v-if="id&&!products.some(p=>p.id===id)" :value="id">{{id}}（已下架，请更换）</option></select><button type="button" @click="move(home.live[view.id].productIds,index,-1)">上移</button><button type="button" @click="home.live[view.id].productIds.splice(index,1)">删除</button></div><button type="button" class="text-button" :disabled="home.live[view.id].productIds.length>=10" @click="home.live[view.id].productIds.push('')">＋ 挂品</button>
+   </fieldset>
    <p class="muted">可在下方首页预览中查看机位配置状态。真实观看需配置播放域名并使用微信真机验收；带有效期的签名地址过期后需更新。</p>
   </fieldset>
   <LiveReplayManager />
