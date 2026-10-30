@@ -459,6 +459,7 @@ func (s *Store) runArticlePublisher(ctx context.Context) {
 			log.Printf("article scheduled publication: %v", err)
 		}
 		cancel()
+		s.heartbeat(ctx, "article_publisher", "")
 		select {
 		case <-ctx.Done():
 			return

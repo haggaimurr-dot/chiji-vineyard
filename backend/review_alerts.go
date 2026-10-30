@@ -40,6 +40,7 @@ func (s *Store) runReviewAlertScanner(ctx context.Context) {
 			log.Printf("review alert scan: %v", err)
 		}
 		cancel()
+		s.heartbeat(ctx, "review_alert_scanner", "")
 		select {
 		case <-ctx.Done():
 			return

@@ -174,6 +174,7 @@ func (s *Store) runOrderAlertScanner(ctx context.Context) {
 		if err := s.scanAbnormalOrders(job); err != nil && ctx.Err() == nil {
 			log.Printf("order alert scan: %v", err)
 		}
+		s.heartbeat(ctx, "order_alert_scanner", "")
 	}
 	scanOnce()
 	ticker := time.NewTicker(5 * time.Minute)

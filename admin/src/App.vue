@@ -13,6 +13,7 @@ import LeadReminders from './components/LeadReminders.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import ReviewsView from './views/ReviewsView.vue'
 import AuditView from './views/AuditView.vue'
+import RuntimeStatus from './views/RuntimeStatus.vue'
 import PaymentsView from './views/PaymentsView.vue'
 import PaymentAlerts from './components/PaymentAlerts.vue'
 import ReviewAlerts from './components/ReviewAlerts.vue'
@@ -60,9 +61,10 @@ const menuItems = [
   { key: 'settings', label: '运营配置', icon: '设' },
   { key: 'payments', label: '微信支付', icon: '付' },
   { key: 'audit', label: '操作日志', icon: '志' },
+  { key: 'runtime', label: '健康检查', icon: '康' },
 ]
-const menu = computed(() => menuItems.filter((item) => (item.key !== 'reminders' || can(currentUser.value, 'product.read')) && (!['settings', 'audit', 'payments'].includes(item.key) || currentUser.value.role === 'SUPER_ADMIN')))
-const views: Record<string, any> = { security: PersonalSecurity, payments: PaymentsView, reviews: ReviewsView, dashboard: DashboardView, products: ProductsView, orders: OrdersView, content: ContentView, leads: LeadsView, settings: SettingsView, audit: AuditView, checkin: ActivityCheckin }
+const menu = computed(() => menuItems.filter((item) => (item.key !== 'reminders' || can(currentUser.value, 'product.read')) && (!['settings', 'audit', 'payments', 'runtime'].includes(item.key) || currentUser.value.role === 'SUPER_ADMIN')))
+const views: Record<string, any> = { security: PersonalSecurity, payments: PaymentsView, reviews: ReviewsView, dashboard: DashboardView, products: ProductsView, orders: OrdersView, content: ContentView, leads: LeadsView, settings: SettingsView, audit: AuditView, checkin: ActivityCheckin, runtime: RuntimeStatus }
 views.reminders = ReminderTasks
 const currentView = computed(() => menu.value.some((item) => item.key === active.value) ? views[active.value] : views[menu.value[0]?.key || ''])
 const currentLabel = computed(() => menu.value.find((item) => item.key === active.value)?.label || menu.value[0]?.label || '暂无可用模块')

@@ -839,3 +839,10 @@ CREATE TABLE IF NOT EXISTS ticket_satisfaction (
  created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
  INDEX idx_satis_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 运行时心跳（新增）：健康检查聚合页用
+CREATE TABLE IF NOT EXISTS runtime_heartbeats (
+ component VARCHAR(60) PRIMARY KEY,
+ last_run DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ detail VARCHAR(200) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

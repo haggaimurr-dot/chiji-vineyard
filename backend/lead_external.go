@@ -128,6 +128,7 @@ func (s *Store) runLeadExternalReminders(ctx context.Context) {
 		if e != nil {
 			log.Print("CRM 外部提醒查询失败，请检查数据库迁移")
 		}
+		s.heartbeat(ctx, "lead_external_reminders", "")
 		select {
 		case <-ctx.Done():
 			return

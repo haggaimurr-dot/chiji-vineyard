@@ -100,16 +100,17 @@ return errors.New("腾讯云短信签名/模板尚未配置")
 var notifyHTTP = &http.Client{Timeout: 15 * time.Second}
 
 func (s *Store) runNotifyWorker(ctx context.Context) {
-ticker:= time.NewTicker(time.Minute)
-defer ticker.Stop()
-for {
-select {
-case <-ctx.Done():
-return
-case <-ticker.C:
-s.dispatchNotifications(ctx)
-}
-}
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			s.dispatchNotifications(ctx)
+			s.heartbeat(ctx, "notify_worker", "")
+		}
+	}
 }
 
 func (s *Store) dispatchNotifications(ctx context.Context) {

@@ -510,6 +510,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.notifyStats(ctx, req.Data)
 	case "admin.ticket.satisfactionStats":
 		return s.ticketSatisfactionStats(ctx, req.Data)
+	case "admin.runtime.status":
+		return s.runtimeStatus(ctx)
 	case "admin.lead.channelStats":
 		return s.leadChannelStats(ctx, req.Data)
 	case "admin.lead.funnel":
