@@ -506,6 +506,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 			return nil, err
 		}
 		return s.store.searchLeads(ctx, d)
+	case "admin.lead.channelStats":
+		return s.leadChannelStats(ctx, req.Data)
 	case "admin.lead.funnel":
 		var d LeadSearch
 		if err = decode(req.Data, &d); err != nil {

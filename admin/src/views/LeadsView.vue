@@ -90,6 +90,17 @@ function amountCents() {
   if (cents > 100000000000) throw new Error('商机金额不能超过10亿元')
   return cents
 }
+interface LeadChannelStat { channel: string; count: number; won: number; opportunityAmount: number }
+const channelStats = ref<LeadChannelStat[]>([]), channelTotal = ref<LeadChannelStat | null>(null), channelError = ref(''), channelLoading = ref(false)
+const channelStart = ref(''), channelEnd = ref('')
+function defaultChannelRange() { const d = new Date(); channelEnd.value = d.toISOString().slice(0, 10); d.setDate(d.getDate() - 29); channelStart.value = d.toISOString().slice(0, 10) }
+async function loadChannelStats() {
+  channelLoading.value = true; channelError.value = ''
+  try { const r = await api<{ items: LeadChannelStat[]; total: LeadChannelStat }>('admin.lead.channelStats', { start: channelStart.value, end: channelEnd.value }); channelStats.value = r.items; channelTotal.value = r.total }
+  catch (e) { channelError.value = message(e) }
+  finally { channelLoading.value = false }
+}
+defaultChannelRange()
 async function loadFunnel() {
   const request = ++funnelRequest
   funnelLoading.value = true; funnelError.value = ''; funnel.value = null
@@ -328,6 +339,17 @@ onUnmounted(() => { mounted = false; ++requestId; ++historyRequest; ++openReques
         <div class="funnel-stages"><button v-for="stage in funnel.stages" :key="stage.status" class="funnel-stage" :class="{ active: status === stage.status }" @click="status = status === stage.status ? '' : stage.status"><span>{{ labels[stage.status] }}</span><strong>{{ stage.count }} <small>条</small></strong><div class="funnel-track"><i :style="{ width: `${funnel.total ? stage.count / funnel.total * 100 : 0}%` }" /></div><span>{{ money(stage.amount) }}</span></button></div>
         <p>各阶段显示当前状态分布；成交占比 = 已成交 / 全部线索（含已关闭）。金额为商机估值，不代表收款。{{ funnel.total ? '' : '暂无匹配线索。' }}</p>
       </template>
+    </section>
+    <section class="panel" aria-label="线索来源渠道统计">
+      <div class="panel-head"><div><h3>来源渠道统计</h3><p>按线索来源渠道分组：线索数 / 成单数 / 成单率 / 商机金额，默认最近 30 天。</p></div>
+      <div class="row-actions"><input v-model="channelStart" type="date" :max="channelEnd" aria-label="开始日期" /><span class="subtle">至</span><input v-model="channelEnd" type="date" :min="channelStart" aria-label="结束日期" /><button class="button secondary" :disabled="channelLoading" @click="loadChannelStats">查询</button></div></div>
+      <p v-if="channelLoading" role="status">正在统计…</p>
+      <p v-else-if="channelError" class="error" role="alert">{{ channelError }} <button class="text-button" @click="loadChannelStats">重试</button></p>
+      <table v-else class="lead-table"><thead><tr><th>渠道</th><th>线索数</th><th>成单数</th><th>成单率</th><th>商机金额</th></tr></thead><tbody>
+      <tr v-for="s in channelStats" :key="s.channel"><td>{{ s.channel }}</td><td>{{ s.count }}</td><td>{{ s.won }}</td><td>{{ s.count ? (s.won / s.count * 100).toFixed(1) + "%" : "—" }}</td><td>{{ money(s.opportunityAmount) }}</td></tr>
+      <tr v-if="channelTotal"><td><strong>合计</strong></td><td><strong>{{ channelTotal.count }}</strong></td><td><strong>{{ channelTotal.won }}</strong></td><td><strong>{{ channelTotal.count ? (channelTotal.won / channelTotal.count * 100).toFixed(1) + "%" : "—" }}</strong></td><td><strong>{{ money(channelTotal.opportunityAmount) }}</strong></td></tr>
+      <tr v-if="!channelStats.length"><td colspan="5" class="subtle">该时段无线索</td></tr>
+      </tbody></table>
     </section>
     <section class="panel">
       <div class="panel-head"><div><h3>公海池</h3><p>超过 {{ poolConfig.inactiveDays }} 天未跟进且有负责人的线索自动流入公海，任何人可认领回私海。</p></div><div class="row-actions"><button class="button secondary" :disabled="poolBusy" @click="poolOpen = !poolOpen; if (poolOpen && !poolLoaded) loadPool()">{{ poolOpen ? "收起" : "展开" }}</button><button class="button secondary" :disabled="poolBusy" @click="loadPool()">刷新</button></div></div>
