@@ -16,5 +16,15 @@
   <view wx:if="{{notice.show}}" class="live-notice"><text class="live-notice-title">开播预告</text><text class="live-notice-text">{{notice.text}}</text><text class="live-notice-countdown">{{notice.countdown}}</text><button wx:if="{{notice.pushConfigured}}" class="live-button" bindtap="subscribeNotice" loading="{{notice.busy}}" disabled="{{notice.busy}}">{{notice.subscribed ? "已订阅提醒" : "订阅开播提醒"}}</button></view>
   <view class="live-note">现场画面可能有短暂延迟，机位休息或网络中断时会暂停。默认静音，可在播放器内开启声音。</view>
   <button class="live-refresh" bindtap="loadConfig">刷新机位状态</button>
+ <view class="replay-section"><text class="replay-title">直播回放</text>
+  <view wx:if="{{!replays.length}}" class="live-note">暂无回放，敬请期待。</view>
+  <block wx:for="{{replays}}" wx:key="id">
+   <view class="replay-item" data-id="{{item.id}}" bindtap="playReplay">
+    <text class="replay-item-title">{{item.title}}</text>
+    <text class="live-note">{{item.playedAt}}</text>
+   </view>
+   <video wx:if="{{replayPlaying === item.id}}" class="live-video" src="{{item.url}}" poster="{{item.coverUrl}}" controls="{{true}}" autoplay="{{true}}" bindended="stopReplay" binderror="stopReplay" />
+  </block>
+ </view>
  </block>
 </view>

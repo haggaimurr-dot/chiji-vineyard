@@ -3,7 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, toRaw, watch } fro
 import { api, isDemo } from '../api'
 import OperationsPreview from '../components/OperationsPreview.vue'
 import ActivityManagement from './ActivityManagement.vue'
-import type { HomeConfig, PrivacyPolicy, Product, Article } from '../types'
+import type { HomeConfig, PrivacyPolicy, Product, Article } from '../types'
+import LiveReplayManager from './LiveReplayManager.vue'
 type ConfigKey = 'home' | 'privacy'
 type Config = { home: HomeConfig; privacy: PrivacyPolicy }
 const props=defineProps<{disabled?:boolean}>()
@@ -159,6 +160,7 @@ async function uploadBanner(event:Event,index:number) {
    </div></fieldset>
    <p class="muted">可在下方首页预览中查看机位配置状态。真实观看需配置播放域名并使用微信真机验收；带有效期的签名地址过期后需更新。</p>
   </fieldset>
+  <LiveReplayManager />
   <label>果园介绍标题<input v-model.trim="home.storyTitle"/></label><label>果园介绍正文<textarea v-model.trim="home.storyCopy" rows="3"/></label><label>合作入口标题<input v-model.trim="home.cooperationTitle"/></label><label>合作入口说明<input v-model.trim="home.cooperationCopy"/></label>
   <button class="button primary" :disabled="working||!!pendingReadback">{{ busy === 'home' ? '保存并回读中…' : pendingReadback ? '请先回读上次保存值' : '保存并预览首页' }}</button>
   </fieldset>

@@ -468,6 +468,8 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.returnTracking(ctx, openid, req.Data)
 	case "liveNotice.status":
 		return s.liveNoticeStatus(ctx, openid, req.Data)
+	case "live.replay.list":
+		return s.liveReplayList(ctx, req.Data)
 	case "liveNotice.subscribe":
 		return s.liveNoticeSubscribe(ctx, openid, req.Data)
 	case "invoice.titles":

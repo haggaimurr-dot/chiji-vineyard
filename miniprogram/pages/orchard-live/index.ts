@@ -11,6 +11,7 @@ Page({
   channel: { enabled: false, url: '', hours: '' } as OrchardLiveChannel,
   home: {} as HomeConfig, loading: true, error: '', playing: false,
   status: 'ready', version: 0, visible: false, notice: { show: false, text: '', countdown: '', subscribed: false, pushConfigured: false, busy: false },
+  replays: [] as Array<{id:string;title:string;url:string;coverUrl:string;durationSec:number;playedAt:string}>, replayPlaying: '',
  },
  onShow() { this.setData({ visible: true }); return this.loadConfig() },
  onHide() { this.stopPlayback(); this.setData({ visible: false, version: this.data.version + 1 }) },
@@ -30,6 +31,7 @@ Page({
    if (version !== this.data.version || !this.data.visible) return
    this.setData({ home, channel: liveChannel(home, this.data.selected), loading: false })
    this.loadNotice()
+   this.loadReplays()
   } catch (_) {
    if (version !== this.data.version || !this.data.visible) return
    this.setData({ loading: false, error: '果园直播信息暂时无法加载，请重试。', channel: { enabled: false, url: '', hours: '' } })
@@ -40,8 +42,9 @@ Page({
   if (!liveViews.some(view => view.id === id) || id === this.data.selected) return
   const pending = this.data.loading
   this.stopPlayback()
-  this.setData({ selected: id, version: this.data.version + 1, loading: false, channel: liveChannel(this.data.home, id) })
+  this.setData({ selected: id, version: this.data.version + 1, loading: false, channel: liveChannel(this.data.home, id), replayPlaying: '' })
   this.loadNotice()
+  this.loadReplays()
   // A switch during a pending request must not leave an empty or stale configuration.
   if (pending || !this.data.home.banners) return this.loadConfig()
  },
@@ -71,6 +74,18 @@ Page({
   } catch (e) { wx.showToast({ title: (e as Error).message || '订阅失败', icon: 'none' }) }
   finally { this.setData({ 'notice.busy': false }) }
  },
+ async loadReplays() {
+  try {
+   const replays = await callApi<Array<{id:string;title:string;url:string;coverUrl:string;durationSec:number;playedAt:string}>>('live.replay.list', { channel: this.data.selected })
+   this.setData({ replays: replays || [] })
+  } catch (_) { this.setData({ replays: [] }) }
+ },
+ playReplay(event: WechatMiniprogram.BaseEvent) {
+  const id = event.currentTarget.dataset.id as string
+  this.stopPlayback()
+  this.setData({ replayPlaying: id })
+ },
+ stopReplay() { this.setData({ replayPlaying: '' }) },
  watchLive() {
   if (this.data.loading || this.data.error || !this.data.channel.enabled || !this.data.visible) return
   this.clearTimer()

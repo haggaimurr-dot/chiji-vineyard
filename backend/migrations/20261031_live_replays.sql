@@ -1,0 +1,12 @@
+-- 直播回放
+CREATE TABLE IF NOT EXISTS live_replays (
+ id VARCHAR(80) PRIMARY KEY,
+ channel VARCHAR(16) NOT NULL,
+ title VARCHAR(120) NOT NULL,
+ url VARCHAR(2000) NOT NULL,
+ cover_url VARCHAR(2000) NOT NULL DEFAULT '',
+ duration_sec INT NOT NULL DEFAULT 0,
+ played_at VARCHAR(32) NOT NULL DEFAULT '',
+ created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+ INDEX idx_replay_channel (channel,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
