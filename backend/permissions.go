@@ -26,7 +26,7 @@ var actionPermissions = map[string]string{
 	"admin.payment.financeReconcile": "super", "admin.payment.overview": "super", "admin.payment.reconcile": "super", "admin.payment.resolve": "super", "admin.payment.alertCount": "super",
 	"admin.dashboard":      "dashboard.read",
 	"admin.product.search": "product.read", "admin.product.import": "product.write", "admin.batch.list": "product.read", "admin.batch.save": "product.write",
-	"admin.product.list": "product.read", "admin.product.save": "product.write",
+	"admin.product.list": "product.read", "admin.product.save": "product.write", "admin.product.batchStatus": "product.write", "admin.product.duplicate": "product.write",
 	"admin.inventory.locations": "product.read", "admin.inventory.lots": "product.read", "admin.inventory.lot.movements": "product.read", "admin.inventory.warehouse.save": "inventory.write", "admin.inventory.receive": "inventory.write", "admin.inventory.loss": "inventory.write", "admin.inventory.allocate": "inventory.write",
 	"admin.inventory.set": "inventory.write", "admin.inventory.batch": "inventory.write",
 	"admin.inventory.movements": "product.read", "admin.inventory.alerts": "product.read", "admin.inventory.alert.save": "inventory.write",
@@ -120,7 +120,7 @@ func (s *Store) authorizeAdmin(r *http.Request, actor Claims, action string) err
 		return errPermission
 	}
 	// Product saves also create/change SKU stock; prevent bypassing inventory grants.
-	if (action == "admin.product.save" || action == "admin.product.import") && !slices.Contains(permissions, "inventory.write") {
+	if (action == "admin.product.save" || action == "admin.product.import" || action == "admin.product.batchStatus" || action == "admin.product.duplicate") && !slices.Contains(permissions, "inventory.write") {
 		return errPermission
 	}
 	return nil

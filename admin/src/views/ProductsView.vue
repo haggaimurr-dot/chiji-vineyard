@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import ProductTools from './ProductTools.vue'
 import { api, money } from '../api'
 import type { Product } from '../types'
@@ -19,9 +19,39 @@ async function saveBatch(){const items=batch.value.filter(x=>x.selected);if(!ite
 const editing = ref<Product | null>(null)
 const saving = ref(false)
 const error = ref('')
+const selected = ref<string[]>([])
+const selBusy = ref(false)
+const selMsg = ref('')
+const pageAllSelected = computed(() => products.value.length > 0 && selected.value.length === products.value.length)
+function toggleSelect(id: string) { const i = selected.value.indexOf(id); if (i < 0) selected.value.push(id); else selected.value.splice(i, 1) }
+function toggleSelectAll() { selected.value = pageAllSelected.value ? [] : products.value.map(p => p.id) }
+async function batchStatus(status: 'PUBLISHED' | 'DRAFT') {
+  if (!selected.value.length || selBusy.value) return
+  if (!window.confirm(`确认将 ${selected.value.length} 个商品${status === 'PUBLISHED' ? '上架' : '下架为草稿'}？`)) return
+  selBusy.value = true; selMsg.value = ''
+  try {
+    const result = await api<{ updated: number }>('admin.product.batchStatus', { ids: selected.value, status })
+    selMsg.value = `已${status === 'PUBLISHED' ? '上架' : '下架'} ${result.updated} 个商品`
+    selected.value = []
+    await load()
+  } catch (e) { selMsg.value = (e as Error).message }
+  finally { selBusy.value = false }
+}
+async function duplicateProduct(product: Product) {
+  if (selBusy.value) return
+  if (!window.confirm(`复制「${product.name}」为草稿（规格库存置零）？`)) return
+  selBusy.value = true; selMsg.value = ''
+  try {
+    const created = await api<Product>('admin.product.duplicate', { id: product.id })
+    selMsg.value = `已复制为草稿：${created.name}`
+    selected.value = []
+    await load()
+  } catch (e) { selMsg.value = (e as Error).message }
+  finally { selBusy.value = false }
+}
 const blank = (): Product => ({ id: '', name: '', subtitle: '', category: 'family', saleMode: 'spot', cover: '', gallery: [], badges: [], origin: '', description: '', highlights: [], status: 'DRAFT', sortOrder: 100, skus: [{ id: '', name: '家庭装', price: 0, stock: 0, limitPerOrder: 1, weightLabel: '' }] })
 
-async function load(next=offset.value) { const id=++request;busy.value=true;error.value='';try { const result=await api<{items:Product[];total:number;offset:number}>('admin.product.search',{...query.value,offset:next,limit:pageSize.value});if(id!==request)return;products.value=result.items;total.value=result.total;offset.value=result.offset;inventoryRevision.value++ } catch(e) { if(id===request)error.value = (e as Error).message } finally{if(id===request)busy.value=false} }
+async function load(next=offset.value) { const id=++request;busy.value=true;error.value='';try { const result=await api<{items:Product[];total:number;offset:number}>('admin.product.search',{...query.value,offset:next,limit:pageSize.value});if(id!==request)return;products.value=result.items;total.value=result.total;offset.value=result.offset;inventoryRevision.value++;selected.value=selected.value.filter(id=>result.items.some(p=>p.id===id)) } catch(e) { if(id===request)error.value = (e as Error).message } finally{if(id===request)busy.value=false} }
 onMounted(()=>load(0))
 function edit(product?: Product) { editing.value = JSON.parse(JSON.stringify(product || blank())); editing.value?.skus.forEach(s=>s.expectedStock=s.stock); error.value = '' }
 function addTraceability() {
@@ -61,8 +91,9 @@ async function inventory(product: Product, skuId: string, current: number) {
   <div v-show="tab==='movements'||tab==='alerts'"><InventoryPanel :mode="tab" :revision="inventoryRevision" @count="alertCount=$event" @adjusted="load" /></div>
   <p v-if="error&&!editing" class="form-error" role="alert">{{error}}</p>
   <form v-show="tab==='products'" class="product-filters panel" @submit.prevent="load(0)"><label>搜索商品<input v-model.trim="query.keyword" maxlength="60" placeholder="商品 / 产地 / 规格" @input="search"/></label><label>分类<select v-model="query.category" @change="load(0)"><option value="all">全部分类</option><option value="family">家庭装</option><option value="gift">节礼装</option></select></label><label>状态<select v-model="query.status" @change="load(0)"><option value="">全部状态</option><option value="PUBLISHED">销售中</option><option value="DRAFT">草稿</option></select></label><label>销售模式<select v-model="query.saleMode" @change="load(0)"><option value="">全部模式</option><option value="spot">现货</option><option value="presale">预售</option></select></label><button class="button primary" :disabled="busy">查询</button><button type="button" class="button secondary" @click="query={keyword:'',category:'all',status:'',saleMode:''};load(0)">重置</button></form>
+  <div v-show="tab==='products'&&(selected.length||selMsg)" class="batch-bar panel"><span>已选 {{selected.length}} 个商品</span><div class="row-actions"><button v-permission="['product.write','inventory.write']" class="button secondary" :disabled="selBusy||!selected.length" @click="batchStatus('PUBLISHED')">批量上架</button><button v-permission="['product.write','inventory.write']" class="button secondary" :disabled="selBusy||!selected.length" @click="batchStatus('DRAFT')">批量下架</button><button class="text-button" :disabled="selBusy" @click="selected=[]">清空选择</button></div><span v-if="selMsg" class="batch-msg">{{selMsg}}</span></div>
   <p v-if="tab==='products'&&busy" aria-live="polite">加载中…</p>
-  <section v-show="tab==='products'" class="panel table-panel"><table><thead><tr><th>商品</th><th>销售模式</th><th>规格 / 售价</th><th>可售库存</th><th>状态</th><th></th></tr></thead><tbody><tr v-for="product in products" :key="product.id"><td><div class="product-cell"><img :src="product.cover" loading="lazy" :alt="product.name"/><div><strong>{{ product.name }}</strong><small>{{ product.subtitle }}</small></div></div></td><td><span class="tag" :class="product.saleMode">{{ product.saleMode === 'spot' ? '现货' : '预售' }}</span><small v-if="product.expectedShipDate" class="block">{{ product.expectedShipDate }} 起发</small></td><td><div class="sku-line" v-for="sku in product.skus" :key="sku.id"><span>{{ sku.name }}</span><b>{{ money(sku.price) }}</b></div></td><td><button v-permission="'inventory.write'" class="stock-link" v-for="sku in product.skus" :key="sku.id" @click="inventory(product, sku.id, sku.stock)">{{ sku.name }} <strong>{{ sku.stock }}</strong></button></td><td><span class="status" :class="product.status.toLowerCase()">{{ product.status === 'PUBLISHED' ? '销售中' : '草稿' }}</span></td><td><button v-permission="['product.write', 'inventory.write']" class="text-button" @click="edit(product)">编辑</button><button class="text-button" @click="batchProductId=product.id;tab='batches'">批次</button></td></tr><tr v-if="!products.length&&!busy"><td colspan="6">暂无匹配商品</td></tr></tbody></table><div class="product-pagination"><span>共 {{total}} 款商品</span><select v-model.number="pageSize" @change="load(0)"><option :value="20">20 / 页</option><option :value="50">50 / 页</option></select><button class="button secondary" :disabled="busy||offset===0" @click="load(offset-pageSize)">上一页</button><span>第 {{Math.floor(offset/pageSize)+1}} 页</span><button class="button secondary" :disabled="busy||offset+pageSize>=total" @click="load(offset+pageSize)">下一页</button><button class="button secondary" :disabled="busy" @click="load()">刷新</button></div></section>
+  <section v-show="tab==='products'" class="panel table-panel"><table><thead><tr><th><input type="checkbox" :checked="pageAllSelected" @change="toggleSelectAll" aria-label="全选本页商品" /></th><th>商品</th><th>销售模式</th><th>规格 / 售价</th><th>可售库存</th><th>状态</th><th></th></tr></thead><tbody><tr v-for="product in products" :key="product.id"><td><input type="checkbox" :checked="selected.includes(product.id)" @change="toggleSelect(product.id)" :aria-label="'选择'+product.name" /></td><td><div class="product-cell"><img :src="product.cover" loading="lazy" :alt="product.name"/><div><strong>{{ product.name }}</strong><small>{{ product.subtitle }}</small></div></div></td><td><span class="tag" :class="product.saleMode">{{ product.saleMode === 'spot' ? '现货' : '预售' }}</span><small v-if="product.expectedShipDate" class="block">{{ product.expectedShipDate }} 起发</small></td><td><div class="sku-line" v-for="sku in product.skus" :key="sku.id"><span>{{ sku.name }}</span><b>{{ money(sku.price) }}</b></div></td><td><button v-permission="'inventory.write'" class="stock-link" v-for="sku in product.skus" :key="sku.id" @click="inventory(product, sku.id, sku.stock)">{{ sku.name }} <strong>{{ sku.stock }}</strong></button></td><td><span class="status" :class="product.status.toLowerCase()">{{ product.status === 'PUBLISHED' ? '销售中' : '草稿' }}</span></td><td><button v-permission="['product.write', 'inventory.write']" class="text-button" @click="edit(product)">编辑</button><button v-permission="['product.write', 'inventory.write']" class="text-button" @click="duplicateProduct(product)">复制</button><button class="text-button" @click="batchProductId=product.id;tab='batches'">批次</button></td></tr><tr v-if="!products.length&&!busy"><td colspan="7">暂无匹配商品</td></tr></tbody></table><div class="product-pagination"><span>共 {{total}} 款商品</span><select v-model.number="pageSize" @change="load(0)"><option :value="20">20 / 页</option><option :value="50">50 / 页</option></select><button class="button secondary" :disabled="busy||offset===0" @click="load(offset-pageSize)">上一页</button><span>第 {{Math.floor(offset/pageSize)+1}} 页</span><button class="button secondary" :disabled="busy||offset+pageSize>=total" @click="load(offset+pageSize)">下一页</button><button class="button secondary" :disabled="busy" @click="load()">刷新</button></div></section>
 
   <div v-if="batchOpen" class="modal-backdrop"><form class="drawer" @submit.prevent="saveBatch"><div class="drawer-head"><h2>批量调整可售库存</h2><button type="button" class="close" :disabled="batchBusy" @click="batchOpen=false">×</button></div><div class="drawer-body"><p>填写调整后的可售库存，预占库存保持独立。本次列出当前商品页的规格，最多选择 200 个。若提交前库存变化，整批不会保存，请关闭并刷新后重新操作。</p><button type="button" class="text-button" @click="batch.forEach(x=>x.selected=true)">全选</button><button type="button" class="text-button" @click="batch.forEach(x=>x.selected=false)">取消全选</button><table><thead><tr><th>选择</th><th>商品 / 规格</th><th>当前</th><th>调整后</th></tr></thead><tbody><tr v-for="row in batch" :key="row.skuId"><td><input type="checkbox" v-model="row.selected"/></td><td>{{row.name}}</td><td>{{row.expectedStock}}</td><td><input v-model.number="row.stock" type="number" min="0" max="2147483647" step="1" :disabled="!row.selected" required/></td></tr></tbody></table><label>调整原因<textarea v-model.trim="batchReason" maxlength="200" required rows="2"/></label><p v-if="batchError" class="form-error">{{batchError}}</p></div><div class="drawer-foot"><button type="button" class="button secondary" :disabled="batchBusy" @click="batchOpen=false">取消</button><button v-permission="'inventory.write'" class="button primary" :disabled="batchBusy">{{batchBusy?'保存中…':'保存所选库存'}}</button></div></form></div>
   <div v-if="editing" class="modal-backdrop" @click.self="editing = null"><form class="drawer" @submit.prevent="save"><div class="drawer-head"><div><p class="eyebrow purple">PRODUCT EDITOR</p><h2>{{ editing.id ? '编辑商品' : '新建商品' }}</h2></div><button type="button" class="close" @click="editing = null">×</button></div><div class="drawer-body form-grid">
@@ -121,4 +152,6 @@ async function inventory(product: Product, skuId: string, current: number) {
 .table-panel{overflow-x:auto}.table-panel table{min-width:800px}.stock-link{white-space:nowrap}
 .product-filters{display:flex;flex-wrap:wrap;gap:12px;padding:20px;margin-bottom:16px;align-items:end}.product-filters label{display:grid;gap:8px;font-size:13px}.product-filters input,.product-filters select,.product-pagination select{padding:10px;border:1px solid var(--border);border-radius:8px}.product-pagination{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:12px;padding:20px;font-size:13px}
 .inventory-tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.batch-bar{display:flex;align-items:center;gap:16px;padding:12px 20px;margin-bottom:16px;flex-wrap:wrap;font-size:13px}
+.batch-msg{color:var(--purple);font-size:12px}
 </style>

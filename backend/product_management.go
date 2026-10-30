@@ -241,3 +241,84 @@ func (s *Server) importProducts(ctx context.Context, actor Claims, raw json.RawM
 	}
 	return M{"created": len(out.Products), "skus": out.Rows}, nil
 }
+
+// batchProductStatus publishes or unpublishes multiple products at once.
+func (s *Server) batchProductStatus(ctx context.Context, actor Claims, raw json.RawMessage) (any, error) {
+	var d struct {
+		IDs    []string `json:"ids"`
+		Status string   `json:"status"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	if d.Status != "DRAFT" && d.Status != "PUBLISHED" {
+		return nil, errors.New("状态无效")
+	}
+	if len(d.IDs) == 0 || len(d.IDs) > 200 {
+		return nil, errors.New("请选择 1–200 个商品")
+	}
+	tx, err := s.store.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	for _, id := range d.IDs {
+		res, err := tx.ExecContext(ctx, "UPDATE products SET status=? WHERE id=?", d.Status, id)
+		if err != nil {
+			return nil, err
+		}
+		n, err := res.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+		if n == 0 {
+			return nil, errors.New("商品不存在")
+		}
+	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "PRODUCT_BATCH_STATUS", "", jsonValue(M{"ids": d.IDs, "status": d.Status})); err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return M{"updated": len(d.IDs)}, nil
+}
+
+// duplicateProduct copies a product (SKUs, media, content) as a DRAFT with zero stock.
+func (s *Server) duplicateProduct(ctx context.Context, actor Claims, raw json.RawMessage) (any, error) {
+	var d struct {
+		ID string `json:"id"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	p, err := s.store.product(ctx, d.ID, true)
+	if err != nil || p == nil {
+		return nil, errors.New("商品不存在")
+	}
+	p.ID = ""
+	p.Name = clean(p.Name+"（副本）", 80)
+	p.Status = "DRAFT"
+	for i := range p.SKUs {
+		p.SKUs[i].ID = ""
+		p.SKUs[i].ProductID = ""
+		p.SKUs[i].Stock = 0
+		p.SKUs[i].ExpectedStock = nil
+	}
+	tx, err := s.store.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	np, err := s.saveProductTx(ctx, tx, actor, *p)
+	if err != nil {
+		return nil, err
+	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "PRODUCT_DUPLICATE", np.ID, jsonValue(M{"name": np.Name, "sourceId": d.ID})); err != nil {
+		return nil, err
+	}
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+	return s.store.product(ctx, np.ID, true)
+}

@@ -176,6 +176,10 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.products(ctx, "", true)
 	case "admin.product.save":
 		return s.saveProduct(ctx, actor, req.Data)
+	case "admin.product.batchStatus":
+		return s.batchProductStatus(ctx, actor, req.Data)
+	case "admin.product.duplicate":
+		return s.duplicateProduct(ctx, actor, req.Data)
 	case "admin.inventory.locations":
 		return s.inventoryLocations(ctx)
 	case "admin.inventory.lots":
