@@ -283,6 +283,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.resolveInvoiceEmail(ctx, actor, req.Data)
 	case "admin.coupon.get":
 		return s.store.config(ctx, "coupons")
+	case "admin.coupon.stats":
+		return s.couponStats(ctx)
 	case "admin.coupon.save":
 		if e := super(); e != nil {
 			return nil, e

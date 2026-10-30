@@ -147,3 +147,63 @@ func bestWalletCoupon(wallet []WalletCoupon, base Quote, now time.Time) string {
 	}
 	return best
 }
+
+// 发券效果统计：按模板聚合领取/核销/过期数。
+type couponStat struct {
+	Code       string  `json:"code"`
+	Name       string  `json:"name"`
+	Minimum    int     `json:"minimum"`
+	Amount     int     `json:"amount"`
+	Issued     int     `json:"issued"`
+	Used       int     `json:"used"`
+	Expired    int     `json:"expired"`
+	Active     int     `json:"active"`
+	RedeemRate float64 `json:"redeemRate"`
+}
+
+func (s *Server) couponStats(ctx context.Context) (any, error) {
+	var raw []byte
+	if err := s.store.db.QueryRowContext(ctx, "SELECT payload FROM configs WHERE config_key='coupons'").Scan(&raw); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+	var config CouponConfig
+	if raw != nil {
+		if err := json.Unmarshal(raw, &config); err != nil {
+			return nil, err
+		}
+	}
+	now := time.Now()
+	stats := []couponStat{}
+	total := couponStat{}
+	for _, item := range config.Items {
+		st := couponStat{Code: item.Code, Name: item.Name, Minimum: item.Minimum, Amount: item.Amount}
+		if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM user_coupons WHERE code=?", item.Code).Scan(&st.Issued); err != nil {
+			return nil, err
+		}
+		if err := s.store.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM user_coupons w WHERE w.code=? AND EXISTS(
+			SELECT 1 FROM orders o WHERE o.openid=w.openid AND JSON_UNQUOTE(JSON_EXTRACT(o.payload,'$.quote.couponCode'))=w.code AND o.payment_status<>'UNPAID')`, item.Code).Scan(&st.Used); err != nil {
+			return nil, err
+		}
+		if item.EndDate != "" {
+			if end, err := time.Parse("2006-01-02", item.EndDate); err == nil && now.After(end.AddDate(0, 0, 1)) {
+				st.Expired = st.Issued - st.Used
+			}
+		}
+		if st.Expired < 0 {
+			st.Expired = 0
+		}
+		st.Active = st.Issued - st.Used - st.Expired
+		if st.Issued > 0 {
+			st.RedeemRate = float64(int(float64(st.Used) / float64(st.Issued) * 10000)) / 100
+		}
+		stats = append(stats, st)
+		total.Issued += st.Issued
+		total.Used += st.Used
+		total.Expired += st.Expired
+		total.Active += st.Active
+	}
+	if total.Issued > 0 {
+		total.RedeemRate = float64(int(float64(total.Used) / float64(total.Issued) * 10000)) / 100
+	}
+	return M{"items": stats, "total": total}, nil
+}
