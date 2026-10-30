@@ -53,6 +53,20 @@ func validateArticleRevision(a Article, now time.Time) (Article, error) {
 	if a.Status != "DRAFT" && a.Status != "PUBLISHED" && a.Status != "SCHEDULED" {
 		return a, errors.New("文章状态无效")
 	}
+	if len(a.ProductIDs) > 20 {
+		return a, errors.New("每篇内容最多关联20个商品")
+	}
+	seen := map[string]bool{}
+	ids := []string{}
+	for _, id := range a.ProductIDs {
+		id = strings.TrimSpace(id)
+		if id == "" || len(id) > 80 || seen[id] {
+			continue
+		}
+		seen[id] = true
+		ids = append(ids, id)
+	}
+	a.ProductIDs = ids
 	if len(a.Tags) > 20 {
 		return a, errors.New("每篇内容最多20个标签")
 	}

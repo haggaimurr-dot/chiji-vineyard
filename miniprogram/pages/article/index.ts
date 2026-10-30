@@ -57,6 +57,10 @@ Page({
       if (request === this.loadRequest) this.setData({ loading: false })
     }
   },
+  goProduct(event: WechatMiniprogram.BaseEvent) {
+    const id = event.currentTarget.dataset.id as string
+    if (id) wx.navigateTo({ url: '/pages/product/index?id=' + encodeURIComponent(id) })
+  },
   async recordRead() {
     if (!this.visible || this.disposed || !this.readRendered || !this.data.article || this.readRecorded || this.readBusy) return
     const articleId = this.data.article.id

@@ -12,6 +12,7 @@ export interface Sku {
 }
 
 export interface Product {
+  linkedArticles?: Array<{ id: string; title: string; cover: string }>
   favorite?: boolean
   restockReminder?: boolean
   restockPushStatus?: string
@@ -119,6 +120,7 @@ export interface ShippingNotice { parcels?: Parcel[]; orderId: string; orderNo: 
 export interface ShippingSubscription { enabled: boolean; templateId: string; status: string; demo?: boolean }
 
 export interface Article {
+  products?: Array<{ id: string; name: string; cover: string; price: number }>
   completed?: boolean
   favorite?: boolean
   lastReadAt?: string

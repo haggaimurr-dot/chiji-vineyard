@@ -28,3 +28,5 @@
 .qa-text, .qa-answer { font-size: 26rpx; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
 .qa-answer { margin-top: 20rpx; padding: 20rpx; background: #e7eee4; border-radius: 12rpx; }
 .qa-error { color: #a44438; font-size: 24rpx; margin: 16rpx 0; }
+
+.related-products{margin-top:32rpx}.related-title{font-size:30rpx;font-weight:bold;margin-bottom:16rpx}.related-product{display:flex;gap:20rpx;padding:20rpx 0;border-top:1rpx solid #dedbd3;align-items:center}.related-cover{width:120rpx;height:120rpx;border-radius:8rpx}.related-info{display:flex;flex-direction:column;gap:8rpx}.related-name{font-size:26rpx}.related-price{font-size:26rpx;color:#b3542e;font-weight:bold}

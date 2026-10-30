@@ -319,7 +319,13 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		}
 		products := []Product{*p}
 		e = s.store.attachAttention(ctx, openid, products)
-		return products[0], e
+		if e != nil {
+			return nil, e
+		}
+		if products[0].LinkedArticles, e = s.store.productLinkedArticles(ctx, products[0].ID); e != nil {
+			return nil, e
+		}
+		return products[0], nil
 	case "reminder.click":
 		return s.store.recordReminderClick(ctx, openid, req.Data)
 	case "product.attention.set":

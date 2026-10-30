@@ -92,6 +92,13 @@
   </view>
   <view class="divider"></view>
   <view class="page-pad content-section">
+    <view wx:if="{{product.linkedArticles && product.linkedArticles.length}}" class="related-articles">
+      <view class="option-title">相关种植内容</view>
+      <view wx:for="{{product.linkedArticles}}" wx:key="id" class="related-article" data-id="{{item.id}}" bindtap="goArticle">
+        <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" class="related-article-cover"/>
+        <text class="related-article-title">{{item.title}}</text>
+      </view>
+    </view>
     <view class="section-heading"><view class="option-title">产地溯源</view><text wx:if="{{product.traceability.demo}}">示例资料</text></view>
     <block wx:if="{{product.traceability}}">
       <view class="trace-facts"><view>产地 <text>{{product.origin}}</text></view><view>果园 <text>{{product.traceability.orchard || '待补充'}}</text></view><view>批次 <text>{{product.traceability.batch || '待补充'}}</text></view><view>采收 <text>{{product.traceability.harvestedAt || '以实际发货批次为准'}}</text></view></view>

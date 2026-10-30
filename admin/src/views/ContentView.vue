@@ -19,6 +19,8 @@ const reviewing = ref<Article | null>(null), reviewNote = ref(''), reviewError =
 const reviewFilter = ref('PENDING'), submitting = ref('')
 const reviewItems = computed(() => articles.value.filter(a => reviewFilter.value === 'ALL' ? !!a.reviewStatus : a.reviewStatus === reviewFilter.value))
 const tagOptions = computed(() => resources.value.filter(r => r.kind === 'tag'))
+const linkProducts = ref<Array<{id: string; name: string}>>([])
+async function loadLinkProducts() { if (linkProducts.value.length) return; try { const r = await api<Array<{id: string; name: string}>>('admin.product.list', {}); linkProducts.value = (r || []).map((p: any) => ({ id: p.id, name: p.name || p.id })) } catch { linkProducts.value = [] } }
 async function loadResources() {
   if (resourceLoading.value) return
   resourceLoading.value = true; resourceError.value = ''
@@ -98,6 +100,8 @@ onUnmounted(() => { disposed = true; detailRequest++; clearInterval(refreshTimer
 function edit(article?: Article) {
   editing.value = clone(article || blank())
   editing.value.tags ||= []
+  editing.value.productIds ||= []
+  void loadLinkProducts()
   editing.value.contentHtml = sanitizeContent(editing.value.contentHtml || paragraphsToHtml(editing.value.content || []))
   showPreview.value = false; editorError.value = ''
   if (editing.value.id) editing.value.version ||= 1
@@ -319,6 +323,7 @@ async function restore() {
       <fieldset class="content-editor-fields full" :disabled="busy">
         <label class="full">标题<input v-model.trim="editing.title" required maxlength="120"/></label><label class="full">摘要<textarea v-model.trim="editing.summary" required maxlength="260" rows="2"/></label>
         <label>品种<input v-model.trim="editing.variety" required/></label><label>种植阶段<input v-model.trim="editing.stage" required/></label>
+        <div class="full"><p class="editor-label">关联商品（小程序文章详情展示入口）</p><div class="content-resource-tags"><label v-for="p in linkProducts" :key="p.id" class="content-tag-choice"><input v-model="editing.productIds" type="checkbox" :value="p.id"/>{{ p.name }}</label></div><small v-if="!linkProducts.length">暂无商品数据。</small></div>
         <div class="full"><p class="editor-label">标签</p><div class="content-resource-tags"><label v-for="tag in [...new Set([...tagOptions.map(r => r.name), ...(editing.tags || [])])]" :key="tag" class="content-tag-choice"><input v-model="editing.tags" type="checkbox" :value="tag"/>{{ tag }}</label></div><small v-if="!tagOptions.length">可在标签库添加常用标签。</small><p v-if="resourceError" class="form-error">{{ resourceError }} <button type="button" class="text-button" @click="loadResources">重试加载库</button></p></div>
         <p v-if="editing.reviewStatus" class="full content-help">审核状态：{{ reviewLabels[editing.reviewStatus] }}。修改正文、标签或素材后需重新审核；审核通过后可以直接调整发布状态。</p>
         <label>类型<select v-model="editing.type"><option value="article">图文</option><option value="video">短视频</option></select></label><label>发布状态<select v-model="editing.status"><option value="DRAFT">保存草稿</option><option value="PUBLISHED">立即发布</option><option value="SCHEDULED">定时发布</option></select></label>

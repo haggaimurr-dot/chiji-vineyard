@@ -29,6 +29,7 @@ type SKU struct {
 type Product struct {
 	PriceDropReminder bool               `json:"priceDropReminder"`
 	PriceDrop         *PriceDrop         `json:"priceDrop,omitempty"`
+	LinkedArticles    []linkedArticle     `json:"linkedArticles,omitempty"`
 	Favorite          bool               `json:"favorite"`
 	RestockReminder   bool               `json:"restockReminder"`
 	RestockPushStatus string             `json:"restockPushStatus,omitempty"`
@@ -146,6 +147,8 @@ type Order struct {
 type Article struct {
 	Completed    bool     `json:"completed"`
 	Tags         []string `json:"tags,omitempty"`
+	ProductIDs   []string `json:"productIds,omitempty"`
+	Products     []linkedProduct `json:"products,omitempty"`
 	ReviewStatus string   `json:"reviewStatus,omitempty"`
 	ReviewNote   string   `json:"reviewNote,omitempty"`
 	ReviewedBy   string   `json:"reviewedBy,omitempty"`

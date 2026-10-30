@@ -107,6 +107,7 @@ export interface ContentResource { id: string; name: string; kind: 'tag' | 'imag
 
 export interface Article {
   tags?: string[]
+  productIds?: string[]
   reviewStatus?: 'UNSUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
   reviewNote?: string
   reviewedBy?: string

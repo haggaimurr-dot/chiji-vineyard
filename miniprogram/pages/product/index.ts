@@ -132,6 +132,10 @@ Page({
     const id = event.currentTarget.dataset.id
     if (id) wx.navigateTo({ url: `/pages/product/index?id=${encodeURIComponent(id)}` })
   },
+  goArticle(event: WechatMiniprogram.BaseEvent) {
+    const id = event.currentTarget.dataset.id as string
+    if (id) wx.navigateTo({ url: '/pages/article/index?id=' + encodeURIComponent(id) })
+  },
   copyTraceCode() {
     const code = this.data.product?.traceability?.code
     if (!code) return

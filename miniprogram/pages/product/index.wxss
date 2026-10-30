@@ -17,3 +17,5 @@
 .review-photos{display:flex;flex-wrap:wrap;gap:12rpx;margin:16rpx 0}.review-photos image{width:160rpx;height:160rpx;border-radius:12rpx}.review-followup,.my-review{margin:18rpx 0;padding:18rpx;background:#f6f2ed;border-radius:12rpx;line-height:1.8}
 
 .target-price-input { padding: 20rpx; margin: 16rpx 0; border: 1rpx solid #ded2e3; border-radius: 12rpx; font-size: 26rpx; }
+
+.related-articles{margin:32rpx 0}.related-article{display:flex;gap:20rpx;align-items:center;padding:20rpx 0;border-top:1rpx solid #e5e1d8}.related-article-cover{width:120rpx;height:120rpx;border-radius:8rpx}.related-article-title{font-size:26rpx;line-height:1.6}

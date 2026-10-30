@@ -32,6 +32,13 @@
       <view class="question-note" wx:elif="{{!questions.length}}">暂无提问</view>
       <button wx:if="{{questionsMore}}" class="ghost-btn" disabled="{{questionsLoading}}" bindtap="moreQuestions">加载更多问答</button>
     </view>
+    <view wx:if="{{article.products && article.products.length}}" class="related-products">
+      <view class="related-title">相关商品</view>
+      <view wx:for="{{article.products}}" wx:key="id" class="related-product" data-id="{{item.id}}" bindtap="goProduct">
+        <image src="{{item.cover}}" mode="aspectFill" class="related-cover"/>
+        <view class="related-info"><text class="related-name">{{item.name}}</text><text class="related-price">¥{{(item.price/100).toFixed(2)}}</text></view>
+      </view>
+    </view>
     <view class="disclaimer">种植建议需结合当地气候、土壤与植保要求。涉及农资使用时，请遵循产品标签、登记范围及安全间隔期。</view>
   </view>
 </view>

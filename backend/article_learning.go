@@ -163,5 +163,11 @@ func (s *Store) learningArticle(ctx context.Context, openid, id string) (*Articl
 		return nil, err
 	}
 	err = s.db.QueryRowContext(ctx, "SELECT COALESCE(MAX(completed),0) FROM classroom_progress WHERE openid=? AND article_id=?", openid, id).Scan(&a.Completed)
-	return a, err
+	if err != nil {
+		return nil, err
+	}
+	if a.Products, err = s.articleLinkedProducts(ctx, a.ProductIDs); err != nil {
+		return nil, err
+	}
+	return a, nil
 }
