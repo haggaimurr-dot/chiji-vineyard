@@ -5,6 +5,7 @@ import { confirmAction } from '../confirm'
 
 interface OrderAlert { id: string; orderId: string; orderNo: string; kind: string; detail: string; status: string; createdAt: string; resolvedBy: string }
 
+const kindLabel: Record<string, string> = { SHIP_TIMEOUT: '超时未发货', TRACKING_STUCK: '物流停滞', NO_TRACKING: '无揽收轨迹' }
 const alerts = ref<OrderAlert[]>([])
 const openCount = ref(0)
 const loading = ref(false)
@@ -37,8 +38,8 @@ defineExpose({ refresh: load, openCount })
 <template>
   <section class="panel">
     <div class="panel-head">
-      <div><h3>超时未发货提醒 <span v-if="openCount" class="alert-badge">{{ openCount }}</span></h3>
-      <p>已付款超过 48 小时未发货的订单自动提醒；发货或取消后自动消除</p></div>
+      <div><h3>订单异常提醒 <span v-if="openCount" class="alert-badge">{{ openCount }}</span></h3>
+      <p>超时未发货（付款超 48 小时）与物流异常（轨迹停滞 48 小时 / 发货 24 小时无揽收）自动提醒；发货、揽收或轨迹恢复后自动消除</p></div>
       <div class="row-actions">
         <button type="button" class="button secondary" @click="showResolved = !showResolved; load()">{{ showResolved ? '只看未处理' : '查看已处理' }}</button>
         <button type="button" class="button secondary" :disabled="loading" @click="load">刷新</button>
@@ -48,7 +49,7 @@ defineExpose({ refresh: load, openCount })
     <p v-if="loading" class="subtle">加载中…</p>
     <div v-else-if="!alerts.length" class="subtle empty">暂无{{ showResolved ? '' : '未处理的' }}超时提醒</div>
     <div v-for="a in alerts" :key="a.id" class="alert-row" :class="{ resolved: a.status !== 'OPEN' }">
-      <div><strong>{{ a.orderNo || a.orderId }}</strong><small>{{ a.createdAt }}</small><p>{{ a.detail }}</p>
+      <div><strong>{{ a.orderNo || a.orderId }}</strong> <span class="kind-tag">{{ kindLabel[a.kind] || a.kind }}</span><small>{{ a.createdAt }}</small><p>{{ a.detail }}</p>
       <small v-if="a.status !== 'OPEN'" class="subtle">已处理{{ a.resolvedBy ? `（${a.resolvedBy}）` : '' }}</small></div>
       <button v-if="a.status === 'OPEN'" type="button" class="button secondary" :disabled="busy === a.id" @click="resolve(a)">{{ busy === a.id ? '处理中…' : '标记已处理' }}</button>
     </div>
@@ -61,5 +62,6 @@ defineExpose({ refresh: load, openCount })
 .alert-row.resolved { opacity: 0.65; }
 .alert-row small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
 .alert-row p { margin: 6px 0 0; font-size: 13px; }
+.kind-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; background: #fef3e2; color: #b26a00; font-size: 11px; margin-left: 6px; vertical-align: 1px; }
 .empty { padding: 16px 0; }
 </style>
