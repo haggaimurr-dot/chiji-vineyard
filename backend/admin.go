@@ -159,12 +159,19 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		if base == "" {
 			return nil, errors.New("PUBLIC_BASE_URL 未配置")
 		}
+		// 上传时压缩：大图等比缩小到 1600px 以内、JPEG 重编码，减小存储与加载体积。
+		originalBytes := len(content)
+		content, mime = compressImage(content, mime)
 		id := randomID("IMG")
 		_, err = s.store.db.ExecContext(ctx, "INSERT INTO media(id,mime,content) VALUES(?,?,?)", id, mime, content)
 		if err != nil {
 			return nil, err
 		}
-		s.store.audit(ctx, actor, "MEDIA_UPLOAD", id, M{"bytes": len(content)})
+		s.store.audit(ctx, actor, "MEDIA_UPLOAD", id, M{"bytes": len(content), "originalBytes": originalBytes})
+		// CDN 域名由用户提供后配 MEDIA_CDN_BASE（如 https://cdn.example.com），返回 CDN 地址加速加载。
+		if cdn := strings.TrimRight(os.Getenv("MEDIA_CDN_BASE"), "/"); cdn != "" {
+			return M{"fileID": cdn + "/media/" + id}, nil
+		}
 		return M{"fileID": base + "/media/" + id}, nil
 	case "admin.review.list":
 		return s.adminReviews(ctx, req.Data)
