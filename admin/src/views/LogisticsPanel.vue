@@ -44,6 +44,30 @@ async function addParcel() {
   finally { busy.value = false }
 }
 function key(p: Parcel) { return `${p.carrierCode}:${p.trackingNo}` }
+const shippedOrders = computed(() => props.orders.filter(o => o.shipment))
+const printSelected = ref<string[]>([])
+const printBusy = ref(false)
+function esc(s: string) { return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string)) }
+async function printWaybills() {
+  if (!printSelected.value.length || printBusy.value) return
+  printBusy.value = true; error.value = ''; message.value = ''
+  try {
+    const items = await api<Array<{ orderId: string; orderNo: string; recipient: { name: string; phone: string; province: string; city: string; district: string; detail: string }; items: Array<{ name: string; skuName: string; quantity: number; weightLabel: string }>; shipment?: { carrier: string; carrierCode: string; trackingNo: string }; waybillUrl?: string }>>('admin.waybill.batchGet', { orderIds: printSelected.value })
+    const pages = items.map(it => {
+      const addr = [it.recipient.province, it.recipient.city, it.recipient.district, it.recipient.detail].filter(Boolean).join('')
+      const goods = it.items.map(g => `<tr><td>${esc(g.name)}${g.skuName ? '（' + esc(g.skuName) + '）' : ''}</td><td>${g.quantity}</td><td>${esc(g.weightLabel || '')}</td></tr>`).join('')
+      const ship = it.shipment ? `<p>承运商：${esc(it.shipment.carrier || '')}　运单号：<strong>${esc(it.shipment.trackingNo || '')}</strong></p>` : '<p>尚未发货</p>'
+      const label = it.waybillUrl ? `<p>电子面单：<a href="${esc(it.waybillUrl)}" target="_blank">下载/打印电子面单</a></p>` : ''
+      return `<div class="waybill-page"><h2>赤鸡葡萄园 · 发货面单</h2><p>订单号：<strong>${esc(it.orderNo)}</strong></p>${ship}${label}<h3>收件人</h3><p>${esc(it.recipient.name)}　${esc(it.recipient.phone)}</p><p>${esc(addr)}</p><h3>商品明细</h3><table><thead><tr><th>商品</th><th>数量</th><th>规格</th></tr></thead><tbody>${goods}</tbody></table></div>`
+    }).join('')
+    const win = window.open('', '_blank')
+    if (!win) throw new Error('浏览器拦截了打印窗口，请允许弹窗后重试')
+    win.document.write(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>面单批量打印（${items.length}单）</title><style>body{font-family:sans-serif;padding:16px}.waybill-page{border:1px solid #333;padding:16px;margin-bottom:16px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:4px 8px;text-align:left}@media print{.waybill-page{page-break-after:always;border:none}}</style></head><body>${pages}<script>window.onload=()=>window.print()<\/script></body></html>`)
+    win.document.close()
+    message.value = `已生成 ${items.length} 张面单打印页`
+  } catch (e) { error.value = (e as Error).message }
+  finally { printBusy.value = false }
+}
 </script>
 
 <template>
@@ -68,6 +92,13 @@ function key(p: Parcel) { return `${p.carrierCode}:${p.trackingNo}` }
       <label>跟进说明 / 处理结果<textarea v-model="note" maxlength="1000" required :disabled="busy" /></label>
       <button class="button primary" :disabled="busy || (!editing && !parcel)">保存任务</button> <button v-if="editing" class="button secondary" type="button" :disabled="busy" @click="reset">取消编辑</button>
     </form>
+    <section v-permission="'order.ship'">
+      <h3>面单批量打印</h3>
+      <p class="subtle">勾选当前订单页中的已发货订单，一次生成多张面单打印页（只读，不改变订单状态）。面单纸尺寸如需调整请联系开发。</p>
+      <p v-if="!shippedOrders.length" class="subtle">当前订单页暂无已发货订单</p>
+      <div v-for="o in shippedOrders" :key="o.id"><label><input type="checkbox" :value="o.id" v-model="printSelected" :disabled="printBusy" /> {{ o.orderNo }}{{ o.shipment?.trackingNo ? ' · ' + o.shipment.trackingNo : '' }}</label></div>
+      <p><button class="button primary" :disabled="printBusy || !printSelected.length" @click="printWaybills">打印预览（{{ printSelected.length }} 单）</button></p>
+    </section>
     <h3>任务列表</h3><label>任务状态<select v-model="status" :disabled="busy" @change="load"><option value="">全部</option><option v-for="(label,value) in statuses" :key="value" :value="value">{{ label }}</option></select></label>
     <button class="button secondary" :disabled="busy" @click="load">刷新任务</button>
     <p v-if="!tasks.length && !busy" class="subtle">暂无任务</p>

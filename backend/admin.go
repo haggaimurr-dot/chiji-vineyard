@@ -339,6 +339,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.quoteWaybillRates(ctx, req.Data)
 	case "admin.waybill.get":
 		return s.getWaybill(ctx, mustID(req.Data, "orderId"))
+	case "admin.waybill.batchGet":
+		return s.batchWaybillPrint(ctx, req.Data)
 	case "admin.waybill.create":
 		return s.createWaybill(ctx, actor, req.Data)
 	case "admin.waybill.sync":

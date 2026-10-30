@@ -35,7 +35,7 @@ var actionPermissions = map[string]string{
 	"admin.order.picking":         "order.read",
 	"admin.order.export":          "order.export",
 	"admin.order.batches.options": "order.read", "admin.order.batches.save": "order.ship", "admin.order.ship": "order.ship", "admin.order.batchShip": "order.ship", "admin.order.retryShippingNotice": "order.ship", "admin.order.resyncShipment": "order.ship", "admin.order.updateShipment": "order.ship",
-	"admin.waybill.config": "order.read", "admin.waybill.get": "order.read", "admin.waybill.label": "order.read", "admin.waybill.create": "order.ship", "admin.waybill.sync": "order.ship",
+	"admin.waybill.config": "order.read", "admin.waybill.get": "order.read", "admin.waybill.batchGet": "order.ship", "admin.waybill.label": "order.read", "admin.waybill.create": "order.ship", "admin.waybill.sync": "order.ship",
 	"admin.refund.list": "refund.read", "admin.refund.evidence.get": "refund.read", "admin.refund.approve": "refund.approve", "admin.refund.reject": "refund.approve", "admin.refund.sync": "refund.approve",
 	"admin.invoice.file": "invoice.read", "admin.invoice.update": "invoice.write", "admin.invoice.retryEmail": "invoice.write", "admin.invoice.resolveEmail": "invoice.write",
 	"admin.review.moderate": "review.reply", "admin.review.list": "review.read", "admin.review.reply": "review.reply",

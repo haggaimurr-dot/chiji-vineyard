@@ -173,6 +173,48 @@ func readWaybill(ctx context.Context, q waybillQueryer, orderID string, lock boo
 	return &w, nil
 }
 
+// WaybillPrintItem 是批量打印面单的前端拼模板数据：只读，不改变订单状态。
+type WaybillPrintItem struct {
+	OrderID    string      `json:"orderId"`
+	OrderNo    string      `json:"orderNo"`
+	Recipient  Address      `json:"recipient"`
+	Items      []OrderItem  `json:"items"`
+	Shipment   *Shipment    `json:"shipment,omitempty"`
+	WaybillURL string       `json:"waybillUrl,omitempty"`
+}
+
+func (s *Server) batchWaybillPrint(ctx context.Context, raw json.RawMessage) (any, error) {
+	var d struct {
+		OrderIDs []string `json:"orderIds"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	if len(d.OrderIDs) == 0 || len(d.OrderIDs) > 100 {
+		return nil, errors.New("请选择 1–100 个订单")
+	}
+	items := make([]WaybillPrintItem, 0, len(d.OrderIDs))
+	for _, id := range d.OrderIDs {
+		o, err := s.store.order(ctx, s.store.db, id, false)
+		if err != nil {
+			return nil, err
+		}
+		if o == nil {
+			return nil, errors.New("订单不存在：" + id)
+		}
+		w, err := readWaybill(ctx, s.store.db, id, false, false)
+		if err != nil {
+			return nil, err
+		}
+		item := WaybillPrintItem{OrderID: o.ID, OrderNo: o.OrderNo, Recipient: o.Address, Items: o.Items, Shipment: o.Shipment}
+		if w != nil && w.Status == "READY" {
+			item.WaybillURL = w.LabelURL
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
 func (s *Server) getWaybill(ctx context.Context, orderID string) (any, error) {
 	// A process may have stopped after claiming a request. Never silently issue
 	// another bill for that order, even after the provider's 48-hour cache expires.
