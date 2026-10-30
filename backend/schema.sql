@@ -236,6 +236,17 @@ CREATE TABLE IF NOT EXISTS invoice_requests (
 
 -- Private invoice PDFs; run on existing databases before enabling upload.
 -- 2026-10-30: 开票抬头记忆（item17），按客户存档
+-- 2026-10-30: 常见问题快捷回复（item18）
+CREATE TABLE IF NOT EXISTS faqs (
+ id VARCHAR(80) PRIMARY KEY,
+ title VARCHAR(60) NOT NULL,
+ content VARCHAR(2000) NOT NULL,
+ sort INT NOT NULL DEFAULT 0,
+ active BOOLEAN NOT NULL DEFAULT TRUE,
+ updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+ INDEX idx_faq_sort (sort,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS invoice_titles (
  openid VARCHAR(80) NOT NULL,
  kind VARCHAR(16) NOT NULL DEFAULT 'personal',

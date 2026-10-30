@@ -261,6 +261,14 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		}
 		s.store.audit(ctx, actor, "INVENTORY_SET", d.SKUID, M{"stock": d.Stock})
 		return M{"id": d.SKUID, "stock": d.Stock}, nil
+	case "admin.faq.list":
+		return s.store.faqList(ctx, false)
+	case "admin.faq.manage":
+		return s.store.faqList(ctx, true)
+	case "admin.faq.save":
+		return s.saveFaq(ctx, actor, req.Data)
+	case "admin.faq.delete":
+		return s.deleteFaq(ctx, actor, req.Data)
 	case "admin.ticket.list":
 		return s.listTickets(ctx, "", req.Data)
 	case "admin.ticket.create":
