@@ -585,6 +585,23 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 			return nil, err
 		}
 		return s.decideConfigChange(ctx, actor, req.Data)
+	case "admin.config.rollout.list":
+		return s.rolloutList(ctx)
+	case "admin.config.rollout.save":
+		if e := super(); e != nil {
+			return nil, e
+		}
+		return s.rolloutSave(ctx, actor, req.Data)
+	case "admin.config.rollout.full":
+		if e := super(); e != nil {
+			return nil, e
+		}
+		return s.rolloutFull(ctx, actor, req.Data)
+	case "admin.config.rollout.rollback":
+		if e := super(); e != nil {
+			return nil, e
+		}
+		return s.rolloutRollback(ctx, actor, req.Data)
 	case "admin.config.versions":
 		if err = super(); err != nil {
 			return nil, err

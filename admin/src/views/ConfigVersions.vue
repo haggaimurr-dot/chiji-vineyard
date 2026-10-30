@@ -31,6 +31,39 @@ async function decide(order: ChangeOrder, approve: boolean) {
   } catch (e) { ordersError.value = (e as Error).message }
   finally { decidingId.value = '' }
 }
+interface Rollout { id: string; configKey: string; percent: number; status: string; createdBy: string; createdAt: string }
+const rollouts = ref<Rollout[]>([]), rolloutLoading = ref(false), rolloutError = ref(''), rolloutMsg = ref('')
+const rolloutPercent = ref(10), rolloutPayload = ref(''), rolloutBusy = ref(false)
+const rolloutStatusLabel: Record<string, string> = { GRAY: '灰度中', FULL: '已全量', ROLLED_BACK: '已回滚' }
+async function loadRollouts() {
+  if (!isSuper.value) return
+  rolloutLoading.value = true; rolloutError.value = ''
+  try { const r = await api<{ items: Rollout[] }>('admin.config.rollout.list'); rollouts.value = r.items }
+  catch (e) { rolloutError.value = (e as Error).message }
+  finally { rolloutLoading.value = false }
+}
+async function fillHomePayload() {
+  rolloutBusy.value = true; rolloutError.value = ''
+  try { const r = await api<{ home: unknown }>('admin.config.get'); rolloutPayload.value = JSON.stringify(r.home ?? {}, null, 2) }
+  catch (e) { rolloutError.value = (e as Error).message }
+  finally { rolloutBusy.value = false }
+}
+async function saveRollout() {
+  if (rolloutBusy.value) return
+  let payload: unknown
+  try { payload = JSON.parse(rolloutPayload.value) } catch { rolloutError.value = '灰度配置不是有效 JSON'; return }
+  rolloutBusy.value = true; rolloutError.value = ''; rolloutMsg.value = ''
+  try { await api('admin.config.rollout.save', { configKey: 'home', payload, percent: rolloutPercent.value }); rolloutMsg.value = '灰度已创建'; rolloutPayload.value = ''; await loadRollouts() }
+  catch (e) { rolloutError.value = (e as Error).message }
+  finally { rolloutBusy.value = false }
+}
+async function rolloutAction(r: Rollout, action: 'full' | 'rollback') {
+  if (rolloutBusy.value || !confirm(action === 'full' ? `确认将灰度 ${r.id} 全量发布？全量后所有用户看到灰度版配置。` : `确认回滚灰度 ${r.id}？`)) return
+  rolloutBusy.value = true; rolloutError.value = ''; rolloutMsg.value = ''
+  try { await api(`admin.config.rollout.${action}`, { id: r.id }); rolloutMsg.value = action === 'full' ? '已全量发布' : '已回滚'; await loadRollouts() }
+  catch (e) { rolloutError.value = (e as Error).message }
+  finally { rolloutBusy.value = false }
+}
 const items = ref<ConfigVersion[]>([])
 const currentVersions = ref<Partial<Record<ConfigKey, number>>>({})
 const total = ref(0), limit = ref(20), offset = ref(0)
@@ -146,7 +179,7 @@ async function rollback() {
 
 function close() { if (!rollingBack.value) selected.value = null }
 watch(() => props.revision, () => { confirming.value = false; void load(); void loadOrders() })
-onMounted(() => { load(); loadOrders() })
+onMounted(() => { load(); loadOrders(); loadRollouts() })
 </script>
 
 <template>
@@ -160,6 +193,20 @@ onMounted(() => { load(); loadOrders() })
         <td><div class="row-actions"><button class="button primary small" :disabled="!!decidingId" @click="decide(order, true)">{{ decidingId === order.id ? '处理中…' : '批准' }}</button><button class="button secondary small" :disabled="!!decidingId" @click="decide(order, false)">驳回</button></div><input v-model="decideNote" class="note-input" maxlength="200" placeholder="审批备注（可选）" /></td></tr>
     </tbody></table></div>
   </section>
+  <section v-if="isSuper" class="panel table-panel history-panel">
+    <div class="panel-head"><div><h3>配置灰度发布</h3><p>高危配置（当前仅首页 home）按用户比例灰度验证；命中规则 fnv(openid)%100 &lt; 比例，同一用户结果稳定</p></div><button class="button secondary small" :disabled="rolloutLoading" @click="loadRollouts()">刷新</button></div>
+    <p v-if="rolloutError" class="history-notice form-error" role="alert">{{ rolloutError }}</p>
+    <p v-if="rolloutMsg" class="history-notice success-text" role="status">{{ rolloutMsg }}</p>
+    <div class="history-table"><table><thead><tr><th>配置</th><th>比例</th><th>状态</th><th>创建人</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
+      <tr v-if="rolloutLoading"><td colspan="6" class="history-empty">正在加载灰度…</td></tr>
+      <tr v-else-if="!rollouts.length"><td colspan="6" class="history-empty">暂无灰度发布</td></tr>
+      <tr v-for="r in rollouts" :key="r.id"><td>{{ r.configKey }}</td><td>{{ r.percent }}%</td><td>{{ rolloutStatusLabel[r.status] || r.status }}</td><td>{{ r.createdBy }}</td><td>{{ r.createdAt }}</td>
+      <td><template v-if="r.status === 'GRAY'"><button class="button secondary small" :disabled="rolloutBusy" @click="rolloutAction(r, 'full')">全量</button> <button class="button secondary small" :disabled="rolloutBusy" @click="rolloutAction(r, 'rollback')">回滚</button></template><span v-else class="subtle">—</span></td></tr>
+    </tbody></table></div>
+    <div class="rollout-form"><h4>创建灰度（首页 home）</h4>
+    <div class="form-row"><label>灰度比例（%）<input type="number" v-model.number="rolloutPercent" min="1" max="100" :disabled="rolloutBusy" /></label><button class="button secondary" :disabled="rolloutBusy" @click="fillHomePayload">填入当前首页配置</button></div>
+    <label>灰度配置 JSON<textarea v-model="rolloutPayload" rows="8" :disabled="rolloutBusy" placeholder="粘贴或点上方按钮填入首页配置 JSON 后修改"></textarea></label>
+    <button class="button primary" :disabled="rolloutBusy || !rolloutPayload.trim()" @click="saveRollout">{{ rolloutBusy ? "创建中…" : "创建灰度" }}</button></div>
   <section class="panel table-panel history-panel">
     <div class="panel-head"><div><h3>配置版本与回滚</h3><p>保存与回滚均保留完整快照；时间为北京时间</p></div><button class="button secondary small" :disabled="loading || locked" @click="load()">刷新版本</button></div>
     <div class="history-filters">
@@ -225,4 +272,7 @@ onMounted(() => { load(); loadOrders() })
   .history-pagination { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
   .history-metadata { grid-template-columns: 70px 1fr; }
 }
+</style>
+<style scoped>
+.rollout-form{padding:16px 0}.rollout-form h4{margin:0 0 12px}.rollout-form .form-row{display:flex;gap:16px;align-items:flex-end;margin-bottom:12px}.rollout-form label{display:flex;flex-direction:column;gap:6px;font-size:13px;margin-bottom:12px}.rollout-form textarea{font-family:monospace;font-size:12px}
 </style>

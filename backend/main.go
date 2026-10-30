@@ -277,7 +277,7 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		_ = s.store.db.QueryRowContext(ctx, "SELECT COALESCE(SUM(quantity),0) FROM carts WHERE openid=?", openid).Scan(&count)
 		return M{"用户": M{"id": openid, "nickname": nickname}, "cartCount": count}, nil
 	case "home.get":
-		return s.store.home(ctx)
+		return s.store.homeFor(ctx, openid)
 	case "activity.reservation.list":
 		return s.store.activityReservations(ctx, openid)
 	case "activity.reservation.status":
