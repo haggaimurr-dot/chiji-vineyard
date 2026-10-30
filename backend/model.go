@@ -250,6 +250,7 @@ type Claims struct {
 	Username   string `json:"username,omitempty"`
 	Role       string `json:"role,omitempty"`
 	Credential string `json:"credential,omitempty"`
+	Limited    string `json:"limited,omitempty"`
 	Exp        int64  `json:"exp"`
 }
 type Request struct {

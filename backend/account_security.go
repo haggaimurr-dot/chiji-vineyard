@@ -245,7 +245,7 @@ func (s *Server) personalSecurity(r *http.Request, actor Claims, req Request) (a
 				return nil, err
 			}
 		}
-		if _, err = tx.ExecContext(ctx, "UPDATE admins SET password_hash=? WHERE id=?", a.PasswordHash, a.ID); err != nil {
+		if _, err = tx.ExecContext(ctx, "UPDATE admins SET password_hash=?, password_changed_at=NOW(3) WHERE id=?", a.PasswordHash, a.ID); err != nil {
 			return nil, err
 		}
 		result["sessionRevoked"] = true

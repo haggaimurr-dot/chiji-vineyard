@@ -40,7 +40,7 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		if name == "" {
 			return nil, errors.New("请输入用户名")
 		}
-		_, err = s.store.db.ExecContext(ctx, "INSERT INTO admins(id,username,password_hash,role) VALUES(?,?,?,'SUPER_ADMIN')", id, name, hash)
+		_, err = s.store.db.ExecContext(ctx, "INSERT INTO admins(id,username,password_hash,role,password_changed_at) VALUES(?,?,?,'SUPER_ADMIN',NOW(3))", id, name, hash)
 		return M{"id": id, "username": name}, err
 	}
 	if req.Action == "admin.login" {
@@ -49,7 +49,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 			return nil, err
 		}
 		var a Admin
-		err := s.store.db.QueryRowContext(ctx, "SELECT id,username,password_hash,role,active FROM admins WHERE username=?", clean(d.Username, 40)).Scan(&a.ID, &a.Username, &a.PasswordHash, &a.Role, &a.Active)
+		var passwordChangedAt sql.NullTime
+		err := s.store.db.QueryRowContext(ctx, "SELECT id,username,password_hash,role,active,password_changed_at FROM admins WHERE username=?", clean(d.Username, 40)).Scan(&a.ID, &a.Username, &a.PasswordHash, &a.Role, &a.Active, &passwordChangedAt)
 		if err == nil {
 			if e := s.store.limitLogin(r, "admin-resolved-account", a.ID, 5, 900); e != nil {
 				return nil, e
@@ -58,12 +59,41 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		if err != nil || !a.Active || !verifyPassword(d.Password, a.PasswordHash) {
 			return nil, errors.New("用户名或密码错误")
 		}
+		// 密码过期：签发仅可改密的受限会话，要求先修改密码。
+		if passwordExpired(passwordChangedAt, time.Now()) {
+			limited, err := s.issueSession(r, Claims{Subject: a.ID, Kind: "admin", Username: a.Username, Role: a.Role, Credential: adminCredential(a.PasswordHash), Limited: "pwd-change", Exp: time.Now().Add(10 * time.Minute).Unix()})
+			if err != nil {
+				return nil, err
+			}
+			return M{"passwordExpired": true, "token": limited}, nil
+		}
 		required, err := s.loginSecondFactor(ctx, a, strings.TrimSpace(d.Code))
 		if err != nil {
 			return nil, err
 		}
 		if required {
 			return M{"mfaRequired": true}, nil
+		}
+		// 全员强制二次验证：未绑定则签发仅可绑定的受限会话，引导完成绑定。
+		if mfaEnforced() {
+			bound, err := func() (bool, error) {
+				tx, err := s.store.db.BeginTx(ctx, nil)
+				if err != nil {
+					return false, err
+				}
+				defer tx.Rollback()
+				return mfaBound(ctx, tx, a.ID)
+			}()
+			if err != nil {
+				return nil, err
+			}
+			if !bound {
+				limited, err := s.issueSession(r, Claims{Subject: a.ID, Kind: "admin", Username: a.Username, Role: a.Role, Credential: adminCredential(a.PasswordHash), Limited: "mfa-setup", Exp: time.Now().Add(10 * time.Minute).Unix()})
+				if err != nil {
+					return nil, err
+				}
+				return M{"mfaSetupRequired": true, "token": limited}, nil
+			}
 		}
 		permissions, err := s.store.adminPermissions(ctx, a.ID, a.Role)
 		if err != nil {
@@ -80,6 +110,19 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 	actor, err := s.store.requireAdmin(r)
 	if err != nil {
 		return nil, err
+	}
+	// 受限会话（密码过期/强制 MFA 绑定）：只允许完成对应的安全操作。
+	if actor.Limited != "" {
+		allowed := false
+		switch actor.Limited {
+		case "pwd-change":
+			allowed = req.Action == "admin.account.changePassword"
+		case "mfa-setup":
+			allowed = req.Action == "admin.security.status" || req.Action == "admin.security.setup" || req.Action == "admin.security.enable"
+		}
+		if !allowed {
+			return nil, errors.New("请先完成安全验证（修改密码或绑定二次验证）")
+		}
 	}
 	if err = s.store.authorizeAdmin(r, actor, req.Action); err != nil {
 		return nil, err
@@ -880,7 +923,7 @@ func (s *Server) saveAccount(ctx context.Context, actor Claims, raw json.RawMess
 	}
 	if existing == nil {
 		id = randomID("ADM")
-		_, err = tx.ExecContext(ctx, "INSERT INTO admins(id,username,password_hash,role,active) VALUES(?,?,?,?,?)", id, name, hash, a.Role, active)
+		_, err = tx.ExecContext(ctx, "INSERT INTO admins(id,username,password_hash,role,active,password_changed_at) VALUES(?,?,?,?,?,NOW(3))", id, name, hash, a.Role, active)
 	} else {
 		_, err = tx.ExecContext(ctx, "UPDATE admins SET username=?,password_hash=?,role=?,active=? WHERE id=?", name, hash, a.Role, active, id)
 	}

@@ -27,6 +27,13 @@ const loginError = ref('')
 const recoveryCodes = ref<string[]>([])
 const mfaRequired = ref(false)
 const code = ref('')
+// 安全拦截：密码过期 / 强制 MFA 绑定（受限会话，只能完成对应安全操作）
+const securityMode = ref<'' | 'pwd' | 'mfa'>('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const mfaSecret = ref('')
+const mfaUri = ref('')
+const securityBusy = ref(false)
 const loggingIn = ref(false)
 const retryAt = ref(0)
 const now = ref(Date.now())
@@ -67,6 +74,7 @@ function sessionExpired(event: Event) {
   mfaRequired.value = false
   code.value = ''
   password.value = ''
+  securityMode.value = ''
   active.value = 'dashboard'
   currentUser.value = { username: '', role: '' }
   loginError.value = (event as CustomEvent<{ message?: string }>).detail?.message || '登录已失效，请重新登录'
@@ -99,8 +107,10 @@ async function login() {
   if (!username.value || !password.value) { loginError.value = '请输入用户名和密码'; return }
   loggingIn.value = true
   try {
-    const result = await api<{ token?: string; user?: AdminUser; mfaRequired?: boolean }>('admin.login', { username: username.value, password: password.value, code: code.value.trim() })
+    const result = await api<{ token?: string; user?: AdminUser; mfaRequired?: boolean; passwordExpired?: boolean; mfaSetupRequired?: boolean }>('admin.login', { username: username.value, password: password.value, code: code.value.trim() })
     if (result.mfaRequired) { mfaRequired.value = true; return }
+    if (result.passwordExpired && result.token) { enterSecurityMode('pwd', result.token); return }
+    if (result.mfaSetupRequired && result.token) { enterSecurityMode('mfa', result.token); return }
     if (!result.token || !result.user) throw new Error('登录响应无效')
     mfaRequired.value = false
     code.value = ''
@@ -115,6 +125,54 @@ async function login() {
     if (error instanceof ApiError && error.status === 429) retryAt.value = Date.now() + error.retryAfter * 1000
   }
   finally { loggingIn.value = false }
+}
+
+function enterSecurityMode(mode: 'pwd' | 'mfa', limitedToken: string) {
+  localStorage.setItem('chiji_admin_token', limitedToken)
+  newPassword.value = ''; confirmPassword.value = ''; mfaSecret.value = ''; mfaUri.value = ''; code.value = ''
+  loginError.value = ''
+  securityMode.value = mode
+}
+function exitSecurityMode(message: string) {
+  localStorage.removeItem('chiji_admin_token')
+  securityMode.value = ''
+  mfaSecret.value = ''; mfaUri.value = ''; newPassword.value = ''; confirmPassword.value = ''; code.value = ''
+  password.value = ''
+  loginError.value = message
+}
+async function submitPasswordChange() {
+  if (securityBusy.value) return
+  if (newPassword.value.length < 10) { loginError.value = '新密码至少 10 位'; return }
+  if (newPassword.value !== confirmPassword.value) { loginError.value = '两次输入的新密码不一致'; return }
+  securityBusy.value = true; loginError.value = ''
+  try {
+    await api('admin.account.changePassword', { currentPassword: password.value, password: newPassword.value })
+    exitSecurityMode('密码已更新，请用新密码重新登录')
+  } catch (error) { loginError.value = (error as Error).message }
+  finally { securityBusy.value = false }
+}
+async function startMfaSetup() {
+  if (securityBusy.value) return
+  securityBusy.value = true; loginError.value = ''
+  try {
+    const result = await api<{ secret: string; uri: string }>('admin.security.setup', { currentPassword: password.value })
+    mfaSecret.value = result.secret; mfaUri.value = result.uri
+  } catch (error) { loginError.value = (error as Error).message }
+  finally { securityBusy.value = false }
+}
+async function confirmMfaSetup() {
+  if (securityBusy.value) return
+  if (!code.value.trim()) { loginError.value = '请输入验证器中的 6 位动态码'; return }
+  securityBusy.value = true; loginError.value = ''
+  try {
+    const result = await api<{ recoveryCodes?: string[] }>('admin.security.enable', { currentPassword: password.value, code: code.value.trim() })
+    localStorage.removeItem('chiji_admin_token')
+    securityMode.value = ''
+    password.value = ''; code.value = ''
+    if (result.recoveryCodes?.length) { recoveryCodes.value = result.recoveryCodes; return }
+    loginError.value = '二次验证已绑定，请重新登录'
+  } catch (error) { loginError.value = (error as Error).message }
+  finally { securityBusy.value = false }
 }
 
 async function logout() {
@@ -151,11 +209,31 @@ async function logout() {
         <h2>登录运营后台</h2>
         <p class="subtle">使用管理员账号继续</p>
         <div v-if="isDemo" class="demo-note">演示模式：首次可使用任意账号密码。创建账号及重置密码仅在本浏览器会话生效，重置后请使用新密码登录。</div>
+        <template v-if="!securityMode">
         <label>用户名<input v-model.trim="username" autocomplete="username" placeholder="请输入管理员用户名" /></label>
         <label>密码<input v-model="password" type="password" autocomplete="current-password" placeholder="至少 10 位安全密码" /></label>
         <label v-if="mfaRequired">动态码或恢复码<input v-model="code" autocomplete="one-time-code" maxlength="32" placeholder="验证器中的 6 位动态码或一次性恢复码" /><small>启用多因素认证的账号需要完成第二步验证。</small></label>
         <p v-if="loginError" class="form-error" role="alert">{{ loginError }}</p>
         <button class="button primary wide" :disabled="loggingIn || retrySeconds > 0 || recoveryCodes.length > 0">{{ retrySeconds ? `${retrySeconds} 秒后重试` : loggingIn ? '正在登录…' : '进入后台' }}</button>
+        </template>
+        <template v-if="securityMode === 'pwd'">
+        <div class="demo-note" role="status"><strong>密码已过期</strong><p>按安全策略，密码每 90 天需要更换一次。请设置新密码后重新登录。</p></div>
+        <label>新密码<input v-model="newPassword" type="password" autocomplete="new-password" placeholder="至少 10 位" /></label>
+        <label>确认新密码<input v-model="confirmPassword" type="password" autocomplete="new-password" placeholder="再次输入新密码" /></label>
+        <button type="button" class="button primary wide" :disabled="securityBusy" @click="submitPasswordChange">{{ securityBusy ? '提交中…' : '修改密码并重新登录' }}</button>
+        <button type="button" class="button secondary wide" @click="exitSecurityMode('')">返回登录</button>
+        </template>
+        <template v-if="securityMode === 'mfa'">
+        <div class="demo-note" role="status"><strong>需要绑定二次验证</strong><p>按安全策略，所有管理员必须启用多因素认证。请用验证器 App 扫描或手动输入密钥，完成绑定后重新登录。</p></div>
+        <button v-if="!mfaSecret" type="button" class="button primary wide" :disabled="securityBusy" @click="startMfaSetup">{{ securityBusy ? '生成中…' : '生成绑定密钥' }}</button>
+        <template v-else>
+        <label>绑定密钥（手动输入）<input :value="mfaSecret" readonly style="user-select: all" /></label>
+        <p class="subtle" style="overflow-wrap: anywhere">{{ mfaUri }}</p>
+        <label>验证器动态码<input v-model="code" autocomplete="one-time-code" maxlength="32" placeholder="6 位动态码" /></label>
+        <button type="button" class="button primary wide" :disabled="securityBusy" @click="confirmMfaSetup">{{ securityBusy ? '验证中…' : '验证并启用' }}</button>
+        </template>
+        <button type="button" class="button secondary wide" @click="exitSecurityMode('')">返回登录</button>
+        </template>
         <p class="login-foot">迟记葡萄牙 · 内部运营系统</p>
       </form>
     </section>
