@@ -24,7 +24,18 @@ async function reconcileFinance() {
   catch (e) { error.value = (e as Error).message } finally { busy.value = false }
 }
 const notes = ref<Record<string, string>>({})
-const labels: Record<string, string> = { COMPLETED: '统计完成', REFUND_BILL_DIFFERENCE: '退款账单差异', FINANCE_RECONCILIATION_FAILED: '退款 / 资金账单失败', RUNNING: '对账中', MATCHED: '一致', DIFFERENCES: '存在差异', FAILED: '失败', OPEN: '待处理', RESOLVED: '已处理', QUERY_FAILED: '查单失败', CALLBACK_ORDER_MISSING: '回调订单异常', BILL_DIFFERENCE: '账单差异', RECONCILIATION_FAILED: '对账失败', PREPAY_FAILED: '下单失败', CALLBACK_INVALID: '回调校验失败', PAYMENT_MISMATCH: '支付结果异常', PAYMENT_RECORD_FAILED: '入账失败' }
+type Thresholds = { refundStuckHours: number; invoiceStuckHours: number; openAlertCount: number; reminderFailureCount: number }
+const thresholds = ref<Thresholds>({ refundStuckHours: 24, invoiceStuckHours: 48, openAlertCount: 50, reminderFailureCount: 100 })
+const thresholdBusy = ref(false), thresholdMsg = ref('')
+async function loadThresholds() { try { thresholds.value = await api<Thresholds>('admin.alert.thresholds', {}) } catch {} }
+async function saveThresholds() {
+  if (thresholdBusy.value) return
+  thresholdBusy.value = true; thresholdMsg.value = ''
+  try { await api('admin.alert.thresholds.save', thresholds.value); thresholdMsg.value = '告警阈值已保存，定时扫描将按新阈值执行' }
+  catch (e) { thresholdMsg.value = (e as Error).message }
+  finally { thresholdBusy.value = false }
+}
+const labels: Record<string, string> = { COMPLETED: '统计完成', REFUND_BILL_DIFFERENCE: '退款账单差异', FINANCE_RECONCILIATION_FAILED: '退款 / 资金账单失败', RUNNING: '对账中', MATCHED: '一致', DIFFERENCES: '存在差异', FAILED: '失败', OPEN: '待处理', RESOLVED: '已处理', QUERY_FAILED: '查单失败', CALLBACK_ORDER_MISSING: '回调订单异常', BILL_DIFFERENCE: '账单差异', RECONCILIATION_FAILED: '对账失败', PREPAY_FAILED: '下单失败', CALLBACK_INVALID: '回调校验失败', PAYMENT_MISMATCH: '支付结果异常', PAYMENT_RECORD_FAILED: '入账失败', THRESHOLD_REFUND_STUCK: '退款超时', THRESHOLD_INVOICE_STUCK: '发票超时', THRESHOLD_ALERT_BACKLOG: '告警积压', THRESHOLD_REMINDER_FAILURES: '提醒失败积压' }
 async function refresh() { data.value = await api('admin.payment.overview') }
 async function load() { if (busy.value) return; busy.value = true; error.value = ''; try { await refresh() } catch (e) { error.value = (e as Error).message } finally { busy.value = false } }
 async function reconcile() {
@@ -39,7 +50,7 @@ async function resolve(alert: Alert) {
   try { await api('admin.payment.resolve', { id: alert.id, note: notes.value[alert.id] }); await refresh(); notes.value[alert.id] = '' }
   catch (e) { error.value = (e as Error).message } finally { busy.value = false }
 }
-onMounted(load)
+onMounted(() => { load(); loadThresholds() })
 </script>
 
 <template>
@@ -80,6 +91,17 @@ onMounted(load)
       <form v-if="alert.status === 'OPEN'" class="payment-actions" @submit.prevent="resolve(alert)"><input v-model.trim="notes[alert.id]" aria-label="告警处理备注" placeholder="填写核查结果与处理措施" maxlength="240" required /><button class="button" :disabled="busy">标记已处理</button></form>
       <p v-else>处理备注：{{ alert.note }}</p>
     </div><p v-if="!data.alerts.length" class="subtle">暂无支付异常</p>
+  </section>
+  <section class="panel payment-panel">
+    <div class="section-head"><div><h2>关键指标告警阈值</h2><p class="subtle">定时扫描（每 15 分钟）按阈值检查并写入告警</p></div></div>
+    <form class="payment-actions" @submit.prevent="saveThresholds">
+      <label>退款超时（小时）<input v-model.number="thresholds.refundStuckHours" type="number" min="1" max="720" required /></label>
+      <label>发票超时（小时）<input v-model.number="thresholds.invoiceStuckHours" type="number" min="1" max="720" required /></label>
+      <label>告警积压（条）<input v-model.number="thresholds.openAlertCount" type="number" min="1" max="100000" required /></label>
+      <label>提醒失败积压（条）<input v-model.number="thresholds.reminderFailureCount" type="number" min="1" max="100000" required /></label>
+      <button class="button primary" :disabled="thresholdBusy">{{ thresholdBusy ? '保存中…' : '保存阈值' }}</button>
+    </form>
+    <p v-if="thresholdMsg" role="status">{{ thresholdMsg }}</p>
   </section>
 </template>
 

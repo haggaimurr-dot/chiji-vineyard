@@ -38,6 +38,7 @@ func main() {
 	defer stopPublisher()
 	go store.runArticlePublisher(publisherCtx)
 	go s.runPaymentReconciler(publisherCtx)
+	go s.runAlertThresholdScanner(publisherCtx)
 	go store.runReviewAlertScanner(publisherCtx)
 	go s.runAutoInvoices(publisherCtx)
 	go store.runLeadExternalReminders(publisherCtx)

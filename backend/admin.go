@@ -127,6 +127,13 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return M{"id": actor.Subject, "username": actor.Username, "role": actor.Role, "permissions": permissions}, e
 	case "admin.account.permissions":
 		return s.saveAccountPermissions(ctx, actor, req.Data)
+	case "admin.alert.thresholds":
+		return s.getAlertThresholds(ctx)
+	case "admin.alert.thresholds.save":
+		if err = super(); err != nil {
+			return nil, err
+		}
+		return s.saveAlertThresholds(ctx, actor, req.Data)
 	case "admin.payment.financeReconcile", "admin.payment.overview", "admin.payment.reconcile", "admin.payment.resolve", "admin.payment.alertCount":
 		if err = super(); err != nil {
 			return nil, err
