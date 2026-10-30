@@ -224,6 +224,10 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.replyReview(ctx, actor, req.Data)
 	case "admin.review.moderate":
 		return s.moderateReview(ctx, actor, req.Data)
+	case "admin.review.rewardConfig":
+		return s.reviewRewardConfigGet(ctx)
+	case "admin.review.rewardConfig.save":
+		return s.reviewRewardConfigSave(ctx, actor, req.Data)
 	case "admin.review.alerts":
 		return s.reviewAlerts(ctx, req.Data)
 	case "admin.review.alertCount":

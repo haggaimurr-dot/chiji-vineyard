@@ -289,6 +289,15 @@ func (s *Server) changeReview(ctx context.Context, openid string, actor *Claims,
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
+	// 晒图激励：审核通过且带图时自动发券（每条评价最多一次，无图不发）。
+	if actor != nil && d.Status == "APPROVED" {
+		if issued, e := s.store.issueReviewPhotoReward(ctx, r.ID, owner, r.Images); e != nil {
+			// 发券失败不回滚审核，仅记录审计。
+			s.store.audit(ctx, *actor, "REVIEW_REWARD_FAILED", r.ID, M{"error": e.Error()})
+		} else if issued {
+			s.store.audit(ctx, *actor, "REVIEW_REWARD_ISSUED", r.ID, M{})
+		}
+	}
 	if actor != nil {
 		if d.Status != "" {
 			s.store.audit(ctx, *actor, "REVIEW_MODERATE", r.ID, M{"status": d.Status, "reason": r.RejectReason})

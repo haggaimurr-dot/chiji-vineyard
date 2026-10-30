@@ -775,3 +775,11 @@ CREATE TABLE IF NOT EXISTS activity_checkins (
  PRIMARY KEY (activity_id,openid),
  UNIQUE KEY uq_activity_checkin_code (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 晒图评价激励（新增）：每条评价最多发一次券
+CREATE TABLE IF NOT EXISTS review_rewards (
+ review_id VARCHAR(80) PRIMARY KEY,
+ openid VARCHAR(64) NOT NULL,
+ coupon_code VARCHAR(40) NOT NULL,
+ created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

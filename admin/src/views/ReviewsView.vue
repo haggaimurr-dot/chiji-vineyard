@@ -50,9 +50,21 @@ async function reply(item: Review) {
   catch (e) { error.value = (e as Error).message }
   finally { saving.value = '' }
 }
-onMounted(() => { load(); loadAlerts() })
+const rewardCfg = ref({ enabled: false, couponCode: '' }), rewardBusy = ref(false), rewardMsg = ref('')
+async function loadRewardCfg() { try { const r = await api<{ enabled: boolean; couponCode: string }>('admin.review.rewardConfig'); rewardCfg.value = { enabled: !!r.enabled, couponCode: r.couponCode || '' } } catch (e) { rewardMsg.value = (e as Error).message } }
+async function saveRewardCfg() {
+  if (rewardBusy.value) return
+  rewardBusy.value = true; rewardMsg.value = ''
+  try { await api('admin.review.rewardConfig.save', rewardCfg.value); rewardMsg.value = '已保存' }
+  catch (e) { rewardMsg.value = (e as Error).message }
+  finally { rewardBusy.value = false }
+}
+onMounted(() => { load(); loadAlerts(); loadRewardCfg() })
 </script>
 <template>
+  <section class="panel reward-config"><div class="panel-head"><div><h3>晒图评价激励</h3><p class="subtle">评价审核通过且带图时自动发券；每条评价最多发一次，无图不发券。</p></div></div>
+    <div class="reward-form"><label><input type="checkbox" v-model="rewardCfg.enabled" :disabled="rewardBusy" /> 启用晒图激励</label><label>奖励优惠券兑换码<input v-model.trim="rewardCfg.couponCode" maxlength="40" placeholder="例如 PHOTO10" :disabled="rewardBusy" style="text-transform:uppercase" /></label><button class="button secondary" :disabled="rewardBusy" @click="saveRewardCfg">{{ rewardBusy ? '保存中…' : '保存' }}</button><span v-if="rewardMsg" class="subtle">{{ rewardMsg }}</span></div>
+  </section>
   <section class="panel">
     <div class="panel-head"><div><h2>商品评价</h2><p class="subtle">共 {{total}} 条评价 · 新评价和追评审核通过后公开展示，每条评价可回复一次。</p></div><button class="button secondary" :disabled="busy || !!saving" @click="load()">刷新</button></div>
     <div class="review-filter"><label>审核状态 <select v-model="status" :disabled="busy || !!saving" @change="load(1)"><option value="">全部评价</option><option value="PENDING">待审核</option><option value="APPROVED">已通过</option><option value="REJECTED">已驳回</option></select></label><label><input type="checkbox" v-model="lowRating" :disabled="busy || !!saving" @change="load(1)" /> 仅看低分（≤2 星）</label><button class="button secondary" :disabled="busy || !!saving" @click="loadAlerts()">刷新差评提醒</button></div><div v-if="alerts.length" class="review-extra"><strong>差评提醒（{{ alerts.length }}）</strong><p v-for="a in alerts" :key="a.id">{{ a.rating }} 星 · 商品 {{ a.productId }} · {{ a.content }} <button class="button secondary" :disabled="!!saving || busy" @click="resolveAlert(a.id)">标为已处理</button></p></div>
@@ -76,4 +88,7 @@ onMounted(() => { load(); loadAlerts() })
 <style scoped>
 .review-filter{padding:0 24px}.review-actions{display:flex;gap:12px;flex-wrap:wrap}
 .review-card{margin:20px 24px;padding:22px 0;border-bottom:1px solid var(--border)}.review-heading{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.review-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.9;margin:14px 0}.review-extra{padding:16px;margin:16px 0;border-radius:12px;background:var(--cream)}small{display:block;margin-top:6px;color:var(--muted)}.photos{display:flex;flex-wrap:wrap;gap:10px}.photo{padding:0;border:0;background:none;cursor:zoom-in}.photo img{width:100px;height:100px;border-radius:10px;object-fit:cover}textarea{width:100%;min-height:90px;margin:10px 0}.image-overlay{position:fixed;inset:0;z-index:100;background:#000b;display:flex;align-items:center;justify-content:center;gap:20px;flex-direction:column}.image-overlay>img{max-width:90vw;max-height:80vh;object-fit:contain}
+</style>
+<style scoped>
+.reward-config{margin-bottom:16px}.reward-form{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:4px 0 12px}.reward-form label{display:flex;gap:8px;align-items:center;font-size:13px}
 </style>
