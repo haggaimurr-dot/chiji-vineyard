@@ -41,6 +41,7 @@ func main() {
 	go s.runAlertThresholdScanner(publisherCtx)
 	go s.runLiveNoticeScanner(publisherCtx)
 	go store.runReviewAlertScanner(publisherCtx)
+	go store.runOrderAlertScanner(publisherCtx)
 	go s.runAutoInvoices(publisherCtx)
 	go store.runLeadExternalReminders(publisherCtx)
 	port := os.Getenv("PORT")

@@ -14,6 +14,7 @@ import OrderBatches from './OrderBatches.vue'
 import InvoiceActions from './InvoiceActions.vue'
 import AfterSalesPanel from './AfterSalesPanel.vue'
 import PickingSheet from './PickingSheet.vue'
+import OrderAlertPanel from './OrderAlertPanel.vue'
 import { orderExceptions } from '../picking'
 import { logisticsAlerts, orderProgress } from '../order-progress'
 
@@ -247,7 +248,7 @@ function closeEvidence() { evidenceRequest++; evidenceRefund.value = null }
 <template>
   <LogisticsPanel v-if="workspace === 'logistics'" :orders="orders" @changed="loadOrders" />
   <div class="toolbar"><div><h2>订单与售后</h2><p>查找订单、管理发货与处理售后</p></div><button class="button secondary" :disabled="loading || refundsLoading || operationBusy" @click="refresh">刷新</button></div>
-  <div class="segmented order-filters" aria-label="订单运营模块"><button v-for="item in [{ key: 'orders', label: '订单与售后' }, { key: 'picking', label: '拣货单' }, { key: 'logistics', label: '物流与异常任务' }, { key: 'exceptions', label: '异常订单工作台' }]" :key="item.key" :class="{ active: workspace === item.key }" :aria-pressed="workspace === item.key" :disabled="operationBusy" @click="switchWorkspace(item.key)">{{ item.label }}</button></div>
+  <div class="segmented order-filters" aria-label="订单运营模块"><button v-for="item in [{ key: 'orders', label: '订单与售后' }, { key: 'picking', label: '拣货单' }, { key: 'logistics', label: '物流与异常任务' }, { key: 'exceptions', label: '异常订单工作台' }, { key: 'shipTimeout', label: '超时提醒' }]" :key="item.key" :class="{ active: workspace === item.key }" :aria-pressed="workspace === item.key" :disabled="operationBusy" @click="switchWorkspace(item.key)">{{ item.label }}</button></div>
   <p v-if="workspace === 'exceptions'" class="alert">集中处理微信发货同步失败、发货提醒失败或结果待核实、退款失败及已开票邮件异常。使用订单操作重试；退款与邮件结果待核实请先核对服务记录。</p>
   <div class="segmented order-filters" aria-label="订单状态筛选"><button v-for="item in visibleFilters" :key="item.key" :class="{ active: filter === item.key }" :aria-pressed="filter === item.key" :disabled="operationBusy" @click="filter = item.key">{{ item.label }}</button></div>
   <form class="order-search" @submit.prevent="search">
@@ -264,6 +265,7 @@ function closeEvidence() { evidenceRequest++; evidenceRefund.value = null }
   <p v-if="error" class="alert error" role="alert">{{ error }}</p>
   <p v-if="listError" class="alert error" role="alert">订单加载失败：{{ listError }} <button class="text-button" @click="loadOrders">重试</button></p>
   <OrderOperations ref="operations" v-model:busy="operationBusy" :orders="orders" :selected-ids="selectedIds" :filter="filter" :keyword="appliedKeyword" :loading="loading || !!listError || shippingBusy || !!refundBusy || !!syncBusy" @changed="refresh"/>
+  <OrderAlertPanel v-if="workspace === 'shipTimeout'" ref="alertPanel"/>
   <PickingSheet v-if="workspace === 'picking'" :selected-ids="selectedIds" :disabled="loading || operationBusy || !!listError" @update:busy="operationBusy = $event" />
   <OrderPackages v-if="packageOrder" :order="packageOrder" @close="packageOrderId = ''" @changed="loadOrders" @busy="operationBusy = $event"/>
   <section class="panel table-panel orders-table-panel" :aria-busy="loading">
