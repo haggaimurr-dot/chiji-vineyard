@@ -198,12 +198,12 @@ function createRenderer(canvas, hooks) {
   function footer(view) {
     if (view.status) text(short(view.status, 346, 10), 195, 779, 10, C.muted, 400, 'center');
     line(18, 791, 372, 791, C.line);
-    const tabs = [['farm', '葡萄园'], ['inventory', '果实仓'], ['facilities', '小设施'], ['journal', '种植手记']];
+    const tabs = [['farm', '葡萄园'], ['inventory', '果实仓'], ['facilities', '小设施'], ['rank', '排行榜'], ['journal', '种植手记']];
     tabs.forEach(([id, label], i) => {
-      const x = 48.75 + i * 97.5, active = view.tab === id;
+      const x = 39 + i * 78, active = view.tab === id;
       if (active) rounded(x - 27, 797, 54, 38, 13, '#E3EBD9');
       tabIcon(id, x, 808, active); text(label, x, 829, 10, active ? C.ink : '#909B85', active ? 500 : 400, 'center');
-      control(`tab-${id}`, label, i * 97.5 + 4, 795, 89.5, 47, () => view.onTab(id), false);
+      control(`tab-${id}`, label, i * 78 + 4, 795, 70, 47, () => view.onTab(id), false);
     });
   }
 
@@ -427,6 +427,23 @@ function createRenderer(canvas, hooks) {
     wrap('设施会随时间扣除运行维护费。经营币不足时，今日设施暂停运行。', 28, 730, 334, 10, C.muted, 17, 2);
   }
 
+  function rankBoard(view) {
+    heading('果园排行榜', '按繁荣度（累计收益+金币）排名');
+    const board = view.leaderboard;
+    if (view.rankLoading) { text('正在加载排行…', 195, 400, 13, C.muted, 400, 'center'); return; }
+    if (!board || !board.items || !board.items.length) { text('暂无排行数据，先去经营你的果园吧。', 195, 400, 13, C.muted, 400, 'center'); return; }
+    if (board.myRank) text(`我的排名：第 ${board.myRank} 名 · 繁荣度 ${board.myScore}`, 22, 205, 12, C.ink, 500);
+    board.items.slice(0, 12).forEach((entry, i) => {
+      const y = 235 + i * 40;
+      rounded(18, y, 354, 34, 10, entry.mine ? '#E2E9D5' : C.card, C.line);
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+      text(medal, 34, y + 22, 13, C.ink, 500);
+      text(entry.nickname || '匿名果园', 80, y + 22, 12, C.ink, 400);
+      text(`${entry.score}`, 330, y + 22, 12, C.ink, 500, 'right');
+    });
+    text('助力好友：为好友果园 +30 金币，每天最多助力 5 次。', 22, 730, 10, C.muted, 400);
+    button('rank-refresh', '刷新排行', 20, 748, 170, 44, view.onRankRefresh, { size: 12 });
+  }
   function journal(view, state) {
     heading('这一季的种植手记', '每一次照料，都留下经验');
     const stats = [['本季收入', state.totalRevenue, C.ink], ['本季支出', state.totalCosts, C.gold], ['经营盈余', state.totalRevenue - state.totalCosts, C.purple]];
@@ -545,6 +562,7 @@ function createRenderer(canvas, hooks) {
       if (view.tab === 'inventory') inventory(view, view.state);
       else if (view.tab === 'facilities') facilities(view, view.state);
       else if (view.tab === 'journal') journal(view, view.state);
+      else if (view.tab === 'rank') rankBoard(view);
       else farm(view, view.state, elapsed);
       footer(view);
       if (view.error) errorBanner(view);

@@ -208,7 +208,7 @@ func (s *Server) gameDispatch(r *http.Request, request Request) (any, error) {
 		return M{"token": token, "expiresAt": expires.UnixMilli(), "demo": false}, nil
 	}
 	switch request.Action {
-	case "game.bootstrap", "game.sync", "game.action", "game.history", "game.report", "game.logout", "game.reset":
+	case "game.bootstrap", "game.sync", "game.action", "game.history", "game.report", "game.logout", "game.reset", "game.leaderboard", "game.profile", "game.help":
 	default:
 		return nil, gameError("UNKNOWN_ACTION", "不支持的小游戏请求")
 	}
@@ -222,6 +222,10 @@ func (s *Server) gameDispatch(r *http.Request, request Request) (any, error) {
 	}
 	if actor.SessionID == "" || !strings.HasPrefix(actor.Subject, "game:"+appID+":") || len(actor.Subject) > 80 {
 		return nil, &vineyardGameError{Code: "GAME_UNAUTHORIZED", Message: "小游戏登录身份无效", Status: http.StatusUnauthorized}
+	}
+	switch request.Action {
+	case "game.leaderboard", "game.profile", "game.help":
+		return s.gameSocialDispatch(r.Context(), actor.Subject, request.Action, request.Data)
 	}
 	var mutation vineyardMutation
 	var requestHash string
@@ -328,6 +332,12 @@ func (s *Server) gameDispatch(r *http.Request, request Request) (any, error) {
 	}
 	if err = tx.Commit(); err != nil {
 		return nil, err
+	}
+	// 排行榜分数 best-effort 更新。
+	if request.Action == "game.sync" || request.Action == "game.bootstrap" {
+		if st, ok := result["state"].(vineyardFarm); ok {
+			s.store.updateGameScore(r.Context(), actor.Subject, st)
+		}
 	}
 	return result, nil
 }

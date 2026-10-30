@@ -13,9 +13,16 @@ function start(options) {
   const renderer = createRenderer(platform.canvas, platform.controls);
   let frameId = null, running = true, destroyed = false, lastFrame = 0;
   const view = { state: null, tab: 'farm', selectedPlot: 1, busy: true, status: '正在走进葡萄园…',
-    error: '', demo: config.demo, modal: null,
+    error: '', demo: config.demo, modal: null, leaderboard: null, rankLoading: false,
     onSelectPlot(id) { if (!view.busy) { view.selectedPlot = id; view.error = ''; } },
-    onTab(tab) { if (!view.busy) { view.tab = tab; view.error = ''; } },
+    onTab(tab) { if (!view.busy) { view.tab = tab; view.error = ''; if (tab === 'rank') view.onRankRefresh(); } },
+    onRankRefresh() {
+      if (view.rankLoading || config.demo) return;
+      view.rankLoading = true;
+      service.leaderboard().then(board => { if (!destroyed) { view.leaderboard = board; } })
+        .catch(error => { if (!destroyed) view.error = error.message || '排行加载失败'; })
+        .finally(() => { if (!destroyed) view.rankLoading = false; });
+    },
     onAction(command) {
       const name = (ACTIONS[command.type] || {}).name || '农事';
       return run(() => service.command(command), name + '完成');

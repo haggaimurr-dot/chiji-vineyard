@@ -52,6 +52,9 @@ class GameService {
     }
     return body.data;
   }
+  async leaderboard() { return this.call('game.leaderboard', {}); }
+  async setNickname(nickname) { return this.call('game.profile', { nickname }); }
+  async helpFriend(target) { return this.call('game.help', { target }); }
   async init() {
     if (this.config.demo) {
       const existing = this.platform.read(this.saveKey);
