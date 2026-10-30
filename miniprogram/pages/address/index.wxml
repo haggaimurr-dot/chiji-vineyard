@@ -22,7 +22,8 @@
       <label><text>详细地址</text><textarea maxlength="120" placeholder="街道、门牌号、小区楼栋等" data-name="detail" value="{{form.detail}}" bindinput="field" /></label>
       <label><text>设为默认</text><switch checked="{{form.isDefault}}" disabled="{{busy}}" color="#5b2a70" bindchange="toggleDefault" /></label>
     </view>
-    <view class="tip">地址仅用于订单配送。微信导入的地址请核对后保存。</view>
+    <button class="import-btn" bindtap="smartPaste" disabled="{{busy}}">粘贴智能识别（姓名+手机+地址一键填入）</button>
+    <view class="tip">地址仅用于订单配送。粘贴或微信导入的地址请核对后保存。</view>
     <button class="primary-btn save" bindtap="save" loading="{{busy}}" disabled="{{busy}}">保存地址</button>
     <button class="import-btn" bindtap="cancel" disabled="{{busy}}">取消</button>
   </view>

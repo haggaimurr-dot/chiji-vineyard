@@ -1,4 +1,5 @@
 import { callApi } from '../../utils/api'
+import { parseAddress } from '../../utils/address-parse'
 import type { Address } from '../../utils/types'
 const emptyForm = (): Address => ({ name: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false })
 Page({
@@ -23,6 +24,25 @@ Page({
   field(event: WechatMiniprogram.Input) { this.setData({ [`form.${event.currentTarget.dataset.name}`]: event.detail.value }) },
   chooseRegion(event: any) { const [province, city, district] = event.detail.value; this.setData({ region: event.detail.value, 'form.province': province, 'form.city': city, 'form.district': district }) },
   toggleDefault(event: any) { this.setData({ 'form.isDefault': event.detail.value }) },
+  // 粘贴智能识别：从剪贴板读取"姓名+手机+省市区+详细"文本并自动拆分填入
+  async smartPaste() {
+    try {
+      const { data } = await wx.getClipboardData()
+      const text = String(data || '').trim()
+      if (!text) return wx.showToast({ title: '剪贴板是空的', icon: 'none' })
+      const parsed = parseAddress(text)
+      if (!parsed.phone && !parsed.province && !parsed.detail) return wx.showToast({ title: '没识别出地址信息', icon: 'none' })
+      const form = { ...this.data.form }
+      if (parsed.name) form.name = parsed.name
+      if (parsed.phone) form.phone = parsed.phone
+      if (parsed.province) form.province = parsed.province
+      if (parsed.city) form.city = parsed.city
+      if (parsed.district) form.district = parsed.district
+      if (parsed.detail) form.detail = parsed.detail
+      this.setData({ form, region: [form.province, form.city, form.district] })
+      wx.showToast({ title: '已智能填入，请核对', icon: 'none' })
+    } catch (_) { wx.showToast({ title: '读取剪贴板失败', icon: 'none' }) }
+  },
   select(event: any) {
     if (!this.data.selecting || this.data.busy) return
     const address = this.data.addresses.find(a => a.id === event.currentTarget.dataset.id)
