@@ -158,6 +158,12 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.replyReview(ctx, actor, req.Data)
 	case "admin.review.moderate":
 		return s.moderateReview(ctx, actor, req.Data)
+	case "admin.review.alerts":
+		return s.reviewAlerts(ctx, req.Data)
+	case "admin.review.alertCount":
+		return s.reviewAlertCount(ctx)
+	case "admin.review.alert.resolve":
+		return s.resolveReviewAlert(ctx, actor, req.Data)
 	case "admin.dashboard":
 		return s.dashboard(ctx, req.Data)
 	case "admin.product.search":

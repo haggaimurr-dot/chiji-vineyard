@@ -14,6 +14,7 @@ import ReviewsView from './views/ReviewsView.vue'
 import AuditView from './views/AuditView.vue'
 import PaymentsView from './views/PaymentsView.vue'
 import PaymentAlerts from './components/PaymentAlerts.vue'
+import ReviewAlerts from './components/ReviewAlerts.vue'
 import ReminderTasks from './views/ReminderTasks.vue'
 
 const token = ref(localStorage.getItem('chiji_admin_token') || '')
@@ -167,7 +168,7 @@ async function logout() {
       <div class="sidebar-foot"><div class="operator"><span>运</span><div><strong>{{ currentUser.username }}</strong><small>{{ currentUser.role === 'SUPER_ADMIN' ? '超级管理员' : '运营人员' }} · 在线</small></div></div><button class="logout" @click="logout">退出登录</button></div>
     </aside>
     <section class="workspace">
-      <header class="topbar"><button class="menu-toggle" type="button" aria-label="打开菜单" @click="navOpen = true">☰</button><div><p class="eyebrow purple">CHIJIGRAPE</p><h1>{{ currentLabel }}</h1></div><div class="top-actions"><PaymentAlerts v-if="currentUser.role === 'SUPER_ADMIN'" @open="navigate('payments')" /><LeadReminders v-if="can(currentUser, 'lead.read')" :current-user-id="currentUser.id" @open="openLead" /><span v-if="isDemo" class="demo-badge">演示数据</span><span class="date">{{ new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span></div></header>
+      <header class="topbar"><button class="menu-toggle" type="button" aria-label="打开菜单" @click="navOpen = true">☰</button><div><p class="eyebrow purple">CHIJIGRAPE</p><h1>{{ currentLabel }}</h1></div><div class="top-actions"><PaymentAlerts v-if="currentUser.role === 'SUPER_ADMIN'" @open="navigate('payments')" /><ReviewAlerts v-if="can(currentUser, 'review.read')" @open="navigate('reviews')" /><LeadReminders v-if="can(currentUser, 'lead.read')" :current-user-id="currentUser.id" @open="openLead" /><span v-if="isDemo" class="demo-badge">演示数据</span><span class="date">{{ new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' }) }}</span></div></header>
       <div class="view"><p v-if="!currentView" class="subtle">当前账号暂无可用模块，请联系超级管理员分配权限。</p><component v-else :is="currentView" :key="`${active === 'leads' ? `leads-${leadNavigation}` : active}-${currentUser.permissions?.join(',')}`" v-bind="active === 'leads' ? { initialLeadId } : {}" /></div>
     </section>
   </div>

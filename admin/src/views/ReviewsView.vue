@@ -6,11 +6,24 @@ const items = ref<Review[]>([]), page = ref(1), total = ref(0), hasMore = ref(fa
 const drafts = ref<Record<string,string>>({})
 const preview = ref('')
 const status = ref(''), reasons = ref<Record<string,string>>({})
+const lowRating = ref(false)
+const alerts = ref<Array<{ id: string; productId: string; orderId: string; rating: number; content: string; status: string; createdAt: string }>>([])
+async function loadAlerts() {
+  try { const r = await api<{ items: typeof alerts.value }>('admin.review.alerts', {}); alerts.value = r.items }
+  catch (e) { error.value = (e as Error).message }
+}
+async function resolveAlert(id: string) {
+  if (saving.value || busy.value) return
+  saving.value = id; error.value = ''
+  try { await api('admin.review.alert.resolve', { id }); await loadAlerts() }
+  catch (e) { error.value = (e as Error).message }
+  finally { saving.value = '' }
+}
 const statusLabel = (item: Review) => item.status === 'PENDING' ? '待审核' : item.status === 'REJECTED' ? '已驳回' : '已通过'
 async function load(target = page.value) {
   if (busy.value || saving.value) return
   busy.value = true; error.value = ''
-  try { const result = await api<{items: Review[]; total: number; hasMore: boolean}>('admin.review.list', { page: target, status: status.value }); items.value = result.items; total.value = result.total; hasMore.value = result.hasMore; page.value = target }
+  try { const result = await api<{items: Review[]; total: number; hasMore: boolean}>('admin.review.list', { page: target, status: status.value, lowRating: lowRating.value }); items.value = result.items; total.value = result.total; hasMore.value = result.hasMore; page.value = target }
   catch (e) { error.value = (e as Error).message }
   finally { busy.value = false }
 }
@@ -37,12 +50,12 @@ async function reply(item: Review) {
   catch (e) { error.value = (e as Error).message }
   finally { saving.value = '' }
 }
-onMounted(() => load())
+onMounted(() => { load(); loadAlerts() })
 </script>
 <template>
   <section class="panel">
     <div class="panel-head"><div><h2>商品评价</h2><p class="subtle">共 {{total}} 条评价 · 新评价和追评审核通过后公开展示，每条评价可回复一次。</p></div><button class="button secondary" :disabled="busy || !!saving" @click="load()">刷新</button></div>
-    <div class="review-filter"><label>审核状态 <select v-model="status" :disabled="busy || !!saving" @change="load(1)"><option value="">全部评价</option><option value="PENDING">待审核</option><option value="APPROVED">已通过</option><option value="REJECTED">已驳回</option></select></label></div>
+    <div class="review-filter"><label>审核状态 <select v-model="status" :disabled="busy || !!saving" @change="load(1)"><option value="">全部评价</option><option value="PENDING">待审核</option><option value="APPROVED">已通过</option><option value="REJECTED">已驳回</option></select></label><label><input type="checkbox" v-model="lowRating" :disabled="busy || !!saving" @change="load(1)" /> 仅看低分（≤2 星）</label><button class="button secondary" :disabled="busy || !!saving" @click="loadAlerts()">刷新差评提醒</button></div><div v-if="alerts.length" class="review-extra"><strong>差评提醒（{{ alerts.length }}）</strong><p v-for="a in alerts" :key="a.id">{{ a.rating }} 星 · 商品 {{ a.productId }} · {{ a.content }} <button class="button secondary" :disabled="!!saving || busy" @click="resolveAlert(a.id)">标为已处理</button></p></div>
     <p v-if="isDemo" class="demo-note">演示评价独立保存在本浏览器，与小程序演示数据各自独立。</p>
     <p v-if="error" class="form-error" role="alert">{{error}}</p><p v-if="busy" class="subtle">正在加载评价…</p>
     <p v-if="!busy && !error && !items.length" class="subtle">暂无商品评价</p>

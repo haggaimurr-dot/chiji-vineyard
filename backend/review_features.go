@@ -118,8 +118,9 @@ func (s *Server) orderReviews(ctx context.Context, openid string, raw json.RawMe
 }
 func (s *Server) adminReviews(ctx context.Context, raw json.RawMessage) (any, error) {
 	var d struct {
-		Page   int    `json:"page"`
-		Status string `json:"status"`
+		Page      int    `json:"page"`
+		Status    string `json:"status"`
+		LowRating bool   `json:"lowRating"`
 	}
 	if err := decode(raw, &d); err != nil {
 		return nil, err
@@ -139,6 +140,13 @@ func (s *Server) adminReviews(ctx context.Context, raw json.RawMessage) (any, er
 		}
 		where = " WHERE " + reviewStatusSQL + "=?"
 		args = append(args, d.Status)
+	}
+	if d.LowRating {
+		if where == "" {
+			where = " WHERE rating<=2"
+		} else {
+			where += " AND rating<=2"
+		}
 	}
 	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM product_reviews"+where, args...).Scan(&total); err != nil {
 		return nil, err
