@@ -108,6 +108,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.attentionHistory(ctx, d.OpenID, req.Data)
 	case "admin.session.list", "admin.session.revoke", "admin.logout":
 		return s.personalSessions(r, actor, req)
+	case "admin.login.logs":
+		return s.loginLogs(r, actor, req.Data)
 	case "admin.course.list":
 		return s.store.courseList(ctx)
 	case "admin.course.save":

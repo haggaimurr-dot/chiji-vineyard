@@ -295,3 +295,66 @@ func (s *Server) loginSecondFactor(ctx context.Context, a Admin, code string) (b
 	}
 	return false, tx.Commit()
 }
+
+// LoginLogItem describes one recorded admin sign-in (backed by auth_sessions).
+type LoginLogItem struct {
+	ID        string `json:"id"`
+	AdminID   string `json:"adminId"`
+	Username  string `json:"username"`
+	UserAgent string `json:"userAgent"`
+	IP        string `json:"ip"`
+	CreatedAt string `json:"createdAt"`
+	ExpiresAt int64  `json:"expiresAt"`
+	Revoked   bool   `json:"revoked"`
+}
+
+// loginLogs lists admin sign-in records. Regular admins see only their own;
+// SUPER_ADMIN may filter by adminId or see everyone.
+func (s *Server) loginLogs(r *http.Request, actor Claims, raw json.RawMessage) (any, error) {
+	ctx := r.Context()
+	var d struct {
+		AdminID string `json:"adminId"`
+		Limit   int    `json:"limit"`
+		Offset  int    `json:"offset"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	d.Limit, d.Offset = historyPagination(d.Limit, d.Offset)
+	target := strings.TrimSpace(d.AdminID)
+	if actor.Role != "SUPER_ADMIN" {
+		target = actor.Subject
+	}
+	where := "s.kind='admin'"
+	args := []any{}
+	if target != "" {
+		where += " AND s.subject=?"
+		args = append(args, target)
+	}
+	var total int
+	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM auth_sessions s WHERE "+where, args...).Scan(&total); err != nil {
+		return nil, err
+	}
+	listArgs := append(append([]any{}, args...), d.Limit, d.Offset)
+	rows, err := s.store.db.QueryContext(ctx, "SELECT s.id,s.subject,COALESCE(a.username,''),s.user_agent,s.ip_address,s.created_at,s.expires_at,s.revoked_at IS NOT NULL FROM auth_sessions s LEFT JOIN admins a ON a.id=s.subject WHERE "+where+" ORDER BY s.created_at DESC,s.id DESC LIMIT ? OFFSET ?", listArgs...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []LoginLogItem{}
+	for rows.Next() {
+		var item LoginLogItem
+		var revoked bool
+		var created int64
+		if err := rows.Scan(&item.ID, &item.AdminID, &item.Username, &item.UserAgent, &item.IP, &created, &item.ExpiresAt, &revoked); err != nil {
+			return nil, err
+		}
+		item.Revoked = revoked
+		item.CreatedAt = time.Unix(created, 0).UTC().Format(time.RFC3339)
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return M{"items": items, "total": total, "limit": d.Limit, "offset": d.Offset}, nil
+}

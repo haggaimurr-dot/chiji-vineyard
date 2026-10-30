@@ -81,6 +81,37 @@ function expiredSession() {
   window.dispatchEvent(new CustomEvent('chiji-admin-session-expired', { detail: { message: '密码已重置，请使用新密码重新登录。' } }))
 }
 
+type LoginLog = { id: string; adminId: string; username: string; userAgent: string; ip: string; createdAt: string; expiresAt: number; revoked: boolean }
+type LoginLogResult = { items: LoginLog[]; total: number; limit: number; offset: number }
+
+const subTab = ref<'accounts' | 'logs'>('accounts')
+const isSuper = computed(() => {
+  try { return (JSON.parse(localStorage.getItem('chiji_admin_user') || '{}') as { role?: string }).role === 'SUPER_ADMIN' }
+  catch { return false }
+})
+const logs = ref<LoginLog[]>([])
+const logsTotal = ref(0)
+const logsLoading = ref(false)
+const logsError = ref('')
+const logFilter = ref('')
+const logPage = ref(1)
+const logPageSize = 20
+
+async function loadLogs() {
+  logsLoading.value = true
+  logsError.value = ''
+  try {
+    const result = await api<LoginLogResult>('admin.login.logs', { adminId: logFilter.value || undefined, limit: logPageSize, offset: (logPage.value - 1) * logPageSize })
+    logs.value = result.items
+    logsTotal.value = result.total
+  } catch (e) { logsError.value = (e as Error).message }
+  finally { logsLoading.value = false }
+}
+function switchTab(next: 'accounts' | 'logs') {
+  subTab.value = next
+  if (next === 'logs' && !logs.value.length && !logsLoading.value) loadLogs()
+}
+
 async function submit() {
   if (busy.value) return
   formError.value = ''
@@ -137,6 +168,11 @@ async function submit() {
       <div><h3 id="accounts-title">后台账号</h3><p>管理超级管理员和运营人员，按操作分配运营权限，重置密码后全部旧会话失效</p></div>
       <button class="button small secondary" type="button" :disabled="!ready || busy || loading" @click="openEditor('create')">＋ 添加账号</button>
     </div>
+    <div class="sub-tabs" role="tablist" aria-label="账号安全子功能">
+      <button type="button" role="tab" :aria-selected="subTab === 'accounts'" :class="{ active: subTab === 'accounts' }" @click="switchTab('accounts')">账号管理</button>
+      <button type="button" role="tab" :aria-selected="subTab === 'logs'" :class="{ active: subTab === 'logs' }" @click="switchTab('logs')">登录记录</button>
+    </div>
+    <template v-if="subTab === 'accounts'">
     <p v-if="loading" class="account-note" role="status">正在加载账号…</p>
     <div v-if="error" class="account-feedback"><p class="form-error" role="alert">{{ error }}</p><button class="text-button" type="button" :disabled="busy || loading" @click="load">重新加载</button></div>
     <p v-if="message" class="success-text account-note" role="status">{{ message }}</p>
@@ -151,6 +187,30 @@ async function submit() {
       </div>
     </div>
     <p class="account-note subtle">当前账号不可停用；至少保留一个启用的超级管理员。</p>
+    </template>
+    <template v-if="subTab === 'logs'">
+      <div class="log-filters">
+        <label v-if="isSuper">账号筛选<select v-model="logFilter" @change="logPage = 1; loadLogs()"><option value="">全部账号</option><option v-for="a in accounts" :key="a.id" :value="a.id">{{ a.username }}</option></select></label>
+        <button class="text-button" type="button" :disabled="logsLoading" @click="loadLogs">刷新</button>
+      </div>
+      <p v-if="logsLoading" class="account-note" role="status">正在加载登录记录…</p>
+      <p v-if="logsError" class="form-error account-note" role="alert">{{ logsError }}</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>登录时间（北京时间）</th><th>账号</th><th>IP 地址</th><th>设备/浏览器</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr v-for="log in logs" :key="log.id">
+            <td>{{ new Date(log.createdAt).toLocaleString('zh-CN') }}</td>
+            <td>{{ log.username || log.adminId }}</td>
+            <td>{{ log.ip || '—' }}</td>
+            <td class="ua-cell">{{ log.userAgent || '—' }}</td>
+            <td>{{ log.revoked ? '已失效' : '有效' }}</td>
+          </tr>
+          <tr v-if="!logsLoading && !logs.length"><td colspan="5">暂无登录记录</td></tr>
+        </tbody>
+      </table></div>
+      <div class="log-pagination"><span>共 {{ logsTotal }} 条</span><div><button class="text-button" type="button" :disabled="logPage <= 1 || logsLoading" @click="logPage--; loadLogs()">上一页</button><button class="text-button" type="button" :disabled="logsLoading || logPage * logPageSize >= logsTotal" @click="logPage++; loadLogs()">下一页</button></div></div>
+      <p class="account-note subtle">登录记录来自会话签发时的 IP 与设备信息；非超级管理员仅能查看自己的记录。</p>
+    </template>
   </section>
 
   <Teleport to="body">
@@ -188,6 +248,18 @@ async function submit() {
 .current-tag { display: inline-block; margin-left: 6px; padding: 3px 6px; border-radius: 5px; background: var(--purple-soft); color: var(--purple); font-size: 10px; font-weight: 500; }
 .status.inactive { color: var(--muted); background: #eeebe7; }
 .account-note { margin: 16px 24px; font-size: 12px; }
+.sub-tabs { display: flex; gap: 8px; padding: 0 24px; margin-bottom: 4px; }
+.sub-tabs button { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
+.sub-tabs button.active { background: var(--purple-soft); color: var(--purple); border-color: transparent; font-weight: 600; }
+.log-filters { display: flex; align-items: center; gap: 16px; padding: 8px 24px 4px; }
+.log-filters label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.log-filters select { padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: #fbf9f5; }
+.table-wrap { overflow-x: auto; margin: 8px 24px 0; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table-wrap th, .table-wrap td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.ua-cell { max-width: 320px; white-space: normal !important; overflow-wrap: anywhere; font-size: 12px; color: var(--muted); }
+.log-pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; color: var(--muted); font-size: 12px; }
+.log-pagination > div { display: flex; gap: 12px; }
 .account-feedback { padding: 0 24px; }
 .account-feedback p { margin-bottom: 8px; }
 .account-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; margin: auto; padding: 28px; border: 1px solid var(--border); border-radius: 18px; background: var(--paper); color: var(--ink); box-shadow: 0 24px 80px #27142633; }

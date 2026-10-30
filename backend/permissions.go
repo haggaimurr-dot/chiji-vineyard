@@ -47,6 +47,7 @@ var actionPermissions = map[string]string{
 	"admin.account.list": "super", "admin.account.save": "super", "admin.account.resetPassword": "super", "admin.account.permissions": "super",
 	"admin.security.status": "session", "admin.security.setup": "session", "admin.security.enable": "session", "admin.security.disable": "session", "admin.account.changePassword": "session",
 	"admin.session": "session", "admin.session.list": "session", "admin.session.revoke": "session", "admin.logout": "session",
+	"admin.login.logs": "session",
 }
 
 func defaultPermissions(role string) []string {
