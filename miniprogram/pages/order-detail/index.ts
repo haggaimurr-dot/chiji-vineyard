@@ -44,8 +44,8 @@ Page({
     finally { this.setData({ loading: false }) }
   },
   data: { packageBusy: '', packageError: '', packageTracking: {} as Record<string, Tracking>, parcelIndex: 0, parcelOptions: [] as string[], parcels: [] as Array<{carrier: string; carrierCode?: string; trackingNo: string}>, selectedParcel: null as any, progressNodes: [] as ProgressNode[], logisticsAlerts: [] as string[], demo: getApp().globalData.demoMode, rebuyBusy: false, subscribeBusy: false, subscription: null as ShippingSubscription | null, subscriptionError: '', invoiceOpen: false, invoiceKind: 'personal', invoiceTitle: '', invoiceTaxId: '', invoiceEmail: '', invoiceBusy: false, invoiceError: '', invoiceHistory: [] as Array<{kind: string; title: string; taxId: string; email: string}>, invoiceHistoryIndex: -1, order: null as any, loading: false, loadError: '', requestVersion: 0, trackingVersion: 0, actionBusy: false, tracking:null as Tracking|null,trackingLoading:false,trackingError:'', myReviews: [] as Review[], reviewsLoadError: '', reviewId: '', reviewImages: [] as Array<{path: string; dataUrl: string}>, reviewImageBusy: false, reviewProductId: '', reviewName: '', reviewRating: 5, reviewContent: '', reviewBusy: false, reviewError: '', reviewStars: [1,2,3,4,5] },
-  onLoad(options: Record<string, string>) { (this as any).orderId = options.id },
-  onShow() { return this.load() },
+  onLoad(options: Record<string, string>) { (this as any).orderId = options.id; (this as any).enterTab = options.tab || '' },
+  onShow() { return this.load().then(() => { if ((this as any).enterTab === 'review') { (this as any).enterTab = ''; wx.createSelectorQuery().in(this).select('#review-section').boundingClientRect(r => { if (r) wx.pageScrollTo({ scrollTop: (r as any).top, duration: 300 }) }).exec() } }) },
   onUnload() { this.setData({ requestVersion: this.data.requestVersion + 1, trackingVersion: this.data.trackingVersion + 1 }) },
   async load() {
     const version = this.data.requestVersion + 1

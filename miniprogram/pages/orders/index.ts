@@ -46,6 +46,7 @@ Page({
     this.setData({ filter }); return this.load()
   },
   open(event: WechatMiniprogram.BaseEvent) { wx.navigateTo({ url: `/pages/order-detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}` }) },
+  goReview(event: WechatMiniprogram.BaseEvent) { wx.navigateTo({ url: `/pages/order-detail/index?id=${encodeURIComponent(event.currentTarget.dataset.id)}&tab=review` }) },
   async rebuy(event: WechatMiniprogram.BaseEvent) {
     if (this.data.rebuyId) return
     const order = this.data.orders.find(o => o.id === event.currentTarget.dataset.id)

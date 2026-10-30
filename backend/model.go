@@ -118,6 +118,7 @@ type Shipment struct {
 	SyncStartedAt string     `json:"syncStartedAt,omitempty"`
 }
 type Order struct {
+	ReviewPending        bool            `json:"reviewPending,omitempty"`
 	Packages             []OrderPackage `json:"packages,omitempty"`
 	PackageVersion       int            `json:"packageVersion,omitempty"`
 	Events               []OrderEvent   `json:"events,omitempty"`

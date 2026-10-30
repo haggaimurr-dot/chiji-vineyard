@@ -154,5 +154,54 @@ func (s *Store) searchOrdersPage(ctx context.Context, openid string, search Orde
 	if err != nil {
 		return page, err
 	}
+	s.markReviewPending(ctx, tx, page.Items)
 	return page, tx.Commit()
+}
+
+// markReviewPending：已完成订单中若有商品未评价，标记 reviewPending，供订单列表展示"待评价"入口。
+func (s *Store) markReviewPending(ctx context.Context, q interface {
+	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
+}, orders []Order) {
+	ids := []string{}
+	for i := range orders {
+		if orders[i].OrderStatus == "COMPLETED" && orders[i].FulfillmentStatus == "RECEIVED" {
+			ids = append(ids, orders[i].ID)
+		}
+	}
+	if len(ids) == 0 {
+		return
+	}
+	placeholders := strings.Repeat("?,", len(ids))
+	placeholders = placeholders[:len(placeholders)-1]
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	rows, err := q.QueryContext(ctx, "SELECT order_id,product_id FROM product_reviews WHERE order_id IN ("+placeholders+")", args...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	reviewed := map[string]map[string]bool{}
+	for rows.Next() {
+		var oid, pid string
+		if err := rows.Scan(&oid, &pid); err != nil {
+			return
+		}
+		if reviewed[oid] == nil {
+			reviewed[oid] = map[string]bool{}
+		}
+		reviewed[oid][pid] = true
+	}
+	for i := range orders {
+		if orders[i].OrderStatus != "COMPLETED" || orders[i].FulfillmentStatus != "RECEIVED" {
+			continue
+		}
+		for _, item := range orders[i].Items {
+			if !reviewed[orders[i].ID][item.ProductID] {
+				orders[i].ReviewPending = true
+				break
+			}
+		}
+	}
 }
