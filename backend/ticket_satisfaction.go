@@ -58,8 +58,7 @@ func (s *Server) rateTicket(ctx context.Context, openid string, raw json.RawMess
 		return nil, err
 	}
 	satis := M{"rating": d.Rating, "comment": comment}
-	satisRaw, _ := json.Marshal(satis)
-	if _, err = tx.ExecContext(ctx, "UPDATE after_sales_tickets SET payload=JSON_SET(payload,'$.satisfaction',CAST(? AS JSON)) WHERE id=?", satisRaw, d.TicketID); err != nil {
+	if _, err = tx.ExecContext(ctx, "UPDATE after_sales_tickets SET payload=JSON_SET(payload,'$.satisfaction',CAST(? AS JSON)) WHERE id=?", jsonValue(satis), d.TicketID); err != nil {
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
