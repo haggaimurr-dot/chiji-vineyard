@@ -19,6 +19,7 @@ type CreateOrderInput struct {
 	Items          []CartItem `json:"items"`
 	Address        Address    `json:"address"`
 	Note           string     `json:"note"`
+	SourceArticleID string    `json:"sourceArticleId"`
 }
 
 var orderKeyRE = regexp.MustCompile(`^[A-Za-z0-9_-]{16,80}$`)

@@ -640,7 +640,19 @@ func (s *Server) createOrder(ctx context.Context, openid string, raw json.RawMes
 			return nil, errors.New("商品库存不足")
 		}
 	}
-	o := Order{DeliveryDate: d.DeliveryDate, ID: id, OrderNo: no, OpenID: openid, OrderStatus: "PENDING_PAYMENT", PaymentStatus: "UNPAID", FulfillmentStatus: "UNFULFILLED", RefundStatus: "NONE", Items: items, Address: address, Quote: quote, Note: clean(d.Note, 100), CreatedAt: nowString(), ExpiresAt: time.Now().Add(30 * time.Minute)}
+	// 内容归因（新增）：从内容页商品入口下单时记录来源文章 ID（末次点击口径）。
+	sourceArticleID := ""
+	if d.SourceArticleID != "" {
+		var saExists int
+		if err := tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM articles WHERE id=? AND status='PUBLISHED'", d.SourceArticleID).Scan(&saExists); err != nil {
+			return nil, err
+		}
+		if saExists == 0 {
+			return nil, errors.New("来源内容不存在")
+		}
+		sourceArticleID = d.SourceArticleID
+	}
+	o := Order{DeliveryDate: d.DeliveryDate, ID: id, OrderNo: no, OpenID: openid, OrderStatus: "PENDING_PAYMENT", PaymentStatus: "UNPAID", FulfillmentStatus: "UNFULFILLED", RefundStatus: "NONE", Items: items, Address: address, Quote: quote, Note: clean(d.Note, 100), SourceArticleID: sourceArticleID, CreatedAt: nowString(), ExpiresAt: time.Now().Add(30 * time.Minute)}
 	appendOrderEvent(&o, "ORDER_CREATED", "订单已创建", "用户", "")
 	_, err = tx.ExecContext(ctx, "INSERT INTO orders(id,order_no,openid,order_status,payment_status,fulfillment_status,refund_status,total,payload,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?)", o.ID, o.OrderNo, openid, o.OrderStatus, o.PaymentStatus, o.FulfillmentStatus, o.RefundStatus, o.Quote.Total, jsonValue(o), o.ExpiresAt)
 	if err != nil {

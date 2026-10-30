@@ -4,6 +4,7 @@ import { api, dateTime, isDemo, uploadVideo } from '../api'
 import CoursesView from './CoursesView.vue'
 import ClassroomQuestions from './ClassroomQuestions.vue'
 import ContentLibrary from './ContentLibrary.vue'
+import ContentAnalytics from './ContentAnalytics.vue'
 import { reviewLabels } from '../content-library'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import ArticlePreview from '../components/ArticlePreview.vue'
@@ -13,7 +14,7 @@ import { beijingInput, publicationDate, scheduleISO } from '../content-time'
 import type { Article, ArticleStats, ArticleVersion, ContentResource } from '../types'
 
 const articles = ref<Article[]>([])
-const section = ref<'articles' | 'review' | 'tags' | 'media' | 'questions' | 'courses'>('articles')
+const section = ref<'articles' | 'review' | 'tags' | 'media' | 'questions' | 'courses' | 'analytics'>('articles')
 const resources = ref<ContentResource[]>([]), resourceLoading = ref(false), resourceError = ref('')
 const reviewing = ref<Article | null>(null), reviewNote = ref(''), reviewError = ref(''), reviewBusy = ref(false)
 const reviewFilter = ref('PENDING'), submitting = ref('')
@@ -282,10 +283,11 @@ async function restore() {
 
 <template>
   <div class="toolbar"><div><h2>种植内容</h2><p>发布种植知识，安排发布时间，管理内容审核、标签与素材，追踪阅读表现</p></div><button v-permission="'article.write'" class="button primary" @click="edit()">＋ 新建内容</button></div>
-  <div class="content-tabs content-module-tabs" role="tablist" aria-label="种植内容功能"><button v-for="tab in [{ key: 'courses', label: '课程编排' }, { key: 'questions', label: '课堂问答' }, { key: 'articles', label: '内容列表' }, { key: 'review', label: '内容审核' }, { key: 'tags', label: '标签库' }, { key: 'media', label: '素材库' }]" :key="tab.key" role="tab" :aria-selected="section === tab.key" :class="{ active: section === tab.key }" @click="section = tab.key as typeof section">{{ tab.label }}<span v-if="tab.key === 'review'"> {{ articles.filter(a => a.reviewStatus === 'PENDING').length }}</span></button></div>
+  <div class="content-tabs content-module-tabs" role="tablist" aria-label="种植内容功能"><button v-for="tab in [{ key: 'courses', label: '课程编排' }, { key: 'questions', label: '课堂问答' }, { key: 'articles', label: '内容列表' }, { key: 'review', label: '内容审核' }, { key: 'tags', label: '标签库' }, { key: 'media', label: '素材库' }, { key: 'analytics', label: '数据分析' }]" :key="tab.key" role="tab" :aria-selected="section === tab.key" :class="{ active: section === tab.key }" @click="section = tab.key as typeof section">{{ tab.label }}<span v-if="tab.key === 'review'"> {{ articles.filter(a => a.reviewStatus === 'PENDING').length }}</span></button></div>
   <CoursesView v-if="section === 'courses'" />
   <ClassroomQuestions v-if="section === 'questions'" />
   <ContentLibrary v-else-if="section === 'tags' || section === 'media'" :key="section" :mode="section" :resources="resources" :loading="resourceLoading" :load-error="resourceError" @refresh="loadResources"/>
+  <ContentAnalytics v-else-if="section === 'analytics'" />
   <template v-if="section === 'review'">
     <div class="content-controls"><div class="segmented"><button v-for="value in ['PENDING', 'APPROVED', 'REJECTED', 'UNSUBMITTED', 'ALL']" :key="value" :class="{ active: reviewFilter === value }" @click="reviewFilter = value">{{ reviewLabels[value] || '全部审核记录' }}</button></div><button class="text-button" :disabled="loading" @click="load">刷新</button></div>
     <p class="content-help">草稿可提交审核，通过后由运营人员安排发布。修改已送审内容后，需要重新提交审核。</p>

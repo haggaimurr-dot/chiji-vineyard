@@ -10,7 +10,7 @@ type DisplayProduct = Omit<Product, 'skus'> & { skus: Array<Sku & { priceText: s
 Page({
   previewReviewImage(e: WechatMiniprogram.BaseEvent) { wx.previewImage({ current: e.currentTarget.dataset.url, urls: e.currentTarget.dataset.urls }) },
   data: {
-    product: null as DisplayProduct | null, productId: '',
+    product: null as DisplayProduct | null, productId: '', entryFrom: '',
     images: [] as Array<{ src: string; failed: boolean }>,
     reviews: [] as Array<Review & { stars: string; date: string }>, reviewTotal: 0, reviewAverage: '', reviewsLoading: false, reviewsError: '',
     reviewPage: 0, reviewsHasMore: false, reviewRequestVersion: 0,
@@ -19,7 +19,7 @@ Page({
     restockConfig: null as RestockConfig | null, restockError: '',
     priceDropConfig: null as RestockConfig | null, priceDropError: '', priceDropNote: '', targetPriceInput: '',
   },
-  onLoad(options: Record<string, string>) { this.setData({ productId: options.id || '' }); return this.loadProduct() },
+  onLoad(options: Record<string, string>) { this.setData({ productId: options.id || '', entryFrom: options.from || '' }); return this.loadProduct() },
   async loadProduct() {
     this.setData({ loading: true, error: '' })
     try {
@@ -183,6 +183,7 @@ Page({
     this.setData({ submitting: true })
     try {
       wx.setStorageSync('chiji_checkout_items', [{ productId: product.id, skuId: sku.id, quantity: this.data.quantity, selected: true }])
+      if (this.data.entryFrom) wx.setStorageSync('chiji_checkout_source', this.data.entryFrom); else wx.removeStorageSync('chiji_checkout_source')
       wx.navigateTo({ url: '/pages/checkout/index', fail: () => wx.showToast({ title: '暂时无法打开结算，请重试', icon: 'none' }), complete: () => this.setData({ submitting: false }) })
     } catch { this.setData({ submitting: false }); wx.showToast({ title: '暂时无法结算，请重试', icon: 'none' }) }
   },

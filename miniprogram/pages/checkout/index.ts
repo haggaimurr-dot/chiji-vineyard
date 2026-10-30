@@ -90,7 +90,9 @@ Page({
     if (this.data.submitting) return
     this.setData({ submitting: true })
     try {
-      const payload = { items: this.data.items, address: this.data.address, note: this.data.note, couponCode: this.data.couponCode, deliveryDate: this.data.deliveryDate }
+      const entrySource: string = wx.getStorageSync('chiji_checkout_source') || ''
+      const sourceArticleId = entrySource.startsWith('article:') ? entrySource.slice(8) : ''
+      const payload = { items: this.data.items, address: this.data.address, note: this.data.note, couponCode: this.data.couponCode, deliveryDate: this.data.deliveryDate, sourceArticleId }
       const fingerprint = checkoutIntent(payload)
       const storageKey = getApp().globalData.demoMode ? 'chiji_demo_checkout_attempt' : 'chiji_checkout_attempt'
       const previous = wx.getStorageSync(storageKey)
@@ -100,6 +102,7 @@ Page({
       this.setData({ createdOrderId: order.id })
       // Once an order exists, payment retries belong on its detail page.
       wx.removeStorageSync('chiji_checkout_items')
+      wx.removeStorageSync('chiji_checkout_source')
       wx.removeStorageSync(storageKey)
       try { await payOrder(order.id) }
       catch (error) { wx.showToast({ title: (error as Error).message, icon: 'none' }) }

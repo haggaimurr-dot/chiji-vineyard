@@ -496,6 +496,8 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.articleVersions(ctx, mustID(req.Data, "articleId"))
 	case "admin.article.restore":
 		return s.restoreArticle(ctx, actor, req.Data)
+	case "admin.content.analytics":
+		return s.contentAnalytics(ctx, req.Data)
 	case "admin.article.stats":
 		return s.store.articleStats(ctx, mustID(req.Data, "articleId"))
 	case "admin.lead.list", "admin.lead.search":
