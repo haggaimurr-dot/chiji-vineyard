@@ -422,6 +422,14 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.leadDeliveries(ctx, d.LeadID)
 	case "admin.lead.reminders":
 		return s.store.leadReminders(ctx)
+	case "admin.lead.publicPool":
+		return s.leadPublicPool(ctx)
+	case "admin.lead.publicPool.save":
+		return s.savePublicPoolConfig(ctx, actor, req.Data)
+	case "admin.lead.duplicates":
+		return s.leadDuplicates(ctx, req.Data)
+	case "admin.lead.merge":
+		return s.mergeLeads(ctx, actor, req.Data)
 	case "admin.lead.update":
 		return s.updateLead(ctx, actor, req.Data)
 	case "admin.config.get":

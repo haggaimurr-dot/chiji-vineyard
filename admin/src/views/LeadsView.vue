@@ -17,6 +17,44 @@ const owners = ref<AdminOwner[]>([]), pendingReminders = ref<Lead[]>([])
 const ownerError = ref(''), reminderError = ref(''), actionError = ref('')
 const page = ref(1), pageSize = ref(20), loading = ref(false), error = ref(''), success = ref('')
 const exporting = ref(false), exported = ref(0), quickBusy = ref('')
+// 公海池与合并
+const poolItems = ref<Array<{ lead: Lead; daysIdle: number; lastActive: string }>>([]), poolConfig = ref({ inactiveDays: 7 }), poolBusy = ref(false), poolError = ref(''), poolLoaded = ref(false), poolOpen = ref(false)
+const dupItems = ref<Array<{ id: string; organization: string; contact: string; status: string; ownerName: string; createdAt: string; followUpCount: number }>>([])
+const mergeSourceIds = ref<string[]>([]), mergeBusy = ref(false)
+async function loadPool() {
+  if (poolBusy.value) return
+  poolBusy.value = true; poolError.value = ''
+  try { const r = await api<{ config: { inactiveDays: number }; items: typeof poolItems.value }>('admin.lead.publicPool'); poolConfig.value = r.config; poolItems.value = r.items; poolLoaded.value = true }
+  catch (e) { poolError.value = message(e) }
+  finally { poolBusy.value = false }
+}
+async function savePoolConfig() {
+  if (poolBusy.value) return
+  poolBusy.value = true; poolError.value = ''
+  try { await api('admin.lead.publicPool.save', { inactiveDays: poolConfig.value.inactiveDays }); await loadPool(); success.value = '公海规则已更新' }
+  catch (e) { poolError.value = message(e) }
+  finally { poolBusy.value = false }
+}
+async function claimLead(id: string) {
+  if (poolBusy.value) return
+  poolBusy.value = true; poolError.value = ''
+  try { await api('admin.lead.update', { id, ownerId: currentUserId.value }); success.value = '已认领回私海'; await loadPool(); await load() }
+  catch (e) { poolError.value = message(e) }
+  finally { poolBusy.value = false }
+}
+async function loadDuplicates() {
+  if (!selected.value) return
+  try { const r = await api<{ items: typeof dupItems.value }>('admin.lead.duplicates', { id: selected.value.id }); dupItems.value = r.items; mergeSourceIds.value = [] }
+  catch { dupItems.value = [] }
+}
+async function mergeLeads() {
+  if (!selected.value || !mergeSourceIds.value.length || mergeBusy.value) return
+  if (!confirm(`确认将 ${mergeSourceIds.value.length} 条重复线索的跟进记录合并到当前线索？来源线索将标记为已关闭。`)) return
+  mergeBusy.value = true; saveError.value = ''
+  try { const r = await api<{ merged: number; followUpCount: number }>('admin.lead.merge', { targetId: selected.value.id, sourceIds: mergeSourceIds.value }); saveSuccess.value = `已合并 ${r.merged} 条线索，当前共 ${r.followUpCount} 条跟进记录`; mergeSourceIds.value = []; await loadDuplicates(); await load() }
+  catch (e) { saveError.value = message(e) }
+  finally { mergeBusy.value = false }
+}
 const selected = ref<Lead | null>(null), dialog = ref<HTMLDialogElement | null>(null)
 const note = ref(''), nextStatus = ref<Lead['status']>('NEW'), saving = ref(false), saveError = ref(''), saveSuccess = ref('')
 const history = ref<LeadHistory[]>([]), historyLoading = ref(false), historyError = ref('')
@@ -146,7 +184,7 @@ async function openLead(lead: Lead) {
   selected.value = normalizeLead(lead); setDraft(selected.value); saveError.value = ''; saveSuccess.value = ''; conflictNeedsRefresh.value = false
   history.value = []; historyError.value = ''; historyLoading.value = true
   await nextTick(); if (!dialog.value?.open) dialog.value?.showModal()
-  void loadHistory(); void loadDeliveries()
+  void loadHistory(); void loadDeliveries(); void loadDuplicates()
 }
 function closeLead() {
   if (saving.value || refreshingConflict.value) return
@@ -290,6 +328,18 @@ onUnmounted(() => { mounted = false; ++requestId; ++historyRequest; ++openReques
         <p>各阶段显示当前状态分布；成交占比 = 已成交 / 全部线索（含已关闭）。金额为商机估值，不代表收款。{{ funnel.total ? '' : '暂无匹配线索。' }}</p>
       </template>
     </section>
+    <section class="panel">
+      <div class="panel-head"><div><h3>公海池</h3><p>超过 {{ poolConfig.inactiveDays }} 天未跟进且有负责人的线索自动流入公海，任何人可认领回私海。</p></div><div class="row-actions"><button class="button secondary" :disabled="poolBusy" @click="poolOpen = !poolOpen; if (poolOpen && !poolLoaded) loadPool()">{{ poolOpen ? "收起" : "展开" }}</button><button class="button secondary" :disabled="poolBusy" @click="loadPool()">刷新</button></div></div>
+      <div v-if="poolOpen">
+        <p v-if="poolError" class="alert error" role="alert">{{ poolError }}</p>
+        <div v-permission="'super'" class="lead-filter-actions"><label>未跟进 <input type="number" v-model.number="poolConfig.inactiveDays" min="1" max="90" :disabled="poolBusy" style="width:70px" /> 天流入公海</label><button class="button secondary" :disabled="poolBusy" @click="savePoolConfig">保存规则</button></div>
+        <p v-if="poolBusy" role="status">正在加载公海…</p>
+        <p v-else-if="poolLoaded && !poolItems.length" class="subtle">公海暂无线索</p>
+        <table v-else-if="poolLoaded" class="lead-table"><thead><tr><th>客户</th><th>联系人</th><th>原负责人</th><th>闲置天数</th><th>操作</th></tr></thead><tbody>
+        <tr v-for="item in poolItems" :key="item.lead.id"><td>{{ item.lead.organization }}</td><td>{{ item.lead.contact }}</td><td>{{ item.lead.ownerName || "—" }}</td><td>{{ item.daysIdle }} 天</td><td><button v-permission="'lead.write'" class="button secondary" :disabled="poolBusy" @click="claimLead(item.lead.id)">认领</button></td></tr>
+        </tbody></table>
+      </div>
+    </section>
     <form class="panel lead-filters" @submit.prevent="search">
       <label class="lead-search">搜索线索<input v-model="keyword" type="search" placeholder="客户、联系人、手机、需求或历史备注" /></label>
       <label>状态<select v-model="status"><option value="">全部状态</option><option v-for="(label, key) in labels" :key="key" :value="key">{{ label }}</option></select></label>
@@ -384,6 +434,12 @@ onUnmounted(() => { mounted = false; ++requestId; ++historyRequest; ++openReques
         </div>
         <div class="drawer-foot"><span class="save-hint">{{ hasChanges ? '有待保存的修改' : '所有跟进记录都会保留' }}</span><button class="button secondary" type="button" :disabled="saving || refreshingConflict" @click="closeLead">关闭</button><button v-permission="'lead.write'" class="button primary" type="submit" :disabled="saving || refreshingConflict || conflictNeedsRefresh || recordsConflict || !hasChanges">{{ saving ? '正在保存…' : '保存跟进' }}</button></div>
       </form>
+      <div v-if="selected" class="lead-detail" style="margin-top:12px">
+        <h3>重复线索</h3>
+        <p v-if="!dupItems.length" class="subtle">同手机号暂无其他线索</p>
+        <div v-else v-for="d in dupItems" :key="d.id"><label><input type="checkbox" :value="d.id" v-model="mergeSourceIds" :disabled="mergeBusy" /> {{ d.organization }} · {{ d.contact }} · {{ labels[d.status as Lead["status"]] || d.status }} · {{ d.ownerName || "未分配" }} · {{ d.followUpCount }} 条跟进</label></div>
+        <div v-if="dupItems.length" class="row-actions"><button v-permission="'lead.write'" type="button" class="button secondary" :disabled="mergeBusy || !mergeSourceIds.length" @click="mergeLeads">{{ mergeBusy ? "合并中…" : `合并选中 ${mergeSourceIds.length} 条到当前线索` }}</button></div>
+      </div>
     </dialog>
   </div>
 </template>
