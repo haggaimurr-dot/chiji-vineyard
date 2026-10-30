@@ -45,6 +45,25 @@ async function attach(event: Event) {
 }
 onMounted(() => { load(); timer=setInterval(() => { if (!returnEditing.value && !busy.value && !loading.value && !creating.value && !reply.value && !attachments.value.length && !deadline.value && (!selected.value || (owner.value === (selected.value.owner || '') && nextStatus.value === selected.value.status))) load(true) },30000) })
 onUnmounted(() => { if(timer) clearInterval(timer); request++ })
+// SLA 时效统计
+const slaStart = ref(''), slaEnd = ref('')
+const slaReport = ref<{ config: { firstResponseHours: number; resolveHours: number }; total: number; responded: number; resolved: number; avgFirstResponseHours?: number; avgResolveHours?: number; firstResponseOverdue: number; resolveOverdue: number; rows: Array<{ id: string; orderNo: string; status: string; createdAt: string; firstResponseAt?: string; firstResponseHours?: number; resolvedAt?: string; resolveHours?: number; firstResponseDue: boolean; resolveDue: boolean }> } | null>(null)
+const slaBusy = ref(false), slaError = ref('')
+const slaCfg = ref({ firstResponseHours: 4, resolveHours: 48 })
+async function loadSLA() {
+ if (!slaStart.value || !slaEnd.value || slaBusy.value) return
+ slaBusy.value = true; slaError.value = ''
+ try { const r = await api<typeof slaReport.value>('admin.ticket.sla', { startDate: slaStart.value, endDate: slaEnd.value }); slaReport.value = r; if (r) slaCfg.value = { ...r.config } }
+ catch (e) { slaError.value = (e as Error).message }
+ finally { slaBusy.value = false }
+}
+async function saveSLA() {
+ if (slaBusy.value) return
+ slaBusy.value = true; slaError.value = ''
+ try { const r = await api<{ firstResponseHours: number; resolveHours: number }>('admin.ticket.sla.save', slaCfg.value); if (slaReport.value) slaReport.value.config = r; message.value = 'SLA 标准已更新' }
+ catch (e) { slaError.value = (e as Error).message }
+ finally { slaBusy.value = false }
+}
 </script>
 <template>
 <section class="panel after-sales-panel" v-if="can(currentAdmin(), 'refund.read')">
@@ -57,6 +76,17 @@ onUnmounted(() => { if(timer) clearInterval(timer); request++ })
  <section v-if="selected" class="ticket-detail"><h4>{{selected.orderNo}} · {{ticketStatuses[selected.status]}}</h4><p v-if="selected.refundId">关联退款：{{selected.refundId}}</p><div class="ticket-message" v-for="(entry,index) in selected.messages" :key="index"><small>{{entry.role === 'USER' ? '用户' : '商家'}} · {{dateTime(entry.createdAt)}}</small><p>{{entry.content}}</p><a v-for="(file,i) in entry.attachments" :key="i" :href="file.dataUrl" :download="file.name" class="evidence"><img :src="file.dataUrl" :alt="file.name"/><span>{{file.name}} · 下载附件</span></a></div>
  <ReturnGoods :ticket="selected" :disabled="busy" @updated="select" @editing="returnEditing = $event"/>
  <form v-if="selected.status !== 'CLOSED' && can(currentAdmin(), 'refund.approve')" class="ticket-form" @submit.prevent="save"><label>调整处理期限（未来30天内；留空沿用）<input type="datetime-local" v-model="deadline" :disabled="busy"/></label><label>工单附件（JPEG/PNG，最多3张，合计512KB）<input type="file" accept="image/jpeg,image/png" multiple :disabled="busy" @change="attach"/></label><div v-for="(file,index) in attachments" :key="index">{{file.name}} <button type="button" :disabled="busy" @click="attachments.splice(index,1)">移除</button></div><label>负责人（管理员用户名）<input v-model="owner" maxlength="40" :disabled="busy" placeholder="留空表示未分配"/></label><label>处理状态<select v-model="nextStatus" :disabled="busy"><option :value="selected.status">{{ticketStatuses[selected.status]}}</option><option v-if="selected.status === 'OPEN'" value="PROCESSING">处理中</option><option v-if="['OPEN','PROCESSING'].includes(selected.status)" value="RESOLVED">已解决</option><option v-if="selected.status === 'RESOLVED'" value="CLOSED">已关闭</option></select></label><label>回复 / 处理结果（用户可见）<textarea v-model="reply" maxlength="1000" :disabled="busy" :required="nextStatus === 'RESOLVED' || nextStatus === 'CLOSED'" /></label><button class="button small primary" :disabled="busy">{{busy ? '正在保存…' : '保存并回复'}}</button></form></section>
+ <section class="sla-section">
+  <h4>SLA 时效统计</h4>
+  <p class="sla-note">首次响应：工单创建→商家首次回复；解决：创建→已解决/已关闭。阈值可在下方调整（仅超级管理员）。</p>
+  <div class="ticket-filters"><label>开始日期 <input type="date" v-model="slaStart" :disabled="slaBusy" /></label><label>结束日期 <input type="date" v-model="slaEnd" :disabled="slaBusy" /></label><button class="button small primary" :disabled="slaBusy || !slaStart || !slaEnd" @click="loadSLA">统计</button></div>
+  <p v-if="slaError" class="alert error" role="alert">{{ slaError }}</p>
+  <div v-if="slaReport">
+   <p>工单总数 <strong>{{ slaReport.total }}</strong> · 已响应 <strong>{{ slaReport.responded }}</strong> · 已解决 <strong>{{ slaReport.resolved }}</strong> · 平均首次响应 <strong>{{ slaReport.avgFirstResponseHours ?? "—" }} 小时</strong> · 平均解决 <strong>{{ slaReport.avgResolveHours ?? "—" }} 小时</strong> · 响应超时 <strong>{{ slaReport.firstResponseOverdue }}</strong> · 解决超时 <strong>{{ slaReport.resolveOverdue }}</strong></p>
+   <div class="ticket-filters" v-permission="'super'"><label>首次响应阈值（小时）<input type="number" v-model.number="slaCfg.firstResponseHours" min="0.5" max="720" step="0.5" :disabled="slaBusy" /></label><label>解决阈值（小时）<input type="number" v-model.number="slaCfg.resolveHours" min="0.5" max="720" step="0.5" :disabled="slaBusy" /></label><button class="button small secondary" :disabled="slaBusy" @click="saveSLA">保存阈值</button></div>
+   <div class="ticket-list"><div v-for="row in slaReport.rows" :key="row.id" class="ticket-item"><strong>{{ row.orderNo }} · {{ ticketStatuses[row.status] || row.status }}</strong><span>创建 {{ dateTime(row.createdAt) }} · 首次响应 {{ row.firstResponseHours ?? "—" }} 小时 · 解决 {{ row.resolveHours ?? "—" }} 小时</span><strong v-if="row.firstResponseDue || row.resolveDue" role="status" class="sla-overdue">{{ [row.firstResponseDue ? "响应超时" : "", row.resolveDue ? "解决超时" : ""].filter(Boolean).join(" / ") }}</strong></div></div>
+  </div>
+ </section>
 </section>
 </template>
 <style scoped>
@@ -75,4 +105,7 @@ input,select,textarea { padding:10px; border:1px solid var(--border); border-rad
 textarea { min-height:100px; resize:vertical; }
 .ticket-message { padding:12px; border-bottom:1px solid var(--border); }
 .ticket-message p { white-space:pre-wrap; overflow-wrap:anywhere; }
+.sla-section { margin:16px 24px; padding:16px; border:1px solid var(--border); border-radius:10px; }
+.sla-note { color:var(--muted); font-size:12px; }
+.sla-overdue { color:var(--danger,#c00); }
 </style>

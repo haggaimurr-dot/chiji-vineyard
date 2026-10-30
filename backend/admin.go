@@ -250,6 +250,10 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.createTicket(ctx, "", &actor, req.Data)
 	case "admin.ticket.read":
 		return s.readTicket(ctx, "", &actor, req.Data)
+	case "admin.ticket.sla":
+		return s.ticketSLAReport(ctx, req.Data)
+	case "admin.ticket.sla.save":
+		return s.saveTicketSLAConfig(ctx, actor, req.Data)
 	case "admin.ticket.update":
 		return s.updateTicket(ctx, "", &actor, req.Data)
 	case "admin.ticket.returnTracking":

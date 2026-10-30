@@ -398,3 +398,163 @@ func (s *Server) updateTicket(ctx context.Context, openid string, actor *Claims,
 	}
 	return t, nil
 }
+
+// 售后 SLA：阈值存 configs(aftersales.sla)，默认首次响应 4 小时、解决 48 小时，可由主管调整。
+type ticketSLAConfig struct {
+	FirstResponseHours float64 `json:"firstResponseHours"`
+	ResolveHours       float64 `json:"resolveHours"`
+}
+
+func defaultTicketSLAConfig() ticketSLAConfig { return ticketSLAConfig{FirstResponseHours: 4, ResolveHours: 48} }
+
+func (s *Server) readTicketSLAConfig(ctx context.Context) ticketSLAConfig {
+	cfg := defaultTicketSLAConfig()
+	var raw []byte
+	if err := s.store.db.QueryRowContext(ctx, "SELECT payload FROM configs WHERE config_key='aftersales.sla'").Scan(&raw); err != nil {
+		return cfg
+	}
+	var c ticketSLAConfig
+	if err := json.Unmarshal(raw, &c); err != nil {
+		return cfg
+	}
+	if c.FirstResponseHours > 0 {
+		cfg.FirstResponseHours = c.FirstResponseHours
+	}
+	if c.ResolveHours > 0 {
+		cfg.ResolveHours = c.ResolveHours
+	}
+	return cfg
+}
+
+func (s *Server) saveTicketSLAConfig(ctx context.Context, actor Claims, raw json.RawMessage) (any, error) {
+	var c ticketSLAConfig
+	if err := decode(raw, &c); err != nil {
+		return nil, err
+	}
+	if c.FirstResponseHours < 0.5 || c.FirstResponseHours > 720 || c.ResolveHours < 0.5 || c.ResolveHours > 720 {
+		return nil, errors.New("SLA 时长须在 0.5–720 小时之间")
+	}
+	if _, err := s.store.db.ExecContext(ctx, "INSERT INTO configs(config_key,payload) VALUES('aftersales.sla',?) ON DUPLICATE KEY UPDATE payload=VALUES(payload)", jsonValue(c)); err != nil {
+		return nil, err
+	}
+	if _, err := s.store.db.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "TICKET_SLA_CONFIG", "", jsonValue(c)); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+type ticketSLARow struct {
+	ID                 string   `json:"id"`
+	OrderNo            string   `json:"orderNo"`
+	Status             string   `json:"status"`
+	CreatedAt          string   `json:"createdAt"`
+	FirstResponseAt    string   `json:"firstResponseAt,omitempty"`
+	FirstResponseHours *float64 `json:"firstResponseHours,omitempty"`
+	ResolvedAt         string   `json:"resolvedAt,omitempty"`
+	ResolveHours       *float64 `json:"resolveHours,omitempty"`
+	FirstResponseDue   bool     `json:"firstResponseDue"`
+	ResolveDue         bool     `json:"resolveDue"`
+}
+
+type ticketSLAReport struct {
+	Config               ticketSLAConfig `json:"config"`
+	Total                int             `json:"total"`
+	Responded            int             `json:"responded"`
+	Resolved             int             `json:"resolved"`
+	AvgFirstResponseHrs  *float64        `json:"avgFirstResponseHours,omitempty"`
+	AvgResolveHrs        *float64        `json:"avgResolveHours,omitempty"`
+	FirstResponseOverdue int             `json:"firstResponseOverdue"`
+	ResolveOverdue       int             `json:"resolveOverdue"`
+	Rows                 []ticketSLARow  `json:"rows"`
+}
+
+func roundHours(h float64) float64 { return float64(int(h*100+0.5)) / 100 }
+
+func (s *Server) ticketSLAReport(ctx context.Context, raw json.RawMessage) (any, error) {
+	var d struct {
+		StartDate string `json:"startDate"`
+		EndDate   string `json:"endDate"`
+	}
+	if err := decode(raw, &d); err != nil {
+		return nil, err
+	}
+	if d.StartDate == "" || d.EndDate == "" {
+		return nil, errors.New("请选择统计日期范围")
+	}
+	cfg := s.readTicketSLAConfig(ctx)
+	now := time.Now()
+	rep := ticketSLAReport{Config: cfg, Rows: []ticketSLARow{}}
+	rows, err := s.store.db.QueryContext(ctx, "SELECT payload FROM after_sales_tickets WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 2000", d.StartDate+" 00:00:00", d.EndDate+" 23:59:59.999")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var respSum, resSum float64
+	for rows.Next() {
+		var b []byte
+		var t AfterSalesTicket
+		if err = rows.Scan(&b); err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(b, &t); err != nil {
+			return nil, err
+		}
+		created, err := time.Parse(time.RFC3339Nano, t.CreatedAt)
+		if err != nil {
+			continue
+		}
+		row := ticketSLARow{ID: t.ID, OrderNo: t.OrderNo, Status: t.Status, CreatedAt: t.CreatedAt}
+		for _, m := range t.Messages {
+			if m.Role != "ADMIN" {
+				continue
+			}
+			at, err := time.Parse(time.RFC3339Nano, m.CreatedAt)
+			if err != nil {
+				continue
+			}
+			h := roundHours(at.Sub(created).Hours())
+			row.FirstResponseAt, row.FirstResponseHours = m.CreatedAt, &h
+			respSum += h
+			rep.Responded++
+			if h > cfg.FirstResponseHours {
+				row.FirstResponseDue = true
+				rep.FirstResponseOverdue++
+			}
+			break
+		}
+		if row.FirstResponseAt == "" && now.Sub(created).Hours() > cfg.FirstResponseHours && t.Status != "RESOLVED" && t.Status != "CLOSED" {
+			row.FirstResponseDue = true
+			rep.FirstResponseOverdue++
+		}
+		if t.Status == "RESOLVED" || t.Status == "CLOSED" {
+			resolved, err := time.Parse(time.RFC3339Nano, t.UpdatedAt)
+			if err == nil {
+				h := roundHours(resolved.Sub(created).Hours())
+				row.ResolvedAt, row.ResolveHours = t.UpdatedAt, &h
+				resSum += h
+				rep.Resolved++
+				if h > cfg.ResolveHours {
+					row.ResolveDue = true
+					rep.ResolveOverdue++
+				}
+			}
+		} else if now.Sub(created).Hours() > cfg.ResolveHours {
+			row.ResolveDue = true
+			rep.ResolveOverdue++
+		}
+		rep.Rows = append(rep.Rows, row)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	rep.Total = len(rep.Rows)
+	if rep.Responded > 0 {
+		avg := roundHours(respSum / float64(rep.Responded))
+		rep.AvgFirstResponseHrs = &avg
+	}
+	if rep.Resolved > 0 {
+		avg := roundHours(resSum / float64(rep.Resolved))
+		rep.AvgResolveHrs = &avg
+	}
+	return rep, nil
+}
