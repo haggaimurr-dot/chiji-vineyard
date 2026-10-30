@@ -45,37 +45,50 @@ func (s *Server) accountHandover(ctx context.Context, actor Claims, raw json.Raw
 	if !toActive {
 		return nil, errors.New("接收方账号已停用")
 	}
-	rows, err := tx.QueryContext(ctx, "SELECT id,payload FROM partner_leads WHERE JSON_UNQUOTE(JSON_EXTRACT(payload,'$.ownerId'))=?", d.FromAdminID)
+	// 先把待交接线索全部读出再关闭 rows：同一连接上 rows 未读完时不能执行写入。
+	type pendingLead struct {
+		ID   string
+		Lead Lead
+	}
+	pending := []pendingLead{}
+	err = func() error {
+		rows, err := tx.QueryContext(ctx, "SELECT id,payload FROM partner_leads WHERE JSON_UNQUOTE(JSON_EXTRACT(payload,'$.ownerId'))=?", d.FromAdminID)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var id string
+			var payload []byte
+			if err = rows.Scan(&id, &payload); err != nil {
+				return err
+			}
+			var lead Lead
+			if err = json.Unmarshal(payload, &lead); err != nil {
+				return err
+			}
+			pending = append(pending, pendingLead{ID: id, Lead: lead})
+		}
+		return rows.Err()
+	}()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 	now := time.Now()
 	transferred := 0
-	for rows.Next() {
-		var id string
-		var payload []byte
-		if err = rows.Scan(&id, &payload); err != nil {
-			return nil, err
-		}
-		var lead Lead
-		if err = json.Unmarshal(payload, &lead); err != nil {
-			return nil, err
-		}
+	for _, p := range pending {
+		lead := p.Lead
 		lead.OwnerID = d.ToAdminID
 		lead.OwnerName = toName
 		lead.Version++
-		entry := LeadHistory{ID: randomID("LH"), LeadID: id, ActorID: actor.Subject, ActorName: actor.Username, CreatedAt: now.Format(time.RFC3339Nano), Note: "离职交接：" + fromName + " → " + toName, Status: lead.Status, OwnerID: lead.OwnerID, OwnerName: lead.OwnerName, Changes: []string{"ownerId", "ownerName"}}
-		if _, err = tx.ExecContext(ctx, "UPDATE partner_leads SET payload=? WHERE id=?", jsonValue(lead), id); err != nil {
+		entry := LeadHistory{ID: randomID("LH"), LeadID: p.ID, ActorID: actor.Subject, ActorName: actor.Username, CreatedAt: now.Format(time.RFC3339Nano), Note: "离职交接：" + fromName + " → " + toName, Status: lead.Status, OwnerID: lead.OwnerID, OwnerName: lead.OwnerName, Changes: []string{"ownerId", "ownerName"}}
+		if _, err = tx.ExecContext(ctx, "UPDATE partner_leads SET payload=? WHERE id=?", jsonValue(lead), p.ID); err != nil {
 			return nil, err
 		}
 		if _, err = tx.ExecContext(ctx, "INSERT INTO partner_lead_history(id,lead_id,created_at,payload) VALUES(?,?,?,?)", entry.ID, entry.LeadID, now, jsonValue(entry)); err != nil {
 			return nil, err
 		}
 		transferred++
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_ACCOUNT_HANDOVER", d.FromAdminID, jsonValue(M{"from": fromName, "to": toName, "toAdminId": d.ToAdminID, "transferred": transferred})); err != nil {
 		return nil, err
