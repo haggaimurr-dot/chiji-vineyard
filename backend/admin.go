@@ -236,6 +236,10 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.orderAlerts(ctx, req.Data)
 	case "admin.order.alert.resolve":
 		return s.resolveOrderAlert(ctx, actor, req.Data)
+	case "admin.aftersales.reasonReport":
+		return s.aftersalesReasonReport(ctx, req.Data)
+	case "admin.aftersales.reasonReport.export":
+		return s.aftersalesReasonReportExport(ctx, actor, req.Data)
 	case "admin.dashboard.export":
 		return s.dashboardExport(ctx, actor, req.Data)
 	case "admin.product.search":

@@ -26,6 +26,7 @@ var actionPermissions = map[string]string{
 	"admin.payment.financeReconcile": "super", "admin.payment.overview": "super", "admin.payment.reconcile": "super", "admin.payment.resolve": "super", "admin.payment.alertCount": "super", "admin.alert.thresholds": "super", "admin.alert.thresholds.save": "super", "admin.liveNotice.send": "super",
 	"admin.dashboard":      "dashboard.read",
 	"admin.dashboard.export": "dashboard.read",
+	"admin.aftersales.reasonReport": "order.read", "admin.aftersales.reasonReport.export": "order.read",
 	"admin.product.search": "product.read", "admin.product.import": "product.write", "admin.batch.list": "product.read", "admin.batch.save": "product.write",
 	"admin.product.list": "product.read", "admin.product.save": "product.write", "admin.product.batchStatus": "product.write", "admin.product.duplicate": "product.write", "admin.product.tag.list": "product.read", "admin.product.tag.save": "product.write", "admin.product.tag.delete": "product.write", "admin.spec.template.list": "product.read", "admin.spec.template.save": "product.write", "admin.spec.template.delete": "product.write",
 	"admin.inventory.locations": "product.read", "admin.inventory.lots": "product.read", "admin.inventory.lot.movements": "product.read", "admin.inventory.warehouse.save": "inventory.write", "admin.inventory.receive": "inventory.write", "admin.inventory.loss": "inventory.write", "admin.inventory.allocate": "inventory.write",
