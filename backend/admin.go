@@ -250,6 +250,18 @@ func (s *Server) admin(r *http.Request, req Request) (any, error) {
 		return s.store.products(ctx, "", true)
 	case "admin.product.save":
 		return s.saveProduct(ctx, actor, req.Data)
+	case "admin.product.tag.list":
+		return s.productTags(ctx, req.Data)
+	case "admin.product.tag.save":
+		return s.saveProductTag(ctx, actor, req.Data)
+	case "admin.product.tag.delete":
+		return s.deleteProductTag(ctx, actor, req.Data)
+	case "admin.spec.template.list":
+		return s.specTemplates(ctx)
+	case "admin.spec.template.save":
+		return s.saveSpecTemplate(ctx, actor, req.Data)
+	case "admin.spec.template.delete":
+		return s.deleteSpecTemplate(ctx, actor, req.Data)
 	case "admin.product.batchStatus":
 		return s.batchProductStatus(ctx, actor, req.Data)
 	case "admin.product.duplicate":
@@ -618,6 +630,11 @@ func (s *Server) saveProductTx(ctx context.Context, tx *sql.Tx, actor Claims, p 
 	}
 	p.Name = clean(p.Name, 80)
 	p.Cover = clean(p.Cover, 500)
+	validatedTags, verr := validateTagIDs(ctx, tx, p.TagIDs)
+	if verr != nil {
+		return nil, verr
+	}
+	p.TagIDs = validatedTags
 	if p.Name == "" || p.Cover == "" || len(p.SKUs) == 0 {
 		return nil, errors.New("商品名称、封面和规格不能为空")
 	}

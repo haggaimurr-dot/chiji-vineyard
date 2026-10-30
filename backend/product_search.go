@@ -160,6 +160,9 @@ func (s *Store) searchProducts(ctx context.Context, openid string, d ProductSear
 	}
 	err = rows.Err()
 	rows.Close()
+	if err == nil {
+		err = attachProductTagNames(ctx, s.db, out.Items)
+	}
 	if err != nil || len(out.Items) == 0 {
 		if err == nil {
 			err = tx.Commit()

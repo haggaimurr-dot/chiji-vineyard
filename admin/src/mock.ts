@@ -280,6 +280,34 @@ function demoDashboardExport(d: Dashboard): { filename: string; content: string 
   return { filename: `经营概览_${d.startDate}_${d.endDate}.csv`, content }
 }
 
+type DemoTag = { id: string; name: string; sort: number }
+function demoTagStore(): DemoTag[] { try { return JSON.parse(localStorage.getItem('chiji_demo_product_tags') || '[]') } catch { return [] } }
+function saveTagStore(tags: DemoTag[]) { localStorage.setItem('chiji_demo_product_tags', JSON.stringify(tags)) }
+function demoProductTags(): DemoTag[] { return demoTagStore() }
+function demoSaveProductTag(data: any): DemoTag {
+  const name = String(data.name || '').trim()
+  if (!name || name.length > 20) throw new Error('标签名称不能为空且不超过 20 字')
+  const tags = demoTagStore()
+  if (tags.some(t => t.name === name && t.id !== data.id)) throw new Error('标签名称已存在')
+  if (data.id) { const t = tags.find(t => t.id === data.id); if (!t) throw new Error('标签不存在'); t.name = name; saveTagStore(tags); return t }
+  const t = { id: `ptg_${Date.now()}`, name, sort: 0 }; tags.push(t); saveTagStore(tags); return t
+}
+function demoDeleteProductTag(id: string) { saveTagStore(demoTagStore().filter(t => t.id !== id)); return { deleted: true } }
+type DemoSpecTpl = { id: string; name: string; specs: Array<{ name: string; values: string[] }> }
+function demoTplStore(): DemoSpecTpl[] { try { return JSON.parse(localStorage.getItem('chiji_demo_spec_templates') || '[]') } catch { return [] } }
+function saveTplStore(t: DemoSpecTpl[]) { localStorage.setItem('chiji_demo_spec_templates', JSON.stringify(t)) }
+function demoSpecTemplates(): DemoSpecTpl[] { return demoTplStore() }
+function demoSaveSpecTemplate(data: any): DemoSpecTpl {
+  const name = String(data.name || '').trim()
+  if (!name) throw new Error('模板名称不能为空')
+  const specs = (data.specs || []).map((s: any) => ({ name: String(s.name || '').trim(), values: (s.values || []).map((v: any) => String(v).trim()).filter(Boolean) }))
+  if (!specs.length || specs.some((s: any) => !s.name || !s.values.length)) throw new Error('规格维度与取值不能为空')
+  const all = demoTplStore()
+  if (data.id) { const t = all.find(t => t.id === data.id); if (!t) throw new Error('模板不存在'); t.name = name; t.specs = specs; saveTplStore(all); return t }
+  const t = { id: `spt_${Date.now()}`, name, specs }; all.push(t); saveTplStore(all); return t
+}
+function demoDeleteSpecTemplate(id: string) { saveTplStore(demoTplStore().filter(t => t.id !== id)); return { deleted: true } }
+
 export async function mockCall<T>(action: string, data: any = {}): Promise<T> {
   await wait()
   if (action === 'admin.dashboard') leads = leadStore.read().items
@@ -304,6 +332,12 @@ export async function mockCall<T>(action: string, data: any = {}): Promise<T> {
     const demo = demoDashboard(orders, refunds, data, { pendingShipment: 0, pendingRefund: 0, newLeads: 0, products: 0, articles: 0 }, demoCommerceActivity)
     result = demoDashboardExport(demo)
   }
+    else if (action === 'admin.product.tag.list') result = { items: demoProductTags() }
+  else if (action === 'admin.product.tag.save') result = demoSaveProductTag(data)
+  else if (action === 'admin.product.tag.delete') result = demoDeleteProductTag(data.id)
+  else if (action === 'admin.spec.template.list') result = { items: demoSpecTemplates() }
+  else if (action === 'admin.spec.template.save') result = demoSaveSpecTemplate(data)
+  else if (action === 'admin.spec.template.delete') result = demoDeleteSpecTemplate(data.id)
     else if (action === 'admin.dashboard') result = demoDashboard(orders, refunds, data, { pendingShipment: orders.filter((o) => o.paymentStatus === 'PAID' && ['UNFULFILLED', 'PREPARING'].includes(o.fulfillmentStatus) && ['NONE', 'REJECTED', 'PARTIAL'].includes(o.refundStatus)).length, pendingRefund: refunds.filter((r) => r.status === 'APPLIED').length, newLeads: leads.filter((l) => l.status === 'NEW').length, products: products.length, articles: articles.filter((a) => a.status === 'PUBLISHED').length }, demoCommerceActivity)
   else if (action === 'admin.review.list') {
     let items = JSON.parse(localStorage.getItem('chiji_admin_demo_reviews') || 'null') || clone(demoReviews)

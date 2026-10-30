@@ -16,6 +16,7 @@ type AdminProductSearch struct {
 	ProductSearch
 	Status   string `json:"status"`
 	SaleMode string `json:"saleMode"`
+	TagID    string `json:"tagId"`
 }
 
 func (s *Server) searchAdminProducts(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -43,6 +44,10 @@ func (s *Server) searchAdminProducts(ctx context.Context, raw json.RawMessage) (
 	if d.SaleMode != "" {
 		where += " AND JSON_UNQUOTE(JSON_EXTRACT(p.payload,'$.saleMode'))=?"
 		args = append(args, d.SaleMode)
+	}
+	if d.TagID != "" {
+		where += " AND JSON_CONTAINS(JSON_EXTRACT(p.payload,'$.tagIds'), JSON_QUOTE(?))"
+		args = append(args, d.TagID)
 	}
 	tx, err := s.store.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true, Isolation: sql.LevelRepeatableRead})
 	if err != nil {
@@ -99,6 +104,9 @@ func (s *Server) searchAdminProducts(ctx context.Context, raw json.RawMessage) (
 		if err != nil {
 			return nil, err
 		}
+	}
+	if err = attachProductTagNames(ctx, s.store.db, out.Items); err != nil {
+		return nil, err
 	}
 	return out, tx.Commit()
 }

@@ -54,6 +54,8 @@ type Product struct {
 	Pairings          []Pairing          `json:"pairings,omitempty"`
 	Status            string             `json:"status"`
 	SortOrder         int                `json:"sortOrder"`
+	TagIDs            []string           `json:"tagIds,omitempty"`
+	Tags              []string           `json:"tags,omitempty"`
 	SKUs              []SKU              `json:"skus"`
 }
 type Address struct {

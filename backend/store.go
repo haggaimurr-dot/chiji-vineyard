@@ -109,6 +109,9 @@ func (s *Store) products(ctx context.Context, category string, includeDraft bool
 		}
 		out[i].SKUs = skus
 	}
+	if err = attachProductTagNames(ctx, s.db, out); err != nil {
+		return nil, err
+	}
 	return out, nil
 }
 func (s *Store) product(ctx context.Context, id string, includeDraft bool) (*Product, error) {
@@ -129,7 +132,15 @@ func (s *Store) product(ctx context.Context, id string, includeDraft bool) (*Pro
 		return nil, err
 	}
 	p.SKUs, err = s.skus(ctx, id)
-	return &p, err
+	if err != nil {
+		return nil, err
+	}
+	holder := []Product{p}
+	if err = attachProductTagNames(ctx, s.db, holder); err != nil {
+		return nil, err
+	}
+	p = holder[0]
+	return &p, nil
 }
 func (s *Store) skus(ctx context.Context, productID string) ([]SKU, error) {
 	rows, err := s.db.QueryContext(ctx, "SELECT id,product_id,name,price,compare_at_price,stock,reserved,sold,limit_per_order,weight_label,active,sort_order FROM skus WHERE product_id=? AND active=1 ORDER BY sort_order", productID)

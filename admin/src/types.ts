@@ -45,8 +45,13 @@ export interface Product {
   pairings?: Array<{ title: string; description: string; productId?: string }>
   status: 'PUBLISHED' | 'DRAFT'
   sortOrder: number
+  tagIds?: string[]
+  tags?: string[]
   skus: Sku[]
 }
+
+export interface ProductTag { id: string; name: string; sort: number }
+export interface SpecTemplate { id: string; name: string; specs: Array<{ name: string; values: string[] }> }
 
 export interface PackageItem { itemIndex: number; quantity: number }
 export interface OrderPackage { id: string; number: string; items: PackageItem[]; shipment?: {carrier: string; carrierCode?: string; trackingNo: string; shippedAt?: string; syncStatus?: string; syncError?: string}; receivedAt?: string }
