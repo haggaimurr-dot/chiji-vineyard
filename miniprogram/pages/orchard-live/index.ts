@@ -10,7 +10,7 @@ Page({
   views: liveViews, selected: 'orchard' as LiveViewId,
   channel: { enabled: false, url: '', hours: '' } as OrchardLiveChannel,
   home: {} as HomeConfig, loading: true, error: '', playing: false,
-  status: 'ready', version: 0, visible: false,
+  status: 'ready', version: 0, visible: false, notice: { show: false, text: '', countdown: '', subscribed: false, pushConfigured: false, busy: false },
  },
  onShow() { this.setData({ visible: true }); return this.loadConfig() },
  onHide() { this.stopPlayback(); this.setData({ visible: false, version: this.data.version + 1 }) },
@@ -29,6 +29,7 @@ Page({
    const home = await callApi<HomeConfig>('home.get')
    if (version !== this.data.version || !this.data.visible) return
    this.setData({ home, channel: liveChannel(home, this.data.selected), loading: false })
+   this.loadNotice()
   } catch (_) {
    if (version !== this.data.version || !this.data.visible) return
    this.setData({ loading: false, error: '果园直播信息暂时无法加载，请重试。', channel: { enabled: false, url: '', hours: '' } })
@@ -40,8 +41,35 @@ Page({
   const pending = this.data.loading
   this.stopPlayback()
   this.setData({ selected: id, version: this.data.version + 1, loading: false, channel: liveChannel(this.data.home, id) })
+  this.loadNotice()
   // A switch during a pending request must not leave an empty or stale configuration.
   if (pending || !this.data.home.banners) return this.loadConfig()
+ },
+ async loadNotice() {
+  const channel = this.data.selected
+  try {
+   const res = await callApi<{ noticeAt: string; noticeText: string; subscribed: boolean; pushConfigured: boolean; templateId: string }>('liveNotice.status', { channel })
+   const at = Date.parse(res.noticeAt || '')
+   const show = !!res.noticeAt && !Number.isNaN(at) && at > Date.now()
+   let countdown = ''
+   if (show) { const mins = Math.max(1, Math.round((at - Date.now()) / 60000)); countdown = mins >= 60 ? Math.floor(mins / 60) + ' 小时 ' + (mins % 60) + ' 分后开播' : mins + ' 分后开播' }
+   this.setData({ notice: { show, text: res.noticeText || '果园直播即将开始', countdown, subscribed: res.subscribed, pushConfigured: res.pushConfigured, busy: false } })
+   this.data.noticeTemplateId = res.templateId
+  } catch (_) { this.setData({ notice: { show: false, text: '', countdown: '', subscribed: false, pushConfigured: false, busy: false } }) }
+ },
+ async subscribeNotice() {
+  if (this.data.notice.busy) return
+  const channel = this.data.selected
+  this.setData({ 'notice.busy': true })
+  try {
+   if (!this.data.notice.pushConfigured || !this.data.noticeTemplateId) { wx.showToast({ title: '开播提醒尚未开通', icon: 'none' }); return }
+   const auth = await wx.requestSubscribeMessage({ tmplIds: [this.data.noticeTemplateId] })
+   const accept = auth[this.data.noticeTemplateId] === 'accept'
+   await callApi('liveNotice.subscribe', { channel, accept })
+   this.setData({ 'notice.subscribed': accept })
+   wx.showToast({ title: accept ? '已订阅，开播前提醒你' : '已取消订阅', icon: 'success' })
+  } catch (e) { wx.showToast({ title: (e as Error).message || '订阅失败', icon: 'none' }) }
+  finally { this.setData({ 'notice.busy': false }) }
  },
  watchLive() {
   if (this.data.loading || this.data.error || !this.data.channel.enabled || !this.data.visible) return

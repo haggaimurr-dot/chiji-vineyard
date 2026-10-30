@@ -77,6 +77,7 @@ async function save(key:ConfigKey) {
   const current=key==='home'?home.value:privacy.value
   if(!current)return
   const snapshot=clone(current)
+  if (key==='home' && snapshot.live) { for (const id of ['orchard','stall'] as const) { const ch = (snapshot.live as any)[id]; if (ch && typeof ch.noticeAt === 'string' && ch.noticeAt.length === 16) ch.noticeAt = ch.noticeAt + ':00+08:00' } }
   busy.value=key;error.value='';message.value=''
   let acknowledged=false
   try{
@@ -153,6 +154,8 @@ async function uploadBanner(event:Event,index:number) {
     <label>机位状态<select v-model="home.live[view.id].enabled"><option :value="false">关闭</option><option :value="true">开启</option></select></label>
     <label>HLS 播放地址<input v-model.trim="home.live[view.id].url" type="url" maxlength="2000" :required="home.live[view.id].enabled" placeholder="https://直播域名/机位.m3u8"/></label>
     <label>直播时间说明<input v-model.trim="home.live[view.id].hours" maxlength="100" placeholder="例如：每日 08:00–18:00，雨天暂停"/></label>
+    <label>下次开播预告时间<input v-model="home.live[view.id].noticeAt" type="datetime-local" :disabled="false"/></label>
+    <label>预告文案<input v-model.trim="home.live[view.id].noticeText" maxlength="100" placeholder="例如：明早 8 点采摘直播，欢迎预约"/></label>
    </div></fieldset>
    <p class="muted">可在下方首页预览中查看机位配置状态。真实观看需配置播放域名并使用微信真机验收；带有效期的签名地址过期后需更新。</p>
   </fieldset>

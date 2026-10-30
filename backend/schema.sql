@@ -237,6 +237,19 @@ CREATE TABLE IF NOT EXISTS invoice_requests (
 -- Private invoice PDFs; run on existing databases before enabling upload.
 -- 2026-10-30: 开票抬头记忆（item17），按客户存档
 -- 2026-10-30: 常见问题快捷回复（item18）
+-- 2026-10-30: 直播预告推送（item 直播预告）
+CREATE TABLE IF NOT EXISTS live_notice_subscriptions (
+ openid VARCHAR(80) NOT NULL,
+ channel VARCHAR(16) NOT NULL,
+ template_id VARCHAR(200) NOT NULL DEFAULT '',
+ notice_at VARCHAR(40) NOT NULL DEFAULT '',
+ push_status VARCHAR(20) NOT NULL DEFAULT 'READY',
+ push_error VARCHAR(240) NOT NULL DEFAULT '',
+ updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+ PRIMARY KEY (openid,channel),
+ INDEX idx_live_notice_pending (push_status,notice_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS faqs (
  id VARCHAR(80) PRIMARY KEY,
  title VARCHAR(60) NOT NULL,

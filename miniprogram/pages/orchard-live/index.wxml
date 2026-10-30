@@ -13,6 +13,7 @@
   <view wx:if="{{playing}}" class="live-state">{{status === 'playing' ? '正在播放' : status === 'paused' ? '已暂停' : '正在连接现场…'}}</view>
   <view class="live-description">{{selected === 'orchard' ? views[0].description : views[1].description}}</view>
   <view wx:if="{{channel.hours}}" class="live-hours">直播时间：{{channel.hours}}</view>
+  <view wx:if="{{notice.show}}" class="live-notice"><text class="live-notice-title">开播预告</text><text class="live-notice-text">{{notice.text}}</text><text class="live-notice-countdown">{{notice.countdown}}</text><button wx:if="{{notice.pushConfigured}}" class="live-button" bindtap="subscribeNotice" loading="{{notice.busy}}" disabled="{{notice.busy}}">{{notice.subscribed ? "已订阅提醒" : "订阅开播提醒"}}</button></view>
   <view class="live-note">现场画面可能有短暂延迟，机位休息或网络中断时会暂停。默认静音，可在播放器内开启声音。</view>
   <button class="live-refresh" bindtap="loadConfig">刷新机位状态</button>
  </block>

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"time"
 	"net/url"
 	"strings"
 )
@@ -11,9 +12,11 @@ type OrchardLiveConfig struct {
 	Stall   OrchardLiveChannel `json:"stall"`
 }
 type OrchardLiveChannel struct {
-	Enabled bool   `json:"enabled"`
-	URL     string `json:"url"`
-	Hours   string `json:"hours"`
+	Enabled    bool   `json:"enabled"`
+	URL        string `json:"url"`
+	Hours      string `json:"hours"`
+	NoticeAt   string `json:"noticeAt,omitempty"`
+	NoticeText string `json:"noticeText,omitempty"`
 }
 
 func validateOrchardLive(live *OrchardLiveConfig) error {
@@ -21,6 +24,14 @@ func validateOrchardLive(live *OrchardLiveConfig) error {
 		return nil
 	}
 	for _, channel := range []OrchardLiveChannel{live.Orchard, live.Stall} {
+		if len([]rune(channel.NoticeText)) > 100 {
+			return errors.New("直播预告文案最多100字")
+		}
+		if channel.NoticeAt != "" {
+			if _, err := time.Parse(time.RFC3339, channel.NoticeAt); err != nil {
+				return errors.New("直播预告时间格式无效")
+			}
+		}
 		if len([]rune(channel.Hours)) > 100 {
 			return errors.New("直播时间说明最多100字")
 		}

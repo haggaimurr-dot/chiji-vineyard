@@ -10,5 +10,5 @@ export function validLiveUrl(value: unknown): value is string {
 }
 export function liveChannel(home: HomeConfig, id: LiveViewId): OrchardLiveChannel {
  const channel = home.live?.[id]
- return { enabled: channel?.enabled === true && validLiveUrl(channel?.url), url: validLiveUrl(channel?.url) ? channel.url : '', hours: typeof channel?.hours === 'string' ? channel.hours : '' }
+ return { enabled: channel?.enabled === true && validLiveUrl(channel?.url), url: validLiveUrl(channel?.url) ? channel.url : '', hours: typeof channel?.hours === 'string' ? channel.hours : '', noticeAt: typeof channel?.noticeAt === 'string' ? channel.noticeAt : '', noticeText: typeof channel?.noticeText === 'string' ? channel.noticeText : '' }
 }

@@ -39,6 +39,7 @@ func main() {
 	go store.runArticlePublisher(publisherCtx)
 	go s.runPaymentReconciler(publisherCtx)
 	go s.runAlertThresholdScanner(publisherCtx)
+	go s.runLiveNoticeScanner(publisherCtx)
 	go store.runReviewAlertScanner(publisherCtx)
 	go s.runAutoInvoices(publisherCtx)
 	go store.runLeadExternalReminders(publisherCtx)
@@ -446,6 +447,10 @@ func (s *Server) public(r *http.Request, req Request) (any, error) {
 		return s.updateTicket(ctx, openid, nil, req.Data)
 	case "ticket.returnTracking":
 		return s.returnTracking(ctx, openid, req.Data)
+	case "liveNotice.status":
+		return s.liveNoticeStatus(ctx, openid, req.Data)
+	case "liveNotice.subscribe":
+		return s.liveNoticeSubscribe(ctx, openid, req.Data)
 	case "invoice.titles":
 		return s.miniInvoiceTitles(ctx, openid, req.Data)
 	case "invoice.apply":

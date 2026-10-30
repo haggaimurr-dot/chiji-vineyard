@@ -267,7 +267,7 @@ export interface HomeConfig {
  cooperationTitle:string
  cooperationCopy:string
 }
-export interface OrchardLiveChannel { enabled:boolean; url:string; hours:string }
+export interface OrchardLiveChannel { enabled:boolean; url:string; hours:string; noticeAt?:string; noticeText?:string }
 export interface PrivacyPolicy {title:string;version:string;effectiveDate:string;operator:string;contact:string;address:string;published:boolean;content:string[]}
 export interface Tracking {state?:string;status:string;message:string;updatedAt:string;events:Array<{time:string;context:string}>}
 
