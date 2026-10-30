@@ -10,7 +10,7 @@ const actionLabels: Record<string, string> = {
   'admin.account.changePassword': '个人修改密码', 'admin.security.setup': '开始绑定验证器', 'admin.security.enable': '启用多因素认证', 'admin.security.disable': '关闭多因素认证',
   ADMIN_LOGIN: '管理员登录', SHIPPING_NOTICE_RETRY: '重试发货通知',
   CONFIG_SAVE: '保存配置', CONFIG_ROLLBACK: '回滚配置', COUPON_SAVE: '保存优惠券',
-  ADMIN_ACCOUNT_SAVE: '维护管理员账号', ADMIN_PASSWORD_RESET: '重置管理员密码',
+  ADMIN_ACCOUNT_SAVE: '维护管理员账号', ADMIN_PASSWORD_RESET: '重置管理员密码', ADMIN_PERMISSIONS_SAVE: '修改账号权限',
   PRODUCT_SAVE: '保存商品', INVENTORY_SET: '调整库存', INVENTORY_BATCH: '批量调整库存',
   ARTICLE_SAVE: '保存文章', ORDER_SHIP: '订单发货', INVOICE_UPDATE: '维护发票', INVOICE_EMAIL_RETRY: '重试发票邮件', INVOICE_EMAIL_RESOLVE: '核实发票邮件结果',
   ARTICLE_RESTORE: '恢复文章', ORDER_SHIPMENT_UPDATE: '更正发货信息', ORDER_SHIPMENT_RESYNC: '重试同步物流',

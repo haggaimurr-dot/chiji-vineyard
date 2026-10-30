@@ -163,10 +163,15 @@ func (s *Server) saveAccountPermissions(ctx context.Context, actor Claims, raw j
 	}
 	slices.Sort(d.Permissions)
 	d.Permissions = slices.Compact(d.Permissions)
+	var before []string
+	var rawBefore []byte
+	if e := tx.QueryRowContext(ctx, "SELECT payload FROM configs WHERE config_key=?", "auth.permissions."+d.AccountID).Scan(&rawBefore); e == nil {
+		_ = json.Unmarshal(rawBefore, &before)
+	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO configs(config_key,payload) VALUES(?,?) ON DUPLICATE KEY UPDATE payload=VALUES(payload)", "auth.permissions."+d.AccountID, jsonValue(d.Permissions)); err != nil {
 		return nil, err
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_PERMISSIONS_SAVE", d.AccountID, jsonValue(M{"permissions": d.Permissions})); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_PERMISSIONS_SAVE", d.AccountID, jsonValue(M{"before": before, "after": d.Permissions})); err != nil {
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {

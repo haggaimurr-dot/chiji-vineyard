@@ -829,7 +829,17 @@ func (s *Server) saveAccount(ctx context.Context, actor Claims, raw json.RawMess
 			return nil, err
 		}
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_ACCOUNT_SAVE", id, jsonValue(M{"username": name, "role": a.Role, "active": active, "passwordChanged": a.Password != "", "permissions": a.Permissions})); err != nil {
+	detail := M{"username": name, "role": a.Role, "active": active, "passwordChanged": a.Password != "", "permissions": a.Permissions}
+	if existing != nil {
+		var beforePerms []string
+		var rawPerms []byte
+		if e := tx.QueryRowContext(ctx, "SELECT payload FROM configs WHERE config_key=?", "auth.permissions."+id).Scan(&rawPerms); e == nil {
+			_ = json.Unmarshal(rawPerms, &beforePerms)
+		}
+		detail["before"] = M{"role": existing.Role, "active": existing.Active, "permissions": beforePerms}
+		detail["after"] = M{"role": a.Role, "active": active, "permissions": a.Permissions}
+	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO audit_logs(admin_id,username,action,target_id,detail) VALUES(?,?,?,?,?)", actor.Subject, actor.Username, "ADMIN_ACCOUNT_SAVE", id, jsonValue(detail)); err != nil {
 		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
