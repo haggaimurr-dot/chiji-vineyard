@@ -190,6 +190,18 @@ func (s *Server) queryTraceCode(ctx context.Context, raw json.RawMessage) (any, 
 	b.Code = b.ID
 	// Public fields deliberately exclude internal notes and customer/order data.
 	result := M{"code": b.Code, "number": b.Number, "orchard": b.Orchard, "harvestedAt": b.HarvestedAt, "packedAt": b.PackedAt, "expiresAt": b.ExpiresAt, "status": b.Status}
+	// 关联商品公开信息（名称/品种/封面），其余商品字段不泄露。
+	if b.ProductID != "" {
+		var prodPayload []byte
+		if err := s.store.db.QueryRowContext(ctx, "SELECT payload FROM products WHERE id=? AND status='PUBLISHED'", b.ProductID).Scan(&prodPayload); err == nil {
+			var prod Product
+			if json.Unmarshal(prodPayload, &prod) == nil {
+				result["productName"] = prod.Name
+				result["variety"] = prod.Variety
+				result["cover"] = prod.Cover
+			}
+		}
+	}
 	if b.ExternalTrace != nil && validateExternalTrace(b.ExternalTrace) == nil {
 		result["externalTrace"] = b.ExternalTrace
 	}

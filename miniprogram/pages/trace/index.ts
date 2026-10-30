@@ -1,8 +1,12 @@
 import { callApi } from '../../utils/api'
-interface TraceResult {code:string;number:string;orchard:string;harvestedAt:string;packedAt:string;expiresAt:string;status:string;demo?:boolean;externalTrace?:{platform:string;url:string;code:string}}
+interface TraceResult {code:string;number:string;orchard:string;harvestedAt:string;packedAt:string;expiresAt:string;status:string;productName?:string;variety?:string;cover?:string;demo?:boolean;externalTrace?:{platform:string;url:string;code:string}}
 Page({
  data:{code:'',result:null as TraceResult|null,busy:false,error:''},
- onLoad(options:Record<string,string>){if(options.code){this.setData({code:options.code});void this.query()}},
+ onLoad(options:Record<string,string>){
+  // 微信扫小程序码直达时溯源码放在 scene 参数中
+  let code = options.code || ''
+  if(!code && options.scene){ try{ code = decodeURIComponent(options.scene).split('&').map(p=>p.split('=')).find(p=>p[0]==='code')?.[1] || decodeURIComponent(options.scene) }catch(_){ code = options.scene } }
+  if(code){this.setData({code});void this.query()}},
  input(e:WechatMiniprogram.Input){this.setData({code:e.detail.value,result:null,error:''})},
  copyExternal(){const url=this.data.result?.externalTrace?.url;if(url)wx.setClipboardData({data:url})},
  async scan(){try{const result=await wx.scanCode({onlyFromCamera:false,scanType:['qrCode','barCode']});this.setData({code:result.result.trim(),result:null});await this.query()}catch(e){if(!String((e as any).errMsg||'').includes('cancel'))this.setData({error:'未能读取溯源码，请手动输入'})}},
