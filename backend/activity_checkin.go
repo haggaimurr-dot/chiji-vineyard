@@ -137,15 +137,15 @@ func (s *Server) activityCheckinStats(ctx context.Context, raw json.RawMessage) 
 	if d.ActivityID != "" && !validActivityID(d.ActivityID) {
 		return nil, errors.New("活动参数无效")
 	}
-	where, args := "", []any{}
+	cond, args := "1=1", []any{}
 	if d.ActivityID != "" {
-		where, args = " WHERE activity_id=?", []any{d.ActivityID}
+		cond, args = "activity_id=?", []any{d.ActivityID}
 	}
 	var reserved, checked int
-	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_reservations"+where, args...).Scan(&reserved); err != nil {
+	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_reservations WHERE "+cond, args...).Scan(&reserved); err != nil {
 		return nil, err
 	}
-	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_checkins"+where+" AND status='CHECKED'", args...).Scan(&checked); err != nil {
+	if err := s.store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM activity_checkins WHERE "+cond+" AND status='CHECKED'", args...).Scan(&checked); err != nil {
 		return nil, err
 	}
 	return M{"reserved": reserved, "checked": checked}, nil
